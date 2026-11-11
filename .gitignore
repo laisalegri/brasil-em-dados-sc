@@ -1,0 +1,39 @@
+# Ambiente e segredos
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dados (gerados pelo pipeline; não versionar)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Relatórios gerados pelo agente de verificação
+reports/*
+!reports/.gitkeep
+
+# Power BI: arquivos temporários
+dashboards/powerbi/*.pbix.bak
+~$*
+
+# Claude Code: configurações locais (os subagents em .claude/agents/ SÃO versionados)
+.claude/settings.local.json
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
