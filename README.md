@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento (D02 — estrutura do repositório).
+> **Status:** em desenvolvimento (D04 concluído — próximo: D05).
 
 ## Pergunta central
 
@@ -53,3 +53,4 @@ Em construção. Os passos de ambiente (D03), banco (D17) e pipeline serão docu
 
 - [Escopo do MVP](docs/escopo_mvp.md)
 - [Registro de decisões](docs/decisoes.md)
+- [Cronograma](docs/cronograma.md)
