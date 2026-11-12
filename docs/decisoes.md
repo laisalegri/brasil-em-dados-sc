@@ -2,13 +2,37 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-12 — D10: setores do PIB fora do MVP
+
+- **Decisão:** o valor adicionado bruto por setor e os impostos ficam fora do MVP, como extensão. Na extensão, a fonte é a tabela 5938, variáveis 498 (VAB total), 513 (agropecuária), 517 (indústria), 6575 (serviços, exceto administração pública), 525 (administração pública) e 543 (impostos líquidos de subsídios). A tabela 5964 foi descartada: ela é da Pesquisa Nacional de Saúde do Escolar (PeNSE) 2015 e não tem relação com o PIB.
+- **Por quê:**
+  - a pergunta central do projeto não inclui a estrutura produtiva;
+  - a série setorial termina em 2021: em 2022–2023, todas as variáveis setoriais vêm com `...` para os 295 municípios (nota técnica 02/2024 do IBGE);
+  - a abertura setorial pode mudar com a nova base 2021 das Contas Nacionais;
+  - a extensão é barata: usa a mesma URL e o mesmo extrator do PIB, só acrescentando variáveis (`v/37,498,513,517,6575,525,543`).
+- **Consequência:** o dicionário de dados mantém os setores numa seção "EXTENSÃO (fora do MVP)". Testes previstos para a extensão: VAB total + impostos = PIB, e soma dos 4 setores = VAB total, com tolerância de arredondamento. Detalhes em `docs/fontes/sidra_5938.md` (seção "Setores (D10)") e `docs/fontes/sidra_5964.md`.
+- **Ajustes aprovados na revisão do dicionário de dados:**
+  1. **`tipo_medida`** sai da tabela fato e passa a ser atributo da `dim_indicador`, com valores `estimativa`, `censo` ou `nominal` e nunca `NULL`. A chave única da fato é (`cod_municipio`, `codigo_indicador`, `ano`). Motivo: o tipo depende só do indicador, e `NULL` em chave única no PostgreSQL permitiria duplicatas.
+  2. **Códigos de indicador:** `pop_estimada`, `pop_censo` (único para 1378 e 4709), `pib_corrente` e `pib_per_capita`. Os nomes de colunas da `dim_municipio` estão aprovados; o código é convertido com `str(id).zfill(7)`.
+  3. **Valor:** a fato tem uma coluna de valor única, em `numeric(18,2)`, para todos os indicadores.
+  4. **Indicador separado da série de origem:**
+     - `dim_indicador` (conceito de negócio): `codigo_indicador`, `nome`, `unidade_armazenada`, `tipo_medida`, `descricao`.
+     - `dim_serie` (origem técnica, uma linha por tabela/variável ou pesquisa/indicador): `cod_serie`, `codigo_indicador` (FK), `fonte`, `tabela_ou_pesquisa`, `variavel_ou_indicador`, `unidade_origem`, `fator_conversao`, `data_referencia`, `url_extrator`. Séries do MVP: `sidra_6579_v9324`, `sidra_1378_v93`, `sidra_4709_v93`, `sidra_5938_v37` e `pesquisas_38_i47001`.
+     - Fato: `cod_municipio`, `codigo_indicador`, `ano`, `cod_serie` (FK), `valor` (`numeric(18,2)`), `sinal_origem`, `data_coleta`. Chave única: (`cod_municipio`, `codigo_indicador`, `ano`).
+     - A conversão de unidade usa o `fator_conversao` da `dim_serie`. A regra 8 é atendida pelo `cod_serie`: cada linha da fato identifica sua série, e a série identifica tabela/variável ou pesquisa/indicador.
+     - Motivo: atributos que dependem da fonte (tabela, data de referência, unidade de origem, fator) ficam na série; o indicador guarda só o conceito. Isso permite um `pop_censo` único com duas origens (1378 em 2010 e 4709 em 2022) e facilita incluir os setores depois, como novas séries da 5938.
+  5. **Extrator do SIDRA:** localiza os campos pelo cabeçalho da resposta (primeira linha), nunca pela posição das colunas `D*`, porque a ordem varia por tabela.
+  6. **Testes previstos para o D26:**
+     - validação do D09: PIB (R$) / população ≈ PIB per capita, usando a 6579 em 2011–2021 e a 4709 em 2023, excluindo 2010, 2022 e Içara e Laguna em 2012;
+     - cada combinação (`codigo_indicador`, `ano`) vem de exatamente uma série.
+
 ## 2026-11-12 — D09: PIB, PIB per capita e API de Pesquisas
 
 - **Decisão:**
   1. **PIB e unidades monetárias:** valores monetários são convertidos para reais (R$) na camada SILVER. A RAW continua guardando a resposta original da API, sem alteração.
      - O PIB da tabela 5938 (variável 37), publicado em "Mil Reais", é multiplicado por 1000 na carga para a SILVER. O PIB per capita (indicador 47001) já vem em reais (fator 1).
      - Tipo no PostgreSQL: `numeric(18,2)` para valores monetários; nunca `float`/`double`.
-     - Rastreabilidade: a `dim_indicador` registra `unidade_origem`, `fator_conversao` e `unidade_armazenada`; a RAW preserva o valor original.
+     - Rastreabilidade: a `dim_serie` registra `unidade_origem` e `fator_conversao`, e a `dim_indicador` registra `unidade_armazenada`; a RAW preserva o valor original. *(Ajustado no D10. O texto anterior dizia que a `dim_indicador` registrava as três colunas; elas foram divididas com a criação da `dim_serie`.)*
      - *(Revisado em 2026-11-12. O texto anterior dizia: "PIB em mil reais (unidade da fonte: 'Mil Reais'). A unidade é guardada como veio; a conversão para reais, quando necessária, acontece na GOLD." Motivo da mudança: padronizar unidades é papel da SILVER; isso elimina o risco de misturar mil reais e reais nas camadas seguintes e permite validações diretas como PIB / população ≈ PIB per capita.)*
   2. **PIB per capita:** API de Pesquisas do IBGE, pesquisa 38, indicador 47001 ("PIB per capita" → "Série revisada"), em **reais** (unidade R$ com multiplicador 1; "R$ 1,00" no layout da base oficial). Fica diferente da unidade do PIB, e as duas unidades são registradas em cada linha da tabela fato. O valor é o publicado, sem recálculo.
   3. **Nova fonte:** a API de Pesquisas passa a ser fonte oficial do projeto. Na tabela fato, a identificação da série guarda tabela/variável para o SIDRA e pesquisa/indicador para a API de Pesquisas.
@@ -54,7 +78,7 @@ Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra 
 | Decisão | Motivo |
 | --- | --- |
 | Indicadores do MVP: população (censo e estimativa), PIB nominal e PIB per capita | São as fontes com tabelas identificadas; a estrutura setorial ainda depende de validação (D10) |
-| Estrutura setorial fica como extensão | Tabela candidata 5964 e códigos setoriais não confirmados |
+| Estrutura setorial fica como extensão | Setores (extensão): tabela 5938, variáveis 498, 513, 517, 6575, 525 e 543; sem abertura em 2022–2023. *(Corrigido no D10. O texto anterior dizia: "Tabela candidata 5964 e códigos setoriais não confirmados". A 5964 é da PeNSE 2015 e foi descartada.)* |
 | Período 2010–2023 e cadastro atual de 295 municípios | Mantém o Censo 2010; municípios instalados depois de 2010 têm ausência esperada e documentada |
 | PIB per capita: valor publicado pelo IBGE, sem recálculo | Usa a referência oficial; a população usada como denominador será documentada |
 | Variação populacional oficial: Censo 2010 × Censo 2022 | Estimativas aparecem só como série complementar |

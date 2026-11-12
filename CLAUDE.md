@@ -38,7 +38,7 @@ pytest tests/test_x.py -v          # um arquivo de teste
 ## Fontes de dados
 
 - API de Localidades: `https://servicodados.ibge.gov.br/api/v1/localidades/estados/42/municipios`
-- API SIDRA: `https://apisidra.ibge.gov.br/`. Tabelas candidatas: 6579 (estimativas, var. 9324), 1378 (Censo 2010), 4709 (Censo 2022, var. 93), 5938 (PIB, var. 37), 5964 (setores, extensão).
+- API SIDRA: `https://apisidra.ibge.gov.br/`. Tabelas candidatas: 6579 (estimativas, var. 9324), 1378 (Censo 2010), 4709 (Censo 2022, var. 93), 5938 (PIB, var. 37). Setores (extensão): tabela 5938, variáveis 498, 513, 517, 6575, 525 e 543; sem abertura em 2022–2023.
 - API de Pesquisas: `https://servicodados.ibge.gov.br/api/v1/pesquisas/38/indicadores/47001/resultados/N6[N3[42]]` (PIB per capita oficial, em reais). Devolve o código do município com 6 dígitos; converter para 7 pelo cadastro da API de Localidades, com teste de correspondência 1:1.
 - PIB vem em mil reais na fonte e é convertido para reais na SILVER (fator 1000); per capita vem em reais. Todo valor monetário a partir da SILVER está em reais, como `numeric(18,2)`.
 - Antes de escrever um extrator, valide metadados, filtros, unidades e anos disponíveis. Tabelas e variáveis só são consideradas confirmadas quando registradas em `docs/`.
@@ -46,16 +46,16 @@ pytest tests/test_x.py -v          # um arquivo de teste
 ## Regras de dados (não negociáveis)
 
 1. Código IBGE do município é texto de 7 dígitos e é a chave em todas as camadas. Nome de município nunca é chave.
-2. Censo e estimativa nunca se misturam sem rótulo: toda linha de população tem `tipo_medida`.
+2. Censo e estimativa nunca se misturam sem rótulo: o `tipo_medida` (`estimativa`, `censo` ou `nominal`; nunca `NULL`) é atributo da `dim_indicador`, e cada linha da fato o herda pelo indicador. A chave única da fato é (`cod_municipio`, `codigo_indicador`, `ano`).
 3. PIB é nominal. Nunca descreva variação de PIB como crescimento econômico real.
 4. PIB per capita é o valor publicado pelo IBGE, sem recálculo. Nunca o trate como renda.
 5. Ausência é `NULL`, nunca zero. Não interpole nem projete valores.
 6. Municípios instalados depois de 2010 têm ausência esperada nos anos anteriores; isso não é erro.
 7. RAW é imutável: cada coleta grava arquivo novo com timestamp, URL e parâmetros. Nunca sobrescreva nem apague RAW.
-8. Toda linha da tabela fato guarda fonte, identificação da série (tabela/variável SIDRA ou pesquisa/indicador da API de Pesquisas), unidade e data de coleta.
+8. Toda linha da tabela fato guarda `cod_serie` (FK para a `dim_serie`, que identifica fonte, tabela/variável SIDRA ou pesquisa/indicador da API de Pesquisas e unidade de origem) e data de coleta.
 9. Sinais especiais do SIDRA: `-` e `0` carregam como 0; `...`, `..`, `X` e letras de faixa carregam como `NULL`. O sinal original fica na coluna `sinal_origem` (texto, `NULL` quando o valor veio numérico). Legenda em `docs/fontes/sidra_convencoes.md`. Na API de Pesquisas, `-` indica ausência e carrega como `NULL`, com `sinal_origem` = `-`.
 10. Cobertura: ausência de valor só é aceita para Pescaria Brava (4212650) e Balneário Rincão (4220000) antes de 2013, ano de instalação. Qualquer outra ausência faz o teste falhar.
-11. A conversão de unidade acontece só na carga para a SILVER, usando o fator registrado na `dim_indicador`; nunca converta valores na GOLD, nos dashboards ou em notebooks.
+11. A conversão de unidade acontece só na carga para a SILVER, usando o `fator_conversao` da `dim_serie`; nunca converta valores na GOLD, nos dashboards ou em notebooks.
 
 ## Como trabalhar comigo
 

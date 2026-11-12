@@ -34,7 +34,7 @@ O MVP entrega um pipeline reproduzível (RAW → SILVER → GOLD) com populaçã
 | População estimada | Estimativa | SIDRA 6579, var. 9324 | Anos intercensitários disponíveis | Incluso |
 | PIB a preços correntes | PIB nominal | SIDRA 5938, var. 37 | 2010–2023 | Incluso |
 | PIB per capita | Oficial (IBGE) | Valor publicado pelo IBGE; tabela/variável a confirmar no D09 | Anos com PIB publicado | Incluso |
-| Valor adicionado por setor | VAB nominal | Tabela candidata 5964 | A confirmar | Extensão, condicionada ao D10 |
+| Valor adicionado por setor | VAB nominal | Setores (extensão): tabela 5938, variáveis 498, 513, 517, 6575, 525 e 543; sem abertura em 2022–2023 | Confirmada no D10 | Extensão, fora do MVP (decisão D10) |
 
 **Entregáveis:** extratores com rastreabilidade, banco PostgreSQL (dimensões, fato e controle), camada GOLD, notebooks de EDA, dashboard Power BI, app Streamlit, subagents de desenvolvimento e agente de verificação do pipeline.
 
@@ -54,8 +54,8 @@ O MVP entrega um pipeline reproduzível (RAW → SILVER → GOLD) com populaçã
 **Dados e pipeline**
 
 - [ ] `dim_municipio` com 295 linhas, código IBGE de 7 dígitos, armazenado como texto e único
-- [ ] Cada valor da tabela fato ligado a fonte, tabela/variável SIDRA, tipo de medida, unidade e data de coleta
-- [ ] Nenhuma duplicidade na chave (município, indicador, ano, tipo de medida)
+- [ ] Cada valor da tabela fato ligado à sua série de origem (`dim_serie`: fonte, tabela/variável ou pesquisa/indicador, unidade), ao tipo de medida (pela `dim_indicador`) e à data de coleta
+- [ ] Nenhuma duplicidade na chave (município, indicador, ano)
 - [ ] Nenhum dado ausente preenchido com zero; cobertura por indicador e ano documentada
 - [ ] Pipeline roda do zero (RAW → GOLD) com um comando documentado no README
 - [ ] Reexecutar o pipeline não sobrescreve o RAW nem duplica dados
@@ -78,7 +78,7 @@ O MVP entrega um pipeline reproduzível (RAW → SILVER → GOLD) com populaçã
 
 ## Regras metodológicas
 
-1. **Censo e estimativa nunca se misturam sem rótulo.** Toda linha de população carrega o tipo de medida.
+1. **Censo e estimativa nunca se misturam sem rótulo.** O tipo de medida é atributo do indicador (`dim_indicador`), e toda linha herda o tipo pelo indicador.
 2. **O PIB é sempre nominal.** Variações entre anos são variação nominal, nunca crescimento econômico.
 3. **PIB per capita não é renda.** Nunca tratado como renda média dos moradores.
 4. **Ausência é nulo, não zero.** Ausente fica `NULL` e aparece como "sem dado".
@@ -93,7 +93,7 @@ O MVP entrega um pipeline reproduzível (RAW → SILVER → GOLD) com populaçã
 | --- | --- | --- | --- |
 | Municípios instalados depois de 2010: Pescaria Brava (4212650) e Balneário Rincão (4220000) vêm sem valor (`...`) em 2011 na tabela 6579 e com estimativa a partir de 2012 (ver `docs/fontes/sidra_6579.md`); instalação provavelmente em 1º/01/2013, segundo nota do PDF oficial da estimativa de 2012 | Testes de "295 valores por ano" falham em anos antigos; risco de carregar `...` como zero | Carregar como NULL; regra de cobertura por ano; ausência esperada documentada | D06, D08, D26 |
 | Anos sem estimativa populacional oficial | PIB per capita oficial pode usar população de referência diferente da série do projeto | Mapear anos disponíveis; documentar a população usada pelo IBGE | D07, D09 |
-| Tabela de setores (5964) não confirmada | Pergunta derivada 5 sem resposta | Setores como extensão | D10 |
+| Setores fora do MVP. Setores (extensão): tabela 5938, variáveis 498, 513, 517, 6575, 525 e 543; sem abertura em 2022–2023 | Pergunta derivada 5 sem resposta no MVP | Setores como extensão, com a mesma URL do PIB (decisão D10) | D10 |
 | PIB de 2023 não publicado ou revisado | Série termina em 2022 | Confirmar último ano; ajustar recorte | D09 |
 | Limites ou instabilidade da API SIDRA | Extração falha ou incompleta | Lotes, retry com espera, controle de execução | D11, D16 |
 | Cronograma apertado no fim de dezembro (MVP previsto para 26/12) | Entrega final atrasa | Folga dos primeiros dias; dias de reserva | Semanal |

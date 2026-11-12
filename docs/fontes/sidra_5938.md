@@ -215,3 +215,91 @@ A URL do per capita está em `ibge_pesquisas_pib_per_capita.md`.
 - **Decisão da autora sobre a fonte do per capita:** a fonte não é o SIDRA. Ver `ibge_pesquisas_pib_per_capita.md`.
 - Ler as notas da tabela em https://sidra.ibge.gov.br/tabela/5938, pelo navegador.
 - Aprofundar as variáveis setoriais (cartão D10).
+
+---
+
+## Setores (D10)
+
+- **Data da consulta:** 2026-11-12
+
+> Esta seção é investigação para uma decisão da autora. Os setores **não fazem parte do MVP** enquanto a decisão não for registrada em `docs/decisoes.md`. Valores a preços correntes (nominais); nenhuma variação aqui é crescimento real (regra 3).
+
+### URLs consultadas
+
+| # | URL | Uso |
+|---|-----|-----|
+| S1 | https://apisidra.ibge.gov.br/values/t/5938/n6/in%20n3%2042/v/37,498,513,517,6575,525,543/p/2010-2023 | PIB e variáveis setoriais de todos os municípios de SC (**URL combinada**) |
+| S2 | https://servicodados.ibge.gov.br/api/v3/agregados/5964/metadados | A 5964 não é de setores; ver `sidra_5964.md` |
+
+### Variáveis setoriais e cobertura em SC (fonte S1; nomes e unidades conferidos com A)
+
+| id | Nome (literal) | Unidade | 2010–2012 | 2013–2021 | 2022–2023 |
+|----|----------------|---------|-----------|-----------|-----------|
+| 498 | Valor adicionado bruto a preços correntes total | Mil Reais | 293 num. + 2 `...` | 295 num. | 0 num. + **295 `...`** |
+| 513 | Valor adicionado bruto a preços correntes da agropecuária | Mil Reais | 293 + 2 `...` | 295 | **295 `...`** |
+| 517 | Valor adicionado bruto a preços correntes da indústria | Mil Reais | 293 + 2 `...` | 295 | **295 `...`** |
+| 6575 | Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social | Mil Reais | 293 + 2 `...` | 295 | **295 `...`** |
+| 525 | Valor adicionado bruto a preços correntes da administração, defesa, educação e saúde públicas e seguridade social | Mil Reais | 293 + 2 `...` | 295 | **295 `...`** |
+| 543 | Impostos, líquidos de subsídios, sobre produtos a preços correntes | Mil Reais | 293 + 2 `...` | 295 | **295 `...`** |
+| 37 (referência) | Produto Interno Bruto a preços correntes | Mil Reais | 293 + 2 `...` | 295 | 295 num. |
+
+**Cobertura:**
+
+- Em 2010–2012, os 2 `...` de cada variável são sempre 4212650 e 4220000.
+- Em todos os anos, as 295 linhas vêm na consulta por UF, sem nenhum código ausente.
+- Nenhum valor negativo, `-` ou `0` apareceu.
+
+**2022–2023:** **295 × 2 anos × 6 variáveis = 3.540 linhas com `...`.** Isso confirma a nota técnica 02/2024 (fonte L), segundo a qual 2022 e 2023 foram publicados sem abertura por atividade.
+
+**Detalhe de formato.** Nas linhas `...` de 2022–2023, os campos `MC` e `MN` vêm **vazios** (`""`). Já nas linhas `...` de 2010–2012, `MC` = `40` e `MN` = `Mil Reais`. O carregador não deve depender de `MN` na linha para saber a unidade: a unidade vem da `dim_indicador`.
+
+### Coerência (fonte S1, valores em mil reais)
+
+| Município | Ano | PIB (37) | VAB (498) | Impostos (543) | VAB + Impostos − PIB | Agro (513) | Indústria (517) | Serviços (6575) | Adm. pública (525) | Soma dos setores − VAB |
+|-----------|-----|---------:|----------:|---------------:|---------------------:|-----------:|----------------:|----------------:|-------------------:|-----------------------:|
+| Florianópolis (4205407) | 2012 | 13946621 | 11109925 | 2836696 | 0 | 25233 | 1591495 | 7957901 | 1535296 | 0 |
+| Florianópolis (4205407) | 2021 | 23559947 | 19824084 | 3735862 | −1 | 75454 | 1668679 | 15084989 | 2994962 | 0 |
+| Joinville (4209102) | 2012 | 20472881 | 17182864 | 3290016 | −1 | 47548 | 7545310 | 7845658 | 1744348 | 0 |
+| Joinville (4209102) | 2021 | 45074735 | 33662189 | 11412546 | 0 | 161182 | 11937738 | 18178228 | 3385040 | −1 |
+| Abdon Batista (4200051) | 2012 | 62605 | 53751 | 8855 | +1 | 16998 | 6648 | 18782 | 11322 | −1 |
+| Abdon Batista (4200051) | 2021 | 75131 | 71622 | 3509 | 0 | 29846 | 3426 | 16052 | 22297 | −1 |
+
+**Para todos os municípios de SC** (3.534 pares município × ano com setores numéricos, 2010–2021):
+
+- maior |VAB + impostos − PIB| = **1** mil reais;
+- maior |soma dos 4 setores − VAB| = **2** mil reais.
+
+As duas identidades se sustentam dentro do arredondamento para inteiro em mil reais. Que a diferença venha do arredondamento é inferência, compatível com a base oficial de 3 casas decimais.
+
+### Custo para o MVP
+
+A URL combinada S1 funciona com o mesmo filtro e o mesmo extrator do PIB, só acrescentando variáveis em `v/`. Testada em 2026-11-12, devolveu **28.910 linhas de dados** (7 variáveis × 295 × 14 anos), cerca de 9 MB de JSON. A URL só do PIB devolve 4.130 linhas.
+
+**O que mudaria nos cartões seguintes:**
+
+- **Carga:** 6 indicadores a mais na `dim_indicador`, todos com fator 1000 e armazenados em reais. O volume da tabela fato cresce cerca de 7 vezes para o PIB.
+- **Testes de cobertura:** os 3.540 `...` de 2022–2023 **conflitam com a regra 10**, que só aceita ausência para 4212650 e 4220000 antes de 2013. Seria preciso uma exceção por indicador e ano, documentada.
+- **Dashboards:** a série setorial termina em 2021, enquanto PIB e per capita vão até 2023. Os gráficos de composição precisariam de corte em 2021 e de aviso.
+- **Revisão futura:** a nota técnica 02/2024 diz que a abertura volta "após a publicação da nova série do Sistema de Contas Nacionais ano base 2021". A série inteira pode mudar de referência. A data dessa publicação é **NÃO CONFIRMADA**.
+
+**Opções (a decisão é da autora):**
+
+| Opção | Prós | Contras |
+|-------|------|---------|
+| **A. Manter os setores fora do MVP** (como na D01) | Escopo e testes inalterados; regra 10 intacta; nenhuma série com corte em 2021. | O dashboard fica sem composição setorial. O trabalho de investigação fica só documentado. |
+| **B. Extrair setores no RAW junto com o PIB (URL S1), sem carregar na SILVER/GOLD** | Custo de extração quase zero (mesma URL). RAW pronto para uma extensão futura. Regra 10 intacta na fato. | RAW cerca de 7 vezes maior. Dado coletado sem uso no MVP. Exige deixar claro que só a variável 37 vai para a fato. |
+| **C. Carregar setores no MVP até 2021** | Dashboard com composição setorial (agro, indústria, serviços, adm. pública). Identidades verificadas facilitam testes de consistência. | Exige exceção na regra 10 para 2022–2023. Mais indicadores, testes e dicionário. Série setorial mais curta que a do PIB. Risco de mudança de base (2010 → 2021). |
+| **D. Carregar setores no MVP com 2010–2023 completo, guardando os `...` com `sinal_origem`** | Fato fiel à fonte, inclusive os `...`. Grade igual à do PIB. | Mesmo conflito com a regra 10, agora para 3.540 linhas. Dashboards com 2022–2023 "sem dado" em todos os municípios. |
+
+### Verificado diretamente (D10)
+
+- Ids, nomes e unidades das 6 variáveis setoriais e de impostos (A).
+- Cobertura por ano, incluindo os 3.540 `...` de 2022–2023 com `MC`/`MN` vazios (S1).
+- As identidades VAB + impostos ≈ PIB e soma dos setores ≈ VAB, com diferença máxima de 1 e 2 mil reais em SC (S1).
+- A URL combinada com 28.910 linhas (S1).
+- A 5964 não é tabela de PIB (S2).
+
+### Inferido / não confirmado (D10)
+
+- Que as diferenças de 1–2 mil reais venham do arredondamento.
+- **NÃO CONFIRMADO:** quando a abertura setorial de 2022 em diante será publicada, e se a série 2010–2021 mudará com a nova base 2021.

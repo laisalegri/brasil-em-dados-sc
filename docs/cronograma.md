@@ -13,7 +13,7 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 18/11 | **D07** Investigar SIDRA: população | Fontes e dicionário | Com o pesquisador-de-fontes: validar tabela 6579, variável 9324 e anos disponíveis; distinguir estimativas e censos. |
 | ✅ | 19/11 | **D08** Investigar SIDRA: Censo 2010 e 2022 | Fontes e dicionário | Validar tabelas 1378 e 4709, variáveis e filtros de total; confirmar municípios instalados após 2010. |
 | ✅ | 20/11 | **D09** Investigar SIDRA: PIB e PIB per capita | Fontes e dicionário | Validar tabela 5938, variável 37, período 2010–2023 e unidades; localizar o PIB per capita publicado pelo IBGE. |
-| ⬜ | 21/11 | **D10** Investigar setores e consolidar dicionário | Fontes e dicionário | Conferir tabela candidata 5964 e códigos setoriais; consolidar o dicionário de dados em docs/. |
+| ✅ | 21/11 | **D10** Investigar setores e consolidar dicionário | Fontes e dicionário | Conferir tabela candidata 5964 e códigos setoriais; consolidar o dicionário de dados em docs/. |
 | ⬜ | 23/11 | **D11** Desenhar padrão de coleta e rastreabilidade | Extração RAW | Definir nomes de arquivos, timestamp, URL, parâmetros, logs, erros e reexecução. |
 | ⬜ | 24/11 | **D12** Criar extrator de municípios | Extração RAW | Consumir API de Localidades, salvar JSON bruto e validar 295 municípios e códigos únicos. |
 | ⬜ | 25/11 | **D13** Criar extrator de população | Extração RAW | Consumir tabelas SIDRA validadas, salvar respostas brutas e metadados. |
