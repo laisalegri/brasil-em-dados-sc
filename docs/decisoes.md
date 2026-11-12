@@ -2,11 +2,23 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-12 — D09: PIB, PIB per capita e API de Pesquisas
+
+- **Decisão:**
+  1. **PIB:** tabela SIDRA 5938, variável 37, em mil reais (unidade da fonte: "Mil Reais"). A unidade é guardada como veio; a conversão para reais, quando necessária, acontece na GOLD.
+  2. **PIB per capita:** API de Pesquisas do IBGE, pesquisa 38, indicador 47001 ("PIB per capita" → "Série revisada"), em **reais** (unidade R$ com multiplicador 1; "R$ 1,00" no layout da base oficial). Fica diferente da unidade do PIB, e as duas unidades são registradas em cada linha da tabela fato. O valor é o publicado, sem recálculo.
+  3. **Nova fonte:** a API de Pesquisas passa a ser fonte oficial do projeto. Na tabela fato, a identificação da série guarda tabela/variável para o SIDRA e pesquisa/indicador para a API de Pesquisas.
+  4. **Código de 6 dígitos:** a API de Pesquisas devolve o código do município sem o dígito verificador. O extrator converte para 7 dígitos pelo cadastro da API de Localidades. Um teste garante correspondência 1:1: cada código de 6 dígitos corresponde a exatamente um código de 7 dígitos do cadastro, e nenhum código fica sem par.
+  5. **Sinal `-` na API de Pesquisas:** carrega como `NULL`, com `sinal_origem` = `-`. Nessa API, o `-` marca municípios que não existiam no ano (Pescaria Brava e Balneário Rincão em 2010–2012). A regra de `-` como zero absoluto vale só para o SIDRA.
+  6. **Cobertura (ajuste da D08):** ausência ou sinal é aceito para 4212650 e 4220000 em anos anteriores a 2013, o ano de instalação.
+- **Por quê:** nenhuma tabela SIDRA traz o PIB per capita no nível municipal. O indicador 47001 é idêntico à base oficial do PIB dos Municípios nas 4.124 linhas de SC. Na 5938, os dois municípios vêm com `...` até 2012, porque o PIB deles começa em 2013. Carregar o `-` da API de Pesquisas como 0 criaria um valor falso para municípios inexistentes.
+- **Consequência:** a população usada pelo IBGE no per capita está documentada em `docs/fontes/ibge_pesquisas_pib_per_capita.md`: estimativa TCU em 2010–2021, 1ª apuração do Censo 2022 em 2022 e população enviada ao TCU em 2023. Os valores de 2022 e 2023 podem ser revisados pelo IBGE.
+
 ## 2026-11-12 — D08: filtro por UF e cobertura das tabelas SIDRA
 
 - **Decisão:** todas as tabelas SIDRA são extraídas com o filtro por UF (`n6/in n3 42`). A tabela fato guarda apenas o que a fonte devolveu: valores numéricos e sinais, estes com `sinal_origem`. Combinações município × ano ausentes na fonte não geram linha. A grade completa (295 municípios × anos) é montada na camada GOLD a partir da `dim_municipio`, exibindo "sem dado" onde não há valor.
 - **Por quê:** a consulta por UF omite municípios sem valor no período. Na tabela 1378 (Censo 2010), Pescaria Brava (4212650) e Balneário Rincão (4220000) não aparecem, embora venham com `...` quando consultados pelo código. Guardar só o que a fonte devolveu mantém a tabela fato fiel ao RAW e evita criar linhas que a fonte não publicou. A grade completa é uma necessidade de apresentação e por isso fica na GOLD.
-- **Consequência:** a cobertura é garantida por teste. Ausência de linha ou `...` só é aceita para 4212650 e 4220000 em anos anteriores a 2012; qualquer outro município ou ano sem valor faz o teste falhar. As URLs de extração estão em `docs/fontes/sidra_6579.md`, `docs/fontes/sidra_1378.md` e `docs/fontes/sidra_4709.md`.
+- **Consequência:** a cobertura é garantida por teste. Ausência de linha ou `...` só é aceita para 4212650 e 4220000 em anos anteriores a 2013; qualquer outro município ou ano sem valor faz o teste falhar. *(Ajustado no D09: o texto original dizia "anteriores a 2012", mas a tabela 5938 traz `...` para os dois municípios também em 2012.)* As URLs de extração estão em `docs/fontes/sidra_6579.md`, `docs/fontes/sidra_1378.md` e `docs/fontes/sidra_4709.md`.
 
 ## 2026-11-12 — D06: hierarquia territorial na `dim_municipio`
 
