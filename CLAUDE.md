@@ -51,6 +51,7 @@ pytest tests/test_x.py -v          # um arquivo de teste
 6. Municípios instalados depois de 2010 têm ausência esperada nos anos anteriores; isso não é erro.
 7. RAW é imutável: cada coleta grava arquivo novo com timestamp, URL e parâmetros. Nunca sobrescreva nem apague RAW.
 8. Toda linha da tabela fato guarda fonte, tabela/variável SIDRA, unidade e data de coleta.
+9. Sinais especiais do SIDRA: `-` e `0` carregam como 0; `...`, `..`, `X` e letras de faixa carregam como `NULL`. O sinal original fica na coluna `sinal_origem` (texto, `NULL` quando o valor veio numérico). Legenda em `docs/fontes/sidra_convencoes.md`.
 
 ## Como trabalhar comigo
 
