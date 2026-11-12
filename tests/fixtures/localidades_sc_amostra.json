@@ -1,0 +1,202 @@
+[
+  {
+    "id": 4205407,
+    "nome": "Florianópolis",
+    "microrregiao": {
+      "id": 42016,
+      "nome": "Florianópolis",
+      "mesorregiao": {
+        "id": 4205,
+        "nome": "Grande Florianópolis",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    },
+    "regiao-imediata": {
+      "id": 420001,
+      "nome": "Florianópolis",
+      "regiao-intermediaria": {
+        "id": 4201,
+        "nome": "Florianópolis",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 4212650,
+    "nome": "Pescaria Brava",
+    "microrregiao": {
+      "id": 42018,
+      "nome": "Tubarão",
+      "mesorregiao": {
+        "id": 4206,
+        "nome": "Sul Catarinense",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    },
+    "regiao-imediata": {
+      "id": 420003,
+      "nome": "Tubarão",
+      "regiao-intermediaria": {
+        "id": 4202,
+        "nome": "Criciúma",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 4220000,
+    "nome": "Balneário Rincão",
+    "microrregiao": {
+      "id": 42019,
+      "nome": "Criciúma",
+      "mesorregiao": {
+        "id": 4206,
+        "nome": "Sul Catarinense",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    },
+    "regiao-imediata": {
+      "id": 420002,
+      "nome": "Criciúma",
+      "regiao-intermediaria": {
+        "id": 4202,
+        "nome": "Criciúma",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 4206702,
+    "nome": "Herval d'Oeste",
+    "microrregiao": {
+      "id": 42004,
+      "nome": "Joaçaba",
+      "mesorregiao": {
+        "id": 4201,
+        "nome": "Oeste Catarinense",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    },
+    "regiao-imediata": {
+      "id": 420008,
+      "nome": "Joaçaba - Herval d'Oeste",
+      "regiao-intermediaria": {
+        "id": 4204,
+        "nome": "Chapecó",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 4206108,
+    "nome": "Grão-Pará",
+    "microrregiao": {
+      "id": 42018,
+      "nome": "Tubarão",
+      "mesorregiao": {
+        "id": 4206,
+        "nome": "Sul Catarinense",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    },
+    "regiao-imediata": {
+      "id": 420003,
+      "nome": "Tubarão",
+      "regiao-intermediaria": {
+        "id": 4202,
+        "nome": "Criciúma",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina",
+          "regiao": {
+            "id": 4,
+            "sigla": "S",
+            "nome": "Sul"
+          }
+        }
+      }
+    }
+  }
+]

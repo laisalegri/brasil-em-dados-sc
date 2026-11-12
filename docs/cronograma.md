@@ -8,8 +8,8 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 12/11 | **D02** Criar repositório e estrutura de pastas | Fundação e organização | Organizar data/raw, data/processed, notebooks, src, sql, dashboards, tests, docs e .claude/agents. |
 | ✅ | 13/11 | **D03** Configurar ambiente Python | Fundação e organização | Criar ambiente virtual e instalar requests, pandas, sqlalchemy, psycopg, jupyter, python-dotenv e pytest. |
 | ✅ | 14/11 | **D04** Configurar Claude Code no projeto | Agentes de desenvolvimento | Autenticar com Claude Pro, testar no terminal e criar CLAUDE.md com contexto, regras, convenções e comandos. |
-| ⬜ | 16/11 | **D05** Criar subagents pesquisador-de-fontes e revisor-de-codigo | Agentes de desenvolvimento | Definir prompts, ferramentas permitidas e escopo em .claude/agents/; testar cada um em uma tarefa pequena. |
-| ⬜ | 17/11 | **D06** Mapear API de Localidades IBGE | Fontes e dicionário | Com o pesquisador-de-fontes: validar endpoint de municípios de SC, campos e códigos IBGE; salvar amostra. |
+| ✅ | 16/11 | **D05** Criar subagents pesquisador-de-fontes e revisor-de-codigo | Agentes de desenvolvimento | Definir prompts, ferramentas permitidas e escopo em .claude/agents/; testar cada um em uma tarefa pequena. |
+| ✅ | 17/11 | **D06** Mapear API de Localidades IBGE | Fontes e dicionário | Com o pesquisador-de-fontes: validar endpoint de municípios de SC, campos e códigos IBGE; salvar amostra. |
 | ✅ | 18/11 | **D07** Investigar SIDRA: população | Fontes e dicionário | Com o pesquisador-de-fontes: validar tabela 6579, variável 9324 e anos disponíveis; distinguir estimativas e censos. |
 | ⬜ | 19/11 | **D08** Investigar SIDRA: Censo 2010 e 2022 | Fontes e dicionário | Validar tabelas 1378 e 4709, variáveis e filtros de total; confirmar municípios instalados após 2010. |
 | ⬜ | 20/11 | **D09** Investigar SIDRA: PIB e PIB per capita | Fontes e dicionário | Validar tabela 5938, variável 37, período 2010–2023 e unidades; localizar o PIB per capita publicado pelo IBGE. |
