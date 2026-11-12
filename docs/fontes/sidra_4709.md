@@ -137,15 +137,20 @@ Testada em 2026-11-12. Devolveu **295 linhas de dados**, mais o cabeçalho. Toda
 - As notas do PDF oficial são todas de população judicial, sem SC (K).
 - As notas do SIDRA web caem no bloqueio Cloudflare (G).
 
+- **Data de referência do Censo 2022** (confirmada em 2026-11-12): **meia-noite de 31 de julho para 1º de agosto de 2022**.
+  - Documento: *Censo Demográfico 2022 – Notas metodológicas 05/2026 – Microdados da amostra do Censo Demográfico 2022* (IBGE), p. 20, seção de conceitos.
+  - Citação literal: "A investigação das características dos domicílios e das pessoas neles residentes teve como data de referência a meia-noite do dia 31 de julho para 1° de agosto de 2022."
+  - URL: https://ftp.ibge.gov.br/Censos/Censo_Demografico_2022/Microdados_e_Areas_de_Ponderacao/Documentacao/Notas%20metodol%c3%b3gicas/Notas%20metodol%c3%b3gicas%2005-2026%20-%20Microdados%20da%20amostra%20do%20CD2022.pdf (Last-Modified 19/08/2026).
+  - Reforço: o questionário (`Questionario_amostra_completo_CD2022_atualizado_20220906.pdf`) e o manual de entrevista (`Manual_de_Entrevista_CD_1.04_v_05.22.pdf`), na pasta `.../Documentacao/Instrumentos%20de%20coleta/` do mesmo FTP, perguntam "Quantas pessoas moravam neste domicílio em 31 de julho de 2022?".
+  - Antes, este item estava em "Inferido / não confirmado" e em "Pendências".
+
 ## Inferido / não confirmado
 
 - **Origem dos valores.** Que os valores da tabela 4709 sejam os da 2ª apuração, republicada em 22/12/2023, é **inferência forte**: a data de modificação do período coincide com a dos arquivos, e alguns valores coincidem com o PDF de 22/12/2023. Não comparei com a 1ª apuração.
 - **O que mudou entre as apurações.** O que mudou da 1ª apuração (28/06/2023) para a 2ª (27/10/2023 e 22/12/2023), e se municípios de SC foram afetados, é **NÃO CONFIRMADO**. A página do IBGE citada no aviso (I) não foi lida, e www.ibge.gov.br retornou 403 em tarefa anterior.
-- **Data de referência do Censo 2022.** A data de referência (noite de 31/07 para 1º/08/2022, segundo conhecimento geral) é **NÃO CONFIRMADA** nas fontes lidas.
 - **Variável 5936.** O significado de "2010 compatibilizada" (população de 2010 recalculada na malha de 2022, o que poderia cobrir municípios instalados em 2013) é **inferência** a partir do nome. Não foi investigado nem faz parte do MVP.
 
 ## Pendências
 
 - Ler as notas da tabela em https://sidra.ibge.gov.br/tabela/4709, pelo navegador.
 - Ler a página de resultados citada em I e confirmar o que mudou entre as apurações.
-- Confirmar a data de referência do Censo 2022 em fonte oficial.

@@ -125,6 +125,12 @@ Testada em 2026-11-12. Devolveu **293 linhas de dados**, mais o cabeçalho. Toda
 - Os dois municípios aparecem com `...` quando consultados pelo código (F).
 - Os valores da tabela de coerência (C, G).
 
+- **Data de referência do Censo 2010** (confirmada em 2026-11-12): **noite de 31 de julho para 1º de agosto de 2010**.
+  - Documento: *Metodologia do Censo Demográfico 2010* (IBGE, Série Relatórios Metodológicos, v. 41, 2013), seção 1.3 "Periodicidade e data de referência", p. 44 impressa (p. 45 do PDF).
+  - Citação literal: "A investigação das características dos domicílios e das pessoas neles residentes teve como data de referência deste Censo Demográfico a noite de 31 de julho para 1º de agosto de 2010."
+  - URL: https://ftp.ibge.gov.br/Censos/Censo_Demografico_2010/metodologia/metodologia_censo_dem_2010.pdf
+  - A mesma publicação diz que "A coleta dos dados iniciou em 1º de agosto de 2010".
+
 ## Inferido / não confirmado
 
 - **Ausência no filtro por UF.** Que os dois municípios sumam do filtro `in n3 42` porque o SIDRA omite unidades territoriais sem valor nesse tipo de filtro é **inferência**. Não li documentação que descreva esse comportamento.

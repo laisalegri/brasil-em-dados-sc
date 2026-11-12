@@ -35,12 +35,26 @@ Decisão D10: o **indicador** (conceito de negócio) fica na `dim_indicador`; a 
 | cod_serie | codigo_indicador | fonte | tabela_ou_pesquisa | variavel_ou_indicador | unidade_origem | fator_conversao | data_referencia | Anos no recorte 2010–2023 |
 |---|---|---|---|---|---|---|---|---|
 | `sidra_6579_v9324` | `pop_estimada` | `sidra` | 6579 ("Estimativas de População") | 9324 "População residente estimada" | Pessoas (MC 45) | 1 | 1º de julho de cada ano | 2011–2021. **2010, 2022 e 2023 não existem** na tabela. |
-| `sidra_1378_v93` | `pop_censo` | `sidra` | 1378 ("Censo Demográfico" 2010) | 93 "População residente" | Pessoas (MC 45) | 1 | **NÃO CONFIRMADO** | 2010 |
-| `sidra_4709_v93` | `pop_censo` | `sidra` | 4709 ("Censo Demográfico" 2022) | 93 "População residente" | Pessoas (MC 45) | 1 | **NÃO CONFIRMADO** | 2022 |
+| `sidra_1378_v93` | `pop_censo` | `sidra` | 1378 ("Censo Demográfico" 2010) | 93 "População residente" | Pessoas (MC 45) | 1 | noite de 31 de julho para 1º de agosto de 2010 (ver nota ¹) | 2010 |
+| `sidra_4709_v93` | `pop_censo` | `sidra` | 4709 ("Censo Demográfico" 2022) | 93 "População residente" | Pessoas (MC 45) | 1 | meia-noite de 31 de julho para 1º de agosto de 2022 (ver nota ²) | 2022 |
 | `sidra_5938_v37` | `pib_corrente` | `sidra` | 5938 ("PIB dos Municípios", Referência 2010) | 37 "Produto Interno Bruto a preços correntes" | Mil Reais (MC 40) | 1000 | ano civil | 2010–2023, sem lacunas |
 | `pesquisas_38_i47001` | `pib_per_capita` | `api_pesquisas` | Pesquisa 38 (PIB dos Municípios) | Indicador 47001 "PIB per capita" → "Série revisada" | R$ (multiplicador 1) | 1 | ano civil | 2010–2023 |
 
 A coluna `url_extrator` de cada série é a "URL final" listada nas observações por indicador, abaixo.
+
+**Fontes das datas de referência dos Censos** (documentos oficiais do IBGE, consultados em 2026-11-12):
+
+- ¹ **Censo 2010**
+  - Documento: *Metodologia do Censo Demográfico 2010* (Série Relatórios Metodológicos, v. 41, IBGE, 2013), seção 1.3 "Periodicidade e data de referência", p. 44 impressa (p. 45 do PDF).
+  - Citação: "teve como data de referência deste Censo Demográfico a noite de 31 de julho para 1º de agosto de 2010".
+  - URL: https://ftp.ibge.gov.br/Censos/Censo_Demografico_2010/metodologia/metodologia_censo_dem_2010.pdf
+- ² **Censo 2022**
+  - Documento: *Censo Demográfico 2022 – Notas metodológicas 05/2026 – Microdados da amostra do Censo Demográfico 2022*, p. 20.
+  - Citação: "teve como data de referência a meia-noite do dia 31 de julho para 1° de agosto de 2022".
+  - URL: https://ftp.ibge.gov.br/Censos/Censo_Demografico_2022/Microdados_e_Areas_de_Ponderacao/Documentacao/Notas%20metodol%c3%b3gicas/Notas%20metodol%c3%b3gicas%2005-2026%20-%20Microdados%20da%20amostra%20do%20CD2022.pdf
+  - O questionário e o manual de entrevista do Censo 2022 perguntam "Quantas pessoas moravam neste domicílio em 31 de julho de 2022?".
+
+> **Censo e estimativa não são diretamente comparáveis.** As estimativas (`pop_estimada`) têm data de referência em **1º de julho** de cada ano. Os Censos (`pop_censo`) têm data de referência na **noite de 31 de julho para 1º de agosto** de 2010 e de 2022. Além da diferença de método (contagem × estimativa), as datas são diferentes. Por isso, valores de Censo e de estimativa do mesmo ano ou período não devem ser comparados diretamente nem tratados como uma série única (regra 2).
 
 ### 1.3 Tabela fato
 
@@ -238,12 +252,13 @@ Ausência de valor (linha ausente, `NULL` ou sinal) só é aceita para **4212650
 - A cobertura e os sinais por indicador da seção 5.
 - A estrutura da API de Localidades e as contagens da seção 3.
 - O texto oficial sobre o denominador do per capita e a nota técnica 02/2024.
+- As datas de referência dos Censos 2010 e 2022, em documentos metodológicos do IBGE (notas ¹ e ² da seção 1.2).
 
 ## 7. NÃO CONFIRMADO
 
 - **Notas do SIDRA web:** as notas das tabelas 6579, 1378, 4709 e 5938 estão atrás de Cloudflare, e não tentei contornar.
 - **Lacunas da 6579:** o motivo de não haver estimativa em 2010, 2022 e 2023, e o motivo da revisão de 2017–2020 (modificação em 05/09/2022).
-- **Censo 2022:** o que mudou entre a 1ª e a 2ª apuração, e se SC foi afetado. A data de referência do Censo 2022.
+- **Censo 2022:** o que mudou entre a 1ª e a 2ª apuração, e se SC foi afetado. *(A data de referência foi confirmada em 2026-11-12; ver as notas da seção 1.2.)*
 - **Denominador do per capita:** os valores exatos de população usados pelo IBGE em 2010 (estimativa TCU 2010) e em 2022 (1ª apuração). O motivo das exceções de Içara e Laguna em 2012; a hipótese é a inclusão da população desmembrada.
 - **Revisão do PIB:** o que mudou em 2021 na revisão de 19/12/2025. Quando sairá a nova base 2021 e se ela altera a série.
 - **Instalação dos municípios:** a data de 1º/01/2013 vem de nota do PDF de 2012, associada aos dois municípios por coincidência de valores. A página do PDF não foi conferida visualmente.
