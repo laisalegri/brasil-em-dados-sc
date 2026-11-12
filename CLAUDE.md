@@ -40,7 +40,7 @@ pytest tests/test_x.py -v          # um arquivo de teste
 - API de Localidades: `https://servicodados.ibge.gov.br/api/v1/localidades/estados/42/municipios`
 - API SIDRA: `https://apisidra.ibge.gov.br/`. Tabelas candidatas: 6579 (estimativas, var. 9324), 1378 (Censo 2010), 4709 (Censo 2022, var. 93), 5938 (PIB, var. 37), 5964 (setores, extensão).
 - API de Pesquisas: `https://servicodados.ibge.gov.br/api/v1/pesquisas/38/indicadores/47001/resultados/N6[N3[42]]` (PIB per capita oficial, em reais). Devolve o código do município com 6 dígitos; converter para 7 pelo cadastro da API de Localidades, com teste de correspondência 1:1.
-- PIB (5938, var. 37) está em mil reais; PIB per capita (indicador 47001) está em reais.
+- PIB vem em mil reais na fonte e é convertido para reais na SILVER (fator 1000); per capita vem em reais. Todo valor monetário a partir da SILVER está em reais, como `numeric(18,2)`.
 - Antes de escrever um extrator, valide metadados, filtros, unidades e anos disponíveis. Tabelas e variáveis só são consideradas confirmadas quando registradas em `docs/`.
 
 ## Regras de dados (não negociáveis)
@@ -55,6 +55,7 @@ pytest tests/test_x.py -v          # um arquivo de teste
 8. Toda linha da tabela fato guarda fonte, identificação da série (tabela/variável SIDRA ou pesquisa/indicador da API de Pesquisas), unidade e data de coleta.
 9. Sinais especiais do SIDRA: `-` e `0` carregam como 0; `...`, `..`, `X` e letras de faixa carregam como `NULL`. O sinal original fica na coluna `sinal_origem` (texto, `NULL` quando o valor veio numérico). Legenda em `docs/fontes/sidra_convencoes.md`. Na API de Pesquisas, `-` indica ausência e carrega como `NULL`, com `sinal_origem` = `-`.
 10. Cobertura: ausência de valor só é aceita para Pescaria Brava (4212650) e Balneário Rincão (4220000) antes de 2013, ano de instalação. Qualquer outra ausência faz o teste falhar.
+11. A conversão de unidade acontece só na carga para a SILVER, usando o fator registrado na `dim_indicador`; nunca converta valores na GOLD, nos dashboards ou em notebooks.
 
 ## Como trabalhar comigo
 

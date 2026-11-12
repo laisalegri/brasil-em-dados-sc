@@ -5,14 +5,21 @@ Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra 
 ## 2026-11-12 — D09: PIB, PIB per capita e API de Pesquisas
 
 - **Decisão:**
-  1. **PIB:** tabela SIDRA 5938, variável 37, em mil reais (unidade da fonte: "Mil Reais"). A unidade é guardada como veio; a conversão para reais, quando necessária, acontece na GOLD.
+  1. **PIB e unidades monetárias:** valores monetários são convertidos para reais (R$) na camada SILVER. A RAW continua guardando a resposta original da API, sem alteração.
+     - O PIB da tabela 5938 (variável 37), publicado em "Mil Reais", é multiplicado por 1000 na carga para a SILVER. O PIB per capita (indicador 47001) já vem em reais (fator 1).
+     - Tipo no PostgreSQL: `numeric(18,2)` para valores monetários; nunca `float`/`double`.
+     - Rastreabilidade: a `dim_indicador` registra `unidade_origem`, `fator_conversao` e `unidade_armazenada`; a RAW preserva o valor original.
+     - *(Revisado em 2026-11-12. O texto anterior dizia: "PIB em mil reais (unidade da fonte: 'Mil Reais'). A unidade é guardada como veio; a conversão para reais, quando necessária, acontece na GOLD." Motivo da mudança: padronizar unidades é papel da SILVER; isso elimina o risco de misturar mil reais e reais nas camadas seguintes e permite validações diretas como PIB / população ≈ PIB per capita.)*
   2. **PIB per capita:** API de Pesquisas do IBGE, pesquisa 38, indicador 47001 ("PIB per capita" → "Série revisada"), em **reais** (unidade R$ com multiplicador 1; "R$ 1,00" no layout da base oficial). Fica diferente da unidade do PIB, e as duas unidades são registradas em cada linha da tabela fato. O valor é o publicado, sem recálculo.
   3. **Nova fonte:** a API de Pesquisas passa a ser fonte oficial do projeto. Na tabela fato, a identificação da série guarda tabela/variável para o SIDRA e pesquisa/indicador para a API de Pesquisas.
   4. **Código de 6 dígitos:** a API de Pesquisas devolve o código do município sem o dígito verificador. O extrator converte para 7 dígitos pelo cadastro da API de Localidades. Um teste garante correspondência 1:1: cada código de 6 dígitos corresponde a exatamente um código de 7 dígitos do cadastro, e nenhum código fica sem par.
   5. **Sinal `-` na API de Pesquisas:** carrega como `NULL`, com `sinal_origem` = `-`. Nessa API, o `-` marca municípios que não existiam no ano (Pescaria Brava e Balneário Rincão em 2010–2012). A regra de `-` como zero absoluto vale só para o SIDRA.
   6. **Cobertura (ajuste da D08):** ausência ou sinal é aceito para 4212650 e 4220000 em anos anteriores a 2013, o ano de instalação.
 - **Por quê:** nenhuma tabela SIDRA traz o PIB per capita no nível municipal. O indicador 47001 é idêntico à base oficial do PIB dos Municípios nas 4.124 linhas de SC. Na 5938, os dois municípios vêm com `...` até 2012, porque o PIB deles começa em 2013. Carregar o `-` da API de Pesquisas como 0 criaria um valor falso para municípios inexistentes.
+  Converter na SILVER padroniza as unidades na camada certa, elimina o risco de misturar mil reais e reais nas camadas seguintes e permite validar PIB / população ≈ PIB per capita diretamente.
 - **Consequência:** a população usada pelo IBGE no per capita está documentada em `docs/fontes/ibge_pesquisas_pib_per_capita.md`: estimativa TCU em 2010–2021, 1ª apuração do Censo 2022 em 2022 e população enviada ao TCU em 2023. Os valores de 2022 e 2023 podem ser revisados pelo IBGE.
+  - Testes previstos para o D26: (1) cada indicador tem exatamente uma `unidade_armazenada` na tabela fato; (2) para uma amostra de municípios e anos, PIB (R$) / população usada pelo IBGE ≈ PIB per capita publicado, dentro de uma tolerância de arredondamento.
+  - O catálogo de indicadores em `docs/dicionario_dados.md` (D10) deve incluir as colunas `unidade_origem`, `fator_conversao` e `unidade_armazenada`.
 
 ## 2026-11-12 — D08: filtro por UF e cobertura das tabelas SIDRA
 
