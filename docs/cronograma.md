@@ -1,8 +1,8 @@
 # Cronograma — Brasil em Dados SC
 
-Fonte da verdade: quadro do Trello (importado de `trello_brasil_em_dados_sc_v2.csv`). Cada cartão prevê 3 horas. Status: ✅ concluído · ⬜ pendente.
+Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar esta tabela, fica fora do repositório. Cada cartão prevê 3 horas. Status: ✅ concluído · ⬜ pendente.
 
-| Status | Data | Cartão | Fase | Entrega |
+| Status | Data prevista | Cartão | Fase | Entrega |
 | --- | --- | --- | --- | --- |
 | ✅ | 11/11 | **D01** Definir objetivo, escopo e critérios de sucesso | Fundação e organização | Revisar pergunta central, público-alvo, indicadores e limites do MVP. |
 | ✅ | 12/11 | **D02** Criar repositório e estrutura de pastas | Fundação e organização | Organizar data/raw, data/processed, notebooks, src, sql, dashboards, tests, docs e .claude/agents. |
