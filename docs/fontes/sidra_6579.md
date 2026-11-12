@@ -127,21 +127,38 @@ Na carga, `...` deve virar `NULL`, nunca zero (regra 5 do CLAUDE.md).
 
 ## Inferido / não confirmado
 
-- **Anos ausentes.** A ausência de 2010 e 2022 coincide com anos de Censo; nenhuma nota da API diz isso. A população desses anos deverá vir das tabelas 1378 (Censo 2010) e 4709 (Censo 2022), com `tipo_medida` distinto. Para 2023, a tabela não tem valor e ele fica `NULL`; o motivo da ausência é **NÃO CONFIRMADO**.
-- **Revisão de 2017–2020.** A data de modificação desses anos (05/09/2022) sugere uma revisão posterior à publicação original. **NÃO CONFIRMADO**: a API não traz nota que explique a alteração.
-- **Instalação de municípios.** O `...` de 2011 para Pescaria Brava e Balneário Rincão é compatível com municípios instalados depois de 2010. O `docs/escopo_mvp.md` registra a hipótese de instalação em 2013. **NÃO CONFIRMADO**: a API de Localidades não traz data de instalação, e não consultei outra fonte. Também chama atenção haver estimativa já em 2012, antes da data provável de instalação; a explicação também é **NÃO CONFIRMADA**.
-- **Significado do `...`.** O sentido exato do símbolo nesta tabela é **NÃO CONFIRMADO**: a legenda de sinais do SIDRA não foi lida.
+> **Atualização de 2026-11-12.** Li a legenda de símbolos do SIDRA e os PDFs oficiais das estimativas no FTP do IBGE. Os detalhes e as URLs estão em `docs/fontes/sidra_convencoes.md`. O que mudou nesta seção:
+>
+> - o significado de `...` passou a ser **verificado**;
+> - a data de referência de 1º de julho foi **verificada**;
+> - a instalação em 1º/01/2013 deixou de ser só hipótese e virou **inferência forte com evidência oficial**.
+
+- **Anos ausentes** (sem mudança). A ausência de 2010 e 2022 coincide com anos de Censo; nenhuma fonte lida diz isso. A população desses anos deverá vir das tabelas 1378 (Censo 2010) e 4709 (Censo 2022), com `tipo_medida` distinto. Para 2023, a tabela não tem valor e ele fica `NULL`; o motivo da ausência é **NÃO CONFIRMADO**.
+  - Fato novo: o FTP do IBGE também não tem publicações de 2007, 2010, 2022 e 2023, as mesmas lacunas da tabela.
+- **Revisão de 2017–2020** (sem mudança). A data de modificação desses anos (05/09/2022) sugere uma revisão posterior à publicação original. **NÃO CONFIRMADO**: nenhuma fonte lida explica a alteração.
+- **Instalação de municípios** (mudou).
+  - O PDF oficial de 2012 (https://ftp.ibge.gov.br/Estimativas_de_Populacao/Estimativas_2012/estimativa_2012_TCU_20170614.pdf) tem a nota "(3) Municípios instalados em 1º de janeiro de 2013." No texto extraído, a marca (3) aparece junto aos valores 9.416 e 11.136, idênticos aos valores de 2012 deste SIDRA para Pescaria Brava (4212650) e Balneário Rincão (4220000).
+  - A associação nota-município é **inferência forte**, não leitura direta, porque a extração de texto perde o layout do PDF.
+  - Isso também explica por que já existe estimativa em 2012: o IBGE publicou a estimativa de 2012 com nota de instalação em 1º/01/2013. Essa explicação é interpretação.
+- **Significado do `...`** (mudou: o significado oficial está **verificado**).
+  - A legenda oficial do SIDRA, em https://sidra.ibge.gov.br/tabela/6579 (modal "Símbolos especiais"), define `...` como "Valor não disponível". O exemplo oficial inclui "determinado município não existia no ano da pesquisa".
+  - Que esse seja o motivo específico do `...` de 2011 para esses dois municípios é inferência compatível com a nota acima.
+- **Populações judiciais** (novo). Os PDFs oficiais têm notas de população judicial para efeito de distribuição do FPM. Nenhuma nota de SC foi encontrada em 2012, 2013 e 2021.
+  - **NÃO CONFIRMADO:** se o SIDRA publica o valor técnico ou o judicial.
+  - **NÃO CONFIRMADO:** se há casos em SC nos demais anos.
 
 ## Pendências
 
-- Ler as notas metodológicas e a legenda de sinais em https://sidra.ibge.gov.br/tabela/6579 (não lidas).
-- Confirmar a data de instalação de Pescaria Brava (4212650) e Balneário Rincão (4220000) em fonte oficial. Isso está previsto no cartão D08.
-- Entender por que 2012 já tem estimativa para esses dois municípios.
+- Ler as notas da tabela 6579 em https://sidra.ibge.gov.br/tabela/6579, pelo navegador. Elas são carregadas por JavaScript, e o endpoint está atrás de Cloudflare. A legenda de símbolos já foi lida.
+- Confirmar visualmente, na página de SC do PDF de 2012, que a nota (3) se aplica a Pescaria Brava e Balneário Rincão. Ou confirmar a data de instalação em outra fonte oficial (cartão D08).
+- Verificar notas de população judicial para SC em 2011 e 2014–2020.
 
 ## Situação para o extrator
 
 A tabela está pronta para os anos 2011–2021, no nível N6, com a variável 9324 em "Pessoas". O extrator precisa:
 
 - tratar `...` como `NULL`;
+- se a autora decidir, guardar o sinal original numa coluna de observação (ver `sidra_convencoes.md`);
 - registrar que 2010, 2022 e 2023 não existem nesta tabela;
-- usar `D1C` (texto de 7 dígitos) como chave.
+- usar `D1C` (texto de 7 dígitos) como chave;
+- registrar a data de referência como 1º de julho de cada ano.

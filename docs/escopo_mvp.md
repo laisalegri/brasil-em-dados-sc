@@ -91,7 +91,7 @@ O MVP entrega um pipeline reproduzível (RAW → SILVER → GOLD) com populaçã
 
 | Risco | Impacto | Mitigação | Verificar em |
 | --- | --- | --- | --- |
-| Municípios instalados depois de 2010 (provavelmente Balneário Rincão e Pescaria Brava, em 2013) | Testes de "295 por ano" falham em anos antigos | Regra de cobertura por ano; ausência esperada documentada | D06, D08, D26 |
+| Municípios instalados depois de 2010: Pescaria Brava (4212650) e Balneário Rincão (4220000) vêm sem valor (`...`) em 2011 na tabela 6579 e com estimativa a partir de 2012 (ver `docs/fontes/sidra_6579.md`); a data de instalação ainda não foi confirmada | Testes de "295 valores por ano" falham em anos antigos; risco de carregar `...` como zero | Carregar como NULL; regra de cobertura por ano; ausência esperada documentada | D06, D08, D26 |
 | Anos sem estimativa populacional oficial | PIB per capita oficial pode usar população de referência diferente da série do projeto | Mapear anos disponíveis; documentar a população usada pelo IBGE | D07, D09 |
 | Tabela de setores (5964) não confirmada | Pergunta derivada 5 sem resposta | Setores como extensão | D10 |
 | PIB de 2023 não publicado ou revisado | Série termina em 2022 | Confirmar último ano; ajustar recorte | D09 |
