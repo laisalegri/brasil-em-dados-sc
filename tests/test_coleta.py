@@ -43,7 +43,11 @@ def _sem_validacao_de_conteudo(cod_serie, dados, *, cadastro=None):
     """Estes testes cobrem a orquestração; o conteúdo esperado é testado em test_conteudo.py."""
 
 
-def _coletar(tmp_path, baixar_fn, validar_conteudo_fn=_sem_validacao_de_conteudo):
+def _coletar(tmp_path, baixar_fn, validar_conteudo_fn=_sem_validacao_de_conteudo,
+             gravar_cadastro=True):
+    """Coleta a 5938; o cadastro que as séries SIDRA exigem é gravado antes na RAW."""
+    if gravar_cadastro:
+        _gravar_cadastro(tmp_path / "raw", _corpo_cadastro(CADASTRO))
     return coletar(COD, pasta_raw=tmp_path / "raw", arquivo_controle=tmp_path / "controle.jsonl",
                    baixar_fn=baixar_fn, agora=_relogio(), versao="abc1234",
                    validar_conteudo_fn=validar_conteudo_fn)
@@ -52,7 +56,7 @@ def _coletar(tmp_path, baixar_fn, validar_conteudo_fn=_sem_validacao_de_conteudo
 def test_conteudo_fora_do_esperado_nao_grava_raw(tmp_path):
     with pytest.raises(ErroValidacao, match="esperadas 4130 linhas"):
         _coletar(tmp_path, _baixar_com(SIDRA_OK), validar_conteudo_fn=validar_conteudo)
-    assert not (tmp_path / "raw").exists()
+    assert not (tmp_path / "raw" / COD).exists()
     [execucao] = ler_execucoes(tmp_path / "controle.jsonl")
     assert execucao["status"] == "falha"
     assert "esperadas 4130 linhas" in execucao["erro"]
@@ -76,7 +80,7 @@ def test_falha_http_nao_grava_raw_e_registra_erro(tmp_path):
 
     with pytest.raises(ErroHTTP):
         _coletar(tmp_path, baixar_falha)
-    assert not (tmp_path / "raw").exists()
+    assert not (tmp_path / "raw" / COD).exists()
     [execucao] = ler_execucoes(tmp_path / "controle.jsonl")
     assert execucao["status"] == "falha"
     assert execucao["arquivo"] is None
@@ -84,6 +88,7 @@ def test_falha_http_nao_grava_raw_e_registra_erro(tmp_path):
 
 
 def test_falha_no_meta_json_deixa_coleta_incompleta_e_ignorada(tmp_path, caplog):
+    _gravar_cadastro(tmp_path / "raw", _corpo_cadastro(CADASTRO))
     link_real = os.link
 
     def link_falha_no_meta(origem, destino):
@@ -93,7 +98,7 @@ def test_falha_no_meta_json_deixa_coleta_incompleta_e_ignorada(tmp_path, caplog)
 
     with patch("brasil_em_dados.extract.raw.os.link", side_effect=link_falha_no_meta):
         with caplog.at_level(logging.WARNING), pytest.raises(ErroGravacao):
-            _coletar(tmp_path, _baixar_com(SIDRA_OK))
+            _coletar(tmp_path, _baixar_com(SIDRA_OK), gravar_cadastro=False)
 
     pasta_raw = tmp_path / "raw"
     assert raw.ultima_coleta_valida(pasta_raw, COD) is None
@@ -185,7 +190,7 @@ def test_pesquisas_fora_do_cadastro_nao_grava_raw(tmp_path):
 def test_resposta_invalida_nao_grava_raw(tmp_path):
     with pytest.raises(ErroValidacao):
         _coletar(tmp_path, _baixar_com(b"<html>Just a moment...</html>"))
-    assert not (tmp_path / "raw").exists()
+    assert not (tmp_path / "raw" / COD).exists()
     [execucao] = ler_execucoes(tmp_path / "controle.jsonl")
     assert execucao["status"] == "falha"
     assert execucao["erro"].startswith("ErroValidacao:")

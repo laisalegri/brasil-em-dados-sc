@@ -73,7 +73,11 @@ Uma resposta só é gravada se passar por todas as verificações:
 | API de Localidades | Lista não vazia | Número de municípios |
 | API de Pesquisas | Lista não vazia; cada indicador com lista `res` não vazia | Número de localidades |
 
-As contagens esperadas por série (por exemplo, 295 municípios, ou 293 linhas na 1378) ficam em cada extrator, do D12 ao D14.
+4. **Códigos no cadastro:** nas séries do SIDRA e da API de Pesquisas, todo código de município precisa existir no cadastro, que é a última coleta válida de `ibge_localidades_sc` na RAW. Código desconhecido reprova a resposta. Sem cadastro na RAW, a coleta da série falha com a mensagem "colete ibge_localidades_sc antes". Por isso, com "todas", as dimensões são coletadas primeiro.
+
+As contagens esperadas por série (por exemplo, 295 municípios, ou 293 linhas na 1378) ficam em `extract/conteudo.py`, do D12 ao D14. No SIDRA, o único sinal aceito é `...`, e só nos municípios e anos previstos na regra da série. Um `-` nesses casos reprova a resposta, porque na carga viraria zero (regra 9) para município que ainda não existia.
+
+**Aviso, sem reprovar:** no SIDRA, um valor `0` em população ou PIB municipal gera aviso no log, mas a resposta é gravada. Pela regra 9 ele pode ser zero por arredondamento, e para esses indicadores é suspeito. A assimetria é intencional: `0` é um número publicado pela fonte; `-` fora do previsto é um sinal inesperado.
 
 ## 7. Cliente HTTP
 

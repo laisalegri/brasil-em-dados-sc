@@ -1,6 +1,7 @@
 """Testes do conteúdo esperado por fonte (D12–D14), com dados sintéticos e amostras reais."""
 
 import json
+import logging
 
 import pytest
 
@@ -36,7 +37,7 @@ def _sidra(municipios, anos, variavel, sinais=(), chaves=ROTULOS_PADRAO, valor="
     return linhas
 
 
-def _validar(cod_serie, dados, cadastro=None):
+def _validar(cod_serie, dados, cadastro=TODOS):
     conteudo.validar_conteudo(cod_serie, dados, cadastro=cadastro)
 
 
@@ -292,7 +293,7 @@ def test_pesquisas_resultado_sem_localidade_falha():
 
 def test_pesquisas_sem_cadastro_falha():
     with pytest.raises(ErroValidacao, match="cadastro de municípios é obrigatório"):
-        _validar("pesquisas_38_i47001", _pesquisas(PREFIXOS))
+        conteudo.validar_conteudo("pesquisas_38_i47001", _pesquisas(PREFIXOS), cadastro=None)
 
 
 # --- cobertura das regras -------------------------------------------------------------------
@@ -302,3 +303,155 @@ def test_toda_fonte_do_catalogo_tem_regra(cod_serie):
     with pytest.raises(ErroValidacao) as erro:
         _validar(cod_serie, [{"x": 1}, {"y": 2}], TODOS)
     assert "Sem regra" not in str(erro.value)
+
+
+# --- D16: códigos conferidos no cadastro ----------------------------------------------------
+
+DESCONHECIDO = "4299990"  # no padrão 42xxxxx, mas fora do cadastro
+
+# Resposta válida de cada série SIDRA: (variável, anos, municípios, (município, ano) com sinal).
+SIDRA_VALIDA = {
+    "sidra_6579_v9324": ("9324", ANOS_6579, TODOS, {(c, 2011) for c in NOVOS}),
+    "sidra_1378_v93": ("93", [2010], ANTIGOS, set()),
+    "sidra_4709_v93": ("93", [2022], TODOS, set()),
+    "sidra_5938_v37": ("37", ANOS_5938, TODOS, {(c, a) for c in NOVOS for a in range(2010, 2013)}),
+}
+
+
+def _sidra_valida(cod_serie, trocar=None):
+    """Resposta válida da série; `trocar` = (código antigo, código novo) em todos os anos."""
+    variavel, anos, municipios, sinais = SIDRA_VALIDA[cod_serie]
+    if trocar:
+        municipios = [trocar[1] if m == trocar[0] else m for m in municipios]
+    return _sidra(municipios, anos, variavel, sinais)
+
+
+@pytest.mark.parametrize("cod_serie", list(conteudo.REGRAS_SIDRA))
+def test_sidra_municipio_fora_do_cadastro_falha(cod_serie):
+    dados = _sidra_valida(cod_serie, trocar=(ANTIGOS[0], DESCONHECIDO))
+    with pytest.raises(ErroValidacao, match=rf"municípios fora do cadastro: \['{DESCONHECIDO}'\]"):
+        _validar(cod_serie, dados)
+
+
+@pytest.mark.parametrize("cod_serie", list(conteudo.REGRAS_SIDRA))
+def test_sidra_com_todos_os_municipios_no_cadastro_passa(cod_serie):
+    _validar(cod_serie, _sidra_valida(cod_serie))
+
+
+def test_sidra_municipio_fora_do_cadastro_falha_mesmo_com_contagem_certa():
+    # 295 linhas, padrão 42xxxxx e sem repetição: só a regra do cadastro é quebrada.
+    dados = _sidra_valida("sidra_4709_v93", trocar=(ANTIGOS[0], DESCONHECIDO))
+    with pytest.raises(ErroValidacao, match=r"^sidra_4709_v93: municípios fora do cadastro"):
+        _validar("sidra_4709_v93", dados)
+
+
+def test_sidra_com_cadastro_vazio_falha():
+    with pytest.raises(ErroValidacao, match="municípios fora do cadastro"):
+        _validar("sidra_4709_v93", _sidra_valida("sidra_4709_v93"), cadastro=[])
+
+
+@pytest.mark.parametrize("cod_serie", list(conteudo.REGRAS_SIDRA))
+def test_sidra_sem_cadastro_falha(cod_serie):
+    with pytest.raises(ErroValidacao, match="cadastro de municípios é obrigatório"):
+        conteudo.validar_conteudo(cod_serie, _sidra_valida(cod_serie), cadastro=None)
+
+
+def test_localidades_nao_exige_cadastro():
+    conteudo.validar_conteudo("ibge_localidades_sc", _localidades(TODOS), cadastro=None)
+
+
+def test_pesquisas_codigo_desconhecido_no_padrao_42_falha_sem_correspondente():
+    codigos = PREFIXOS[:-1] + [DESCONHECIDO[:6]]
+    with pytest.raises(ErroValidacao, match=r"sem correspondente no cadastro: \['429999'\]"):
+        _validar("pesquisas_38_i47001", _pesquisas(codigos), TODOS)
+
+
+# --- D16: aviso de zero suspeito no SIDRA ---------------------------------------------------
+
+LOGGER_CONTEUDO = "brasil_em_dados.extract.conteudo"
+
+
+def _avisos(caplog):
+    return [r for r in caplog.records
+            if r.name == LOGGER_CONTEUDO and r.levelno == logging.WARNING]
+
+
+@pytest.mark.parametrize("zero", ["0", "0.00"])
+def test_sidra_valor_zero_avisa_no_log_e_nao_reprova(caplog, zero):
+    dados = _sidra(TODOS, [2022], "93")
+    dados[1]["V"] = zero
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        _validar("sidra_4709_v93", dados)
+    [aviso] = _avisos(caplog)
+    assert "1 valor(es) zero" in aviso.getMessage()
+    assert TODOS[0] in aviso.getMessage()
+
+
+def test_sidra_zero_no_pib_tambem_avisa(caplog):
+    dados = _sidra_valida("sidra_5938_v37")
+    dados[-1]["V"] = "0"
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        _validar("sidra_5938_v37", dados)
+    assert len(_avisos(caplog)) == 1
+
+
+def test_sidra_varios_zeros_geram_um_aviso_com_a_contagem(caplog):
+    dados = _sidra(TODOS, [2022], "93")
+    for linha in dados[1:4]:
+        linha["V"] = "0"
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        _validar("sidra_4709_v93", dados)
+    [aviso] = _avisos(caplog)
+    assert "3 valor(es) zero" in aviso.getMessage()
+
+
+@pytest.mark.parametrize("valor", ["100", "0.5", "10"])
+def test_sidra_valor_nao_zero_nao_gera_aviso(caplog, valor):
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        _validar("sidra_4709_v93", _sidra(TODOS, [2022], "93", valor=valor))
+    assert _avisos(caplog) == []
+
+
+def test_sidra_traco_nos_municipios_novos_reprova(caplog):
+    # A fonte devolve "..." para Pescaria Brava e Balneário Rincão em 2011; "-" viraria
+    # população 0 na carga (regra 9) para município que ainda não existia.
+    dados = _sidra(TODOS, ANOS_6579, "9324")
+    for linha in dados[1:]:
+        if linha["D1C"] in NOVOS and linha["D3C"] == "2011":
+            linha["V"] = "-"
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        with pytest.raises(ErroValidacao, match="sinais não permitidos"):
+            _validar("sidra_6579_v9324", dados)
+    assert _avisos(caplog) == []
+
+
+def test_sidra_traco_nao_permitido_continua_sendo_sinal_e_reprova(caplog):
+    dados = _sidra(TODOS, [2022], "93")
+    dados[1]["V"] = "-"
+    with caplog.at_level(logging.WARNING, logger=LOGGER_CONTEUDO):
+        with pytest.raises(ErroValidacao, match="sinais não permitidos"):
+            _validar("sidra_4709_v93", dados)
+    assert _avisos(caplog) == []
+
+
+def test_sidra_zero_nao_esconde_outro_problema():
+    dados = _sidra(TODOS, [2022], "93")
+    dados[1]["V"] = "0"
+    dados.pop()
+    with pytest.raises(ErroValidacao, match="esperadas 295 linhas"):
+        _validar("sidra_4709_v93", dados)
+
+
+@pytest.mark.parametrize("valor, esperado", [
+    ("0", True), ("0.00", True), ("-0", True), ("100", False), ("0.01", False),
+    ("-", False), ("...", False), ("X", False),
+])
+def test_eh_zero_so_reconhece_zero_numerico(valor, esperado):
+    assert conteudo.eh_zero(valor) is esperado
+
+
+def test_codigo_fora_do_padrao_nao_e_repetido_como_fora_do_cadastro():
+    dados = _sidra(TODOS[:-1] + ["4300001"], [2022], "93")
+    with pytest.raises(ErroValidacao, match="fora do padrão 42xxxxx") as erro:
+        _validar("sidra_4709_v93", dados)
+    assert "fora do cadastro" not in str(erro.value)

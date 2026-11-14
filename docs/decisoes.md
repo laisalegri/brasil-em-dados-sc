@@ -2,6 +2,15 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-14 — D16: códigos conferidos no cadastro e aviso de zero no SIDRA
+
+- **Decisão:**
+  - nas séries do SIDRA e da API de Pesquisas, todo código de município precisa existir no cadastro (`ibge_localidades_sc`); código desconhecido é falha de validação e nada é gravado na RAW;
+  - no SIDRA, valor `0` em população ou PIB municipal gera aviso no log, sem reprovar a resposta.
+  - no SIDRA, o único sinal aceito para os municípios novos é `...`, que é o que as tabelas 6579 e 5938 devolvem; um `-` nesses casos reprova a resposta.
+- **Por quê:** o padrão `42xxxxx` sozinho aceitaria um código inexistente. O zero pode ser arredondamento (regra 9) e, para população e PIB de um município, é suspeito; mas reprovar a coleta inteira por isso bloquearia dados válidos da fonte. Já o `-` viraria zero na carga (regra 9) para município que ainda não existia, o que contraria as regras 5 e 10.
+- **Consequência:** todas as séries passam a depender de uma coleta válida de `ibge_localidades_sc` na RAW. Se o cadastro mudar (município novo), as séries falham até que ele seja coletado de novo, o que é o comportamento desejado.
+
 ## 2026-11-14 — D11: padrão de coleta e rastreabilidade
 
 - **Decisão:** todas as coletas seguem `docs/padrao_coleta.md`. Os pontos principais:

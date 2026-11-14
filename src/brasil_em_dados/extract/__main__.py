@@ -26,7 +26,7 @@ class Resultado:
 
 
 def ordem_de_coleta() -> list[str]:
-    """Dimensões primeiro (a validação da API de Pesquisas usa o cadastro), depois as séries."""
+    """Dimensões primeiro (a validação das séries confere os códigos no cadastro), depois as séries."""
     dimensoes = [f.cod_serie for f in catalogo.FONTES.values() if f.tipo == catalogo.TIPO_DIMENSAO]
     return dimensoes + [s.cod_serie for s in catalogo.series()]
 

@@ -1,9 +1,11 @@
 """Conteúdo esperado de cada fonte, verificado antes de gravar na RAW (D12–D14).
 
 Resposta fora do esperado = ErroValidacao: nada é gravado e o erro vai para o controle.
-Lógica pura: o cadastro de municípios, quando necessário, é lido pelo chamador.
+Sem I/O de arquivos ou rede: o cadastro de municípios, quando necessário, é lido pelo
+chamador. A única saída lateral é o aviso de valor zero no log.
 """
 
+import logging
 import re
 from collections import Counter
 from dataclasses import dataclass
@@ -12,12 +14,14 @@ from typing import Any
 from brasil_em_dados.extract.erros import ErroValidacao
 from brasil_em_dados.transform.codigos import mapear_codigos_6_para_7
 
+logger = logging.getLogger(__name__)
+
 N_MUNICIPIOS = 295
 CODIGOS_NOVOS = frozenset({"4212650", "4220000"})  # Pescaria Brava e Balneário Rincão
 COD_LOCALIDADES = "ibge_localidades_sc"
 COD_PESQUISAS = "pesquisas_38_i47001"
-PRECISAM_DE_CADASTRO = frozenset({COD_PESQUISAS})
 MAX_EXEMPLOS = 5
+SINAL_AUSENTE = "..."  # único sinal que as fontes reais devolvem para os municípios novos
 
 ROTULO_MUNICIPIO = "Município (Código)"
 ROTULO_ANO = "Ano (Código)"
@@ -37,7 +41,8 @@ class RegraSidra:
     anos: frozenset[int]
     n_linhas: int
     ausentes: frozenset[str] = frozenset()
-    sinais_permitidos: frozenset[tuple[str, int]] = frozenset()
+    sinais_permitidos: frozenset[tuple[str, int]] = frozenset()  # (município, ano) com "..."
+    zero_suspeito: bool = True  # "0" pode ser zero por arredondamento (regra 9): avisa no log
 
 
 @dataclass(frozen=True)
@@ -62,6 +67,9 @@ REGRAS_SIDRA: dict[str, RegraSidra] = {
     "sidra_5938_v37": RegraSidra("37", frozenset(range(2010, 2024)), 4130,
                                  sinais_permitidos=_sinais(CODIGOS_NOVOS, range(2010, 2013))),
 }
+
+# Fontes cujos códigos de município são conferidos contra o cadastro (ibge_localidades_sc).
+PRECISAM_DE_CADASTRO = frozenset(REGRAS_SIDRA) | {COD_PESQUISAS}
 
 
 def _exemplos(itens: list) -> list:
@@ -110,8 +118,17 @@ def linhas_sidra(dados: Any) -> list[LinhaSidra]:
     return linhas
 
 
-def validar_sidra(dados: list[dict[str, Any]], regra: RegraSidra, fonte: str = "SIDRA") -> None:
-    """Confere contagem, anos, variável, códigos, duplicidades, ausências e sinais."""
+def eh_zero(valor: str) -> bool:
+    """Indica se o valor SIDRA é numérico e igual a zero ("0", "0.00")."""
+    return eh_numerico(valor) and float(valor) == 0
+
+
+def validar_sidra(dados: Any, regra: RegraSidra, cadastro: list[str],
+                  fonte: str = "SIDRA") -> None:
+    """Confere contagem, anos, variável, códigos, cadastro, duplicidades, ausências e sinais.
+
+    Valor zero não reprova a resposta: gera aviso no log quando `regra.zero_suspeito`.
+    """
     linhas = linhas_sidra(dados)
     problemas: list[str] = []
 
@@ -127,6 +144,10 @@ def validar_sidra(dados: list[dict[str, Any]], regra: RegraSidra, fonte: str = "
     invalidos = [l.municipio for l in linhas if not _CODIGO_SC.fullmatch(l.municipio)]
     if invalidos:
         problemas.append(f"códigos fora do padrão 42xxxxx: {_exemplos(invalidos)}")
+    validos = {l.municipio for l in linhas if _CODIGO_SC.fullmatch(l.municipio)}
+    desconhecidos = sorted(validos - set(cadastro))
+    if desconhecidos:
+        problemas.append(f"municípios fora do cadastro: {_exemplos(desconhecidos)}")
     repetidos = [k for k, n in Counter((l.municipio, l.ano) for l in linhas).items() if n > 1]
     if repetidos:
         problemas.append(f"município × ano repetidos: {_exemplos(repetidos)}")
@@ -139,11 +160,25 @@ def validar_sidra(dados: list[dict[str, Any]], regra: RegraSidra, fonte: str = "
     if presentes:
         problemas.append(f"municípios que deveriam estar ausentes: {presentes}")
     sinais = [(l.municipio, l.ano, l.valor) for l in linhas
-              if not eh_numerico(l.valor) and (l.municipio, l.ano) not in regra.sinais_permitidos]
+              if not eh_numerico(l.valor) and not _sinal_permitido(l, regra)]
     if sinais:
         problemas.append(f"sinais não permitidos: {_exemplos(sinais)}")
 
     _falhar_se(problemas, fonte)
+    if regra.zero_suspeito:
+        _avisar_zeros(linhas, fonte)
+
+
+def _sinal_permitido(linha: LinhaSidra, regra: RegraSidra) -> bool:
+    """Só "..." nos (município, ano) previstos; "-" seria zero na carga (regra 9)."""
+    return linha.valor == SINAL_AUSENTE and (linha.municipio, linha.ano) in regra.sinais_permitidos
+
+
+def _avisar_zeros(linhas: list[LinhaSidra], fonte: str) -> None:
+    zeros = [(l.municipio, l.ano) for l in linhas if eh_zero(l.valor)]
+    if zeros:
+        logger.warning("%s: %d valor(es) zero, suspeitos para este indicador (regra 9): %s",
+                       fonte, len(zeros), _exemplos(zeros))
 
 
 def validar_localidades(dados: Any) -> None:
@@ -200,6 +235,12 @@ def validar_pesquisas(dados: Any, cadastro: list[str]) -> None:
     _falhar_se(problemas, COD_PESQUISAS)
 
 
+def _exigir_cadastro(cod_serie: str, cadastro: list[str] | None) -> list[str]:
+    if cadastro is None:
+        raise ErroValidacao(f"{cod_serie}: cadastro de municípios é obrigatório")
+    return cadastro
+
+
 def validar_conteudo(cod_serie: str, dados: Any, *, cadastro: list[str] | None = None) -> None:
     """Aplica a regra de conteúdo esperado da fonte; sem regra também é falha.
 
@@ -208,10 +249,9 @@ def validar_conteudo(cod_serie: str, dados: Any, *, cadastro: list[str] | None =
     if cod_serie == COD_LOCALIDADES:
         validar_localidades(dados)
     elif cod_serie in REGRAS_SIDRA:
-        validar_sidra(dados, REGRAS_SIDRA[cod_serie], cod_serie)
+        validar_sidra(dados, REGRAS_SIDRA[cod_serie], _exigir_cadastro(cod_serie, cadastro),
+                      cod_serie)
     elif cod_serie == COD_PESQUISAS:
-        if cadastro is None:
-            raise ErroValidacao(f"{COD_PESQUISAS}: cadastro de municípios é obrigatório")
-        validar_pesquisas(dados, cadastro)
+        validar_pesquisas(dados, _exigir_cadastro(cod_serie, cadastro))
     else:
         raise ErroValidacao(f"Sem regra de conteúdo esperado para {cod_serie}")

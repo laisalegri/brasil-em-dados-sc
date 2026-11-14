@@ -19,7 +19,7 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 25/11 | **D13** Criar extrator de população | Extração RAW | Consumir tabelas SIDRA validadas, salvar respostas brutas e metadados. |
 | ✅ | 26/11 | **D14** Criar extrator de PIB | Extração RAW | Consumir a tabela 5938 (PIB, variável 37) e a API de Pesquisas (PIB per capita, indicador 47001) para 2010–2023 e salvar JSON bruto. |
 | ↪️ | 27/11 | **D15** Criar controle de execução | Extração RAW | **Absorvido pelo D11.** Registrar endpoint, parâmetros, status, quantidade de registros, duração e erros. |
-| ⬜ | 28/11 | **D16** Criar subagent escritor-de-testes e testar falhas | Extração RAW | Configurar o subagent; gerar com ele testes de timeout, erro HTTP, resposta vazia e não sobrescrita do RAW. |
+| ✅ | 28/11 | **D16** Criar subagent escritor-de-testes e testar falhas | Extração RAW | Configurar o subagent; gerar com ele testes de timeout, erro HTTP, resposta vazia e não sobrescrita do RAW. |
 | ⬜ | 30/11 | **D17** Criar banco e usuário de projeto | PostgreSQL e modelagem | Criar database, usuário de escrita e usuário somente leitura para os agentes; configurar variáveis de ambiente. |
 | ⬜ | 01/12 | **D18** Criar dim_municipio e dim_indicador | PostgreSQL e modelagem | Implementar dimensões, chaves, tipos e restrições. |
 | ⬜ | 02/12 | **D19** Criar fato_indicador_municipio e controle | PostgreSQL e modelagem | Criar tabela fato, chave única, tipo de medida, unidade, fonte e a tabela `controle_execucao`. |
