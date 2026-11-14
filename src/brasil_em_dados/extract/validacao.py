@@ -38,8 +38,14 @@ def contar_registros(dados: Any, fonte: str) -> int:
     raise ErroValidacao(f"Fonte desconhecida: {fonte!r}")
 
 
-def validar_resposta(status_http: int, conteudo: bytes, fonte: str) -> int:
-    """Valida status 200, JSON e conteúdo; devolve n_registros."""
+def validar_e_carregar(status_http: int, conteudo: bytes, fonte: str) -> tuple[Any, int]:
+    """Valida status 200, JSON e estrutura; devolve (dados, n_registros)."""
     if status_http != 200:
         raise ErroValidacao(f"Status HTTP {status_http}; esperado 200")
-    return contar_registros(carregar_json(conteudo), fonte)
+    dados = carregar_json(conteudo)
+    return dados, contar_registros(dados, fonte)
+
+
+def validar_resposta(status_http: int, conteudo: bytes, fonte: str) -> int:
+    """Valida status 200, JSON e estrutura; devolve n_registros."""
+    return validar_e_carregar(status_http, conteudo, fonte)[1]

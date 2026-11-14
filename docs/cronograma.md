@@ -15,9 +15,9 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 20/11 | **D09** Investigar SIDRA: PIB e PIB per capita | Fontes e dicionário | Validar tabela 5938, variável 37, período 2010–2023 e unidades; localizar o PIB per capita publicado pelo IBGE. |
 | ✅ | 21/11 | **D10** Investigar setores e consolidar dicionário | Fontes e dicionário | Conferir tabela candidata 5964 e códigos setoriais; consolidar o dicionário de dados em docs/. |
 | ✅ | 23/11 | **D11** Desenhar padrão de coleta e rastreabilidade | Extração RAW | Definir nomes de arquivos, timestamp, URL, parâmetros, logs, erros e reexecução. |
-| ⬜ | 24/11 | **D12** Criar extrator de municípios | Extração RAW | Consumir API de Localidades, salvar JSON bruto e validar 295 municípios e códigos únicos. |
-| ⬜ | 25/11 | **D13** Criar extrator de população | Extração RAW | Consumir tabelas SIDRA validadas, salvar respostas brutas e metadados. |
-| ⬜ | 26/11 | **D14** Criar extrator de PIB | Extração RAW | Consumir a tabela 5938 (PIB, variável 37) e a API de Pesquisas (PIB per capita, indicador 47001) para 2010–2023 e salvar JSON bruto. |
+| ✅ | 24/11 | **D12** Criar extrator de municípios | Extração RAW | Consumir API de Localidades, salvar JSON bruto e validar 295 municípios e códigos únicos. |
+| ✅ | 25/11 | **D13** Criar extrator de população | Extração RAW | Consumir tabelas SIDRA validadas, salvar respostas brutas e metadados. |
+| ✅ | 26/11 | **D14** Criar extrator de PIB | Extração RAW | Consumir a tabela 5938 (PIB, variável 37) e a API de Pesquisas (PIB per capita, indicador 47001) para 2010–2023 e salvar JSON bruto. |
 | ↪️ | 27/11 | **D15** Criar controle de execução | Extração RAW | **Absorvido pelo D11.** Registrar endpoint, parâmetros, status, quantidade de registros, duração e erros. |
 | ⬜ | 28/11 | **D16** Criar subagent escritor-de-testes e testar falhas | Extração RAW | Configurar o subagent; gerar com ele testes de timeout, erro HTTP, resposta vazia e não sobrescrita do RAW. |
 | ⬜ | 30/11 | **D17** Criar banco e usuário de projeto | PostgreSQL e modelagem | Criar database, usuário de escrita e usuário somente leitura para os agentes; configurar variáveis de ambiente. |

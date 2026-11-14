@@ -1,0 +1,41 @@
+[
+  {
+    "NC": "Nível Territorial (Código)",
+    "NN": "Nível Territorial",
+    "MC": "Unidade de Medida (Código)",
+    "MN": "Unidade de Medida",
+    "V": "Valor",
+    "D1C": "Município (Código)",
+    "D1N": "Município",
+    "D2C": "Variável (Código)",
+    "D2N": "Variável",
+    "D3C": "Ano (Código)",
+    "D3N": "Ano"
+  },
+  {
+    "NC": "6",
+    "NN": "Município",
+    "MC": "45",
+    "MN": "Pessoas",
+    "V": "427298",
+    "D1C": "4205407",
+    "D1N": "Florianópolis (SC)",
+    "D2C": "9324",
+    "D2N": "População residente estimada",
+    "D3C": "2011",
+    "D3N": "2011"
+  },
+  {
+    "NC": "6",
+    "NN": "Município",
+    "MC": "45",
+    "MN": "Pessoas",
+    "V": "...",
+    "D1C": "4212650",
+    "D1N": "Pescaria Brava (SC)",
+    "D2C": "9324",
+    "D2N": "População residente estimada",
+    "D3C": "2011",
+    "D3N": "2011"
+  }
+]
