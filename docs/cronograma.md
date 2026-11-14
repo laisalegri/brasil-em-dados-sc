@@ -1,6 +1,6 @@
 # Cronograma — Brasil em Dados SC
 
-Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar esta tabela, fica fora do repositório. Cada cartão prevê 3 horas. Status: ✅ concluído · ⬜ pendente.
+Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar esta tabela, fica fora do repositório. Cada cartão prevê 3 horas. Status: ✅ concluído · ⬜ pendente · ↪️ absorvido por outro cartão.
 
 | Status | Data prevista | Cartão | Fase | Entrega |
 | --- | --- | --- | --- | --- |
@@ -17,12 +17,12 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ⬜ | 23/11 | **D11** Desenhar padrão de coleta e rastreabilidade | Extração RAW | Definir nomes de arquivos, timestamp, URL, parâmetros, logs, erros e reexecução. |
 | ⬜ | 24/11 | **D12** Criar extrator de municípios | Extração RAW | Consumir API de Localidades, salvar JSON bruto e validar 295 municípios e códigos únicos. |
 | ⬜ | 25/11 | **D13** Criar extrator de população | Extração RAW | Consumir tabelas SIDRA validadas, salvar respostas brutas e metadados. |
-| ⬜ | 26/11 | **D14** Criar extrator de PIB | Extração RAW | Consumir tabela 5938 (PIB e PIB per capita) para 2010–2023 e salvar JSON bruto. |
-| ⬜ | 27/11 | **D15** Criar controle de execução | Extração RAW | Registrar endpoint, parâmetros, status, quantidade de registros, duração e erros. |
+| ⬜ | 26/11 | **D14** Criar extrator de PIB | Extração RAW | Consumir a tabela 5938 (PIB, variável 37) e a API de Pesquisas (PIB per capita, indicador 47001) para 2010–2023 e salvar JSON bruto. |
+| ↪️ | 27/11 | **D15** Criar controle de execução | Extração RAW | **Absorvido pelo D11.** Registrar endpoint, parâmetros, status, quantidade de registros, duração e erros. |
 | ⬜ | 28/11 | **D16** Criar subagent escritor-de-testes e testar falhas | Extração RAW | Configurar o subagent; gerar com ele testes de timeout, erro HTTP, resposta vazia e não sobrescrita do RAW. |
 | ⬜ | 30/11 | **D17** Criar banco e usuário de projeto | PostgreSQL e modelagem | Criar database, usuário de escrita e usuário somente leitura para os agentes; configurar variáveis de ambiente. |
 | ⬜ | 01/12 | **D18** Criar dim_municipio e dim_indicador | PostgreSQL e modelagem | Implementar dimensões, chaves, tipos e restrições. |
-| ⬜ | 02/12 | **D19** Criar fato_indicador_municipio e controle | PostgreSQL e modelagem | Criar tabela fato, chave única, tipo de medida, unidade, fonte e controle de execução. |
+| ⬜ | 02/12 | **D19** Criar fato_indicador_municipio e controle | PostgreSQL e modelagem | Criar tabela fato, chave única, tipo de medida, unidade, fonte e a tabela `controle_execucao`. |
 | ⬜ | 03/12 | **D20** Carregar dimensões | PostgreSQL e modelagem | Popular municípios e catálogo de indicadores; validar contagem e integridade. |
 | ⬜ | 04/12 | **D21** Carregar dados RAW no estágio de trabalho | PostgreSQL e modelagem | Ler JSONs e inserir dados preservando proveniência. |
 | ⬜ | 05/12 | **D22** Criar subagent revisor-de-qualidade-de-dados | SILVER: qualidade e tratamento | Configurar subagent com acesso SQL somente leitura para revisar nulos, duplicidades, chaves, cobertura e regras. |

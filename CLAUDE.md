@@ -15,6 +15,9 @@ O cronograma dos cartões está em `docs/cronograma.md`. Ao concluir um cartão,
 - `src/brasil_em_dados/` — pacote Python: `extract/` (coleta das APIs), `load/` (carga no PostgreSQL), `transform/` (normalização)
 - `sql/ddl/`, `sql/silver/`, `sql/gold/` — scripts SQL por camada
 - `data/raw/`, `data/processed/` — gerados pelo pipeline, não versionados
+- `data/controle/` — controle de execução das coletas (`execucoes.jsonl`), não versionado
+- `logs/` — logs do pipeline, não versionados
+- Padrão de coleta e rastreabilidade: `docs/padrao_coleta.md`
 - `tests/` — pytest
 - `notebooks/` — EDA
 - `dashboards/powerbi/`, `dashboards/streamlit/`

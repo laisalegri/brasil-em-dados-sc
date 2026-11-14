@@ -2,6 +2,26 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-14 — D11: padrão de coleta e rastreabilidade
+
+- **Decisão:** todas as coletas seguem `docs/padrao_coleta.md`. Os pontos principais:
+  - **RAW:** `data/raw/{cod_serie}/{AAAAMMDDTHHMMSSfffZ}.json`, em UTC com milissegundos, com os bytes originais da resposta. Os metadados ficam em `.meta.json` com o mesmo nome, incluindo `url`, `parametros`, `sha256`, `versao_extrator` e `igual_a_anterior`.
+  - **Imutabilidade:** gravação em arquivo temporário seguida de `os.link`, que falha se o destino existir. Se o sistema de arquivos não suportar `os.link`, a coleta falha com erro claro; nunca se usa um caminho que possa sobrescrever. O `.meta.json` é gravado por último.
+  - **Coleta válida:** só a que tem o par completo (dados + `.meta.json`). `igual_a_anterior` compara apenas com a última coleta válida da série, e a carga usa a coleta válida mais recente.
+  - **Falha:** nada é gravado na RAW; o erro vai para o log e para o controle de execução.
+  - **Controle de execução:** `data/controle/execucoes.jsonl`, fora da RAW. O D15 foi absorvido pelo D11.
+  - **Catálogo de séries:** o módulo `brasil_em_dados.extract.catalogo` é a fonte única, usada pelos extratores e pela carga da `dim_serie` (D20), com teste que o confere contra o dicionário de dados.
+  - **HTTP:** `requests.Session`, timeout de 10 s e 60 s, até 3 tentativas com backoff para 429, 5xx e timeout, respeitando `Retry-After`; User-Agent sem dados pessoais.
+- **Por quê:**
+  - um arquivo de controle alterado a cada execução dentro da RAW contrariaria a regra 7;
+  - gravar os bytes originais mantém o `sha256` estável e a RAW fiel à resposta;
+  - `os.rename` sobrescreve no Linux, e `os.link` impede a sobrescrita em qualquer sistema;
+  - o par completo evita carregar coletas interrompidas;
+  - o carimbo com milissegundos evita colisão de nomes;
+  - o catálogo único evita três fontes da verdade (dicionário, extrator e banco);
+  - o controle de execução é compartilhado por todos os extratores, por isso foi adiantado do D15.
+- **Consequência:** os extratores do D12 ao D14 usam os módulos compartilhados. No D16, o escritor-de-testes amplia os testes de falha. A tabela `controle_execucao` é criada no D19 e carregada no D21.
+
 ## 2026-11-12 — D10: setores do PIB fora do MVP
 
 - **Decisão:** o valor adicionado bruto por setor e os impostos ficam fora do MVP, como extensão. Na extensão, a fonte é a tabela 5938, variáveis 498 (VAB total), 513 (agropecuária), 517 (indústria), 6575 (serviços, exceto administração pública), 525 (administração pública) e 543 (impostos líquidos de subsídios). A tabela 5964 foi descartada: ela é da Pesquisa Nacional de Saúde do Escolar (PeNSE) 2015 e não tem relação com o PIB.

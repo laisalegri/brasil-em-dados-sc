@@ -21,6 +21,10 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
+# Controle de execução e logs (gerados pelo pipeline; não versionar)
+data/controle/
+logs/
+
 # Relatórios gerados pelo agente de verificação
 reports/*
 !reports/.gitkeep
