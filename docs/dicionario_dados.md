@@ -1,6 +1,6 @@
 # Dicionário de dados: Brasil em Dados SC
 
-- **Versão:** 2026-11-12 (cartão D10)
+- **Versão:** 2026-11-17 (cartões D18/D19: seção 1.4); base consolidada no D10
 - **Consolidado a partir de:**
   - `docs/fontes/sidra_6579.md`
   - `docs/fontes/sidra_1378.md`
@@ -69,6 +69,32 @@ A coluna `url_extrator` de cada série é a "URL final" listada nas observaçõe
 | `data_coleta` | data/hora | Momento da coleta que gerou o arquivo RAW |
 
 Chave única: (`cod_municipio`, `codigo_indicador`, `ano`).
+
+### 1.4 Implementação no banco (D18/D19)
+
+Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `03_fato_e_controle.sql`). O schema `gold` existe, mas ainda não tem tabelas (D30).
+
+**Tipos definidos no DDL:**
+
+| Coluna | Tipo no banco |
+|---|---|
+| `ano` | `smallint` |
+| `valor` | `numeric(18,2)` |
+| `data_coleta`, `inicio`, `fim` | `timestamptz` |
+| `fator_conversao` | `numeric` |
+| códigos e nomes | `text` |
+
+**Restrições:**
+
+| Tabela | Restrição |
+|---|---|
+| `dim_municipio` | `cod_municipio` `^42[0-9]{5}$`; `cod_regiao_imediata` `^42[0-9]{4}$`; `cod_regiao_intermediaria` e `cod_mesorregiao` `^42[0-9]{2}$`; `cod_microrregiao` `^42[0-9]{3}$`; `cod_uf` = `42`; `sigla_uf` = `SC`. Tamanhos conferidos nos 295 municípios da RAW. |
+| `dim_indicador` | `codigo_indicador` `^[a-z][a-z0-9_]*$`; `tipo_medida` `NOT NULL` e em (`estimativa`, `censo`, `nominal`). |
+| `dim_serie` | `fonte` em (`sidra`, `api_pesquisas`); `fator_conversao > 0`; `url_extrator` começa com `https://`; `UNIQUE (cod_serie, codigo_indicador)`; FK para `dim_indicador`. |
+| `fato_indicador_municipio` | PK (`cod_municipio`, `codigo_indicador`, `ano`); `ano` de 2010 a 2023; `cod_municipio` `^42[0-9]{5}$`; `CHECK (valor IS NOT NULL OR sinal_origem IS NOT NULL)`; `sinal_origem` em (`-`, `...`, `..`) ou uma letra de `A` a `Z`; valor numérico sem sinal, exceto `-` com valor 0 (SIDRA); FKs para `dim_municipio`, `dim_indicador` e, composta (`cod_serie`, `codigo_indicador`), para `dim_serie`. Índice em (`codigo_indicador`, `ano`). |
+| `controle_execucao` | `id_execucao` (identidade) como PK; `status` em (`sucesso`, `falha`); sucesso exige `arquivo` e `n_registros` e não tem `erro`; falha exige `erro` e não tem `arquivo`; `fim >= inicio`; `n_registros >= 0`; `UNIQUE (cod_serie, inicio)`. Sem FK para `dim_serie`, porque inclui `ibge_localidades_sc`. Campos de `docs/padrao_coleta.md`, seção 9. |
+
+Não podem ser texto vazio: `nome_municipio`, `nome`, `descricao`, `unidade_armazenada` e `unidade_origem`. O schema `public` guarda só `public.ddl_aplicado`, o registro dos arquivos de `sql/ddl/` já aplicados (D18/D19).
 
 ### Regra de sinais por indicador
 

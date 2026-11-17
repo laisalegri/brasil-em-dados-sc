@@ -2,6 +2,41 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-17 — D18/D19: schemas por camada e regras de dados no banco
+
+- **Decisão:**
+  - **Schemas por camada:** `silver` e `gold`, com dono `bed_app`. A RAW continua em arquivos (`data/raw/`), fora do banco. O `bed_readonly` tem `USAGE` nos dois schemas e `SELECT` nas tabelas atuais e futuras (`ALTER DEFAULT PRIVILEGES`), sem escrita.
+  - **Tabelas na SILVER:** `dim_municipio`, `dim_indicador`, `dim_serie`, `fato_indicador_municipio` e `controle_execucao`, conforme o dicionário (seção 1.4).
+  - **Regras de dados como restrições no banco, além dos testes:**
+    - código do município `^42[0-9]{5}$` e códigos regionais com o tamanho verificado na RAW;
+    - ano de 2010 a 2023;
+    - `valor numeric(18,2)` com `CHECK (valor IS NOT NULL OR sinal_origem IS NOT NULL)`;
+    - regra 9 inteira: `sinal_origem` só aceita `-`, `...`, `..` ou uma letra de `A` a `Z` (inclui `X`), e valor numérico não tem sinal, exceto o `-` do SIDRA com valor 0;
+    - chave primária (`cod_municipio`, `codigo_indicador`, `ano`) na fato;
+    - `tipo_medida` `NOT NULL` com `CHECK` e `fator_conversao > 0`.
+  - **Série coerente com o indicador:** a fato tem FK composta (`cod_serie`, `codigo_indicador`) para `dim_serie (cod_serie, codigo_indicador)`, que é `UNIQUE`. Assim, uma linha de `pop_censo` não pode apontar para uma série do PIB.
+  - **`controle_execucao`:**
+    - não tem FK para a `dim_serie`, porque recebe também as fontes de dimensão (`ibge_localidades_sc`);
+    - um `CHECK` exige o mesmo contrato do `registrar_execucao`: sucesso tem arquivo e contagem, falha tem erro;
+    - `UNIQUE (cod_serie, inicio)` permite recarregar o `execucoes.jsonl` (D21) sem duplicar.
+  - **DDL:** arquivos numerados em `sql/ddl/` (`01_schemas`, `02_dimensoes`, `03_fato_e_controle`). São aplicados por `python -m brasil_em_dados.db.aplicar_ddl` como `bed_app`, em ordem e numa única transação: no primeiro erro, nada fica aplicado. O `00_banco_e_usuarios.sql` fica de fora, porque precisa de superusuário e roda no psql.
+  - **Registro de DDL aplicado:** `public.ddl_aplicado` (`arquivo`, `sha256`, `aplicado_em`).
+    - Cada arquivo roda uma vez só; rodar o aplicador de novo não reaplica nada.
+    - Um arquivo já aplicado e editado depois (sha256 diferente) é erro, e a mensagem pede um arquivo novo numerado.
+    - Também são erro: um arquivo registrado que sumiu da pasta, e um arquivo novo com número menor que o do último aplicado.
+    - O sha256 é calculado com as quebras de linha normalizadas, porque o Git troca CRLF por LF.
+    - O aplicador recusa comandos do psql e de transação (`BEGIN`, `COMMIT`...) nos scripts.
+    - `IF NOT EXISTS` continua nos scripts como defesa extra.
+  - **Pacote `db`:** o módulo `brasil_em_dados.db` virou pacote (`db/__init__.py`) para permitir `python -m brasil_em_dados.db.aplicar_ddl`. A interface (`engine_app`, `engine_readonly`) não mudou.
+- **Por quê:**
+  - uma regra que só existe em teste pode ser violada por uma carga com bug, ou por um `INSERT` manual, e só ser percebida depois. No banco, ela barra a linha na hora;
+  - os schemas por camada deixam explícito o que é dado tratado (SILVER) e o que é analítico (GOLD), e permitem dar privilégios por camada;
+  - a transação única evita um banco com metade do DDL aplicado.
+- **Consequência:**
+  - os arquivos `01` a `03` foram aplicados em 2026-11-17 e não podem mais ser editados. Qualquer mudança de estrutura vai num arquivo novo (`04_...sql`), que roda uma vez só;
+  - os testes de integração aplicam o DDL numa transação sempre desfeita, com dados fictícios (município `4299990`, indicadores `teste_*`), e confirmam pelo SQLSTATE qual restrição barrou cada caso inválido;
+  - os testes do `bed_readonly` nas tabelas reais executam `SET TRANSACTION READ WRITE` antes de tentar escrever, para provar que é a permissão da tabela (ACL) que barra (`42501`), e não só o `default_transaction_read_only`, que o próprio usuário pode desligar.
+
 ## 2026-11-17 — D17: banco, usuários e conexões
 
 - **Decisão:**
