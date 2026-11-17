@@ -2,6 +2,27 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-17 — D17: banco, usuários e conexões
+
+- **Decisão:**
+  - banco `brasil_em_dados` no PostgreSQL local (15.5, porta 5432), com dono `bed_app`, usado pelo pipeline para criar tabelas e carregar dados;
+  - `bed_readonly`, usado pelos agentes: só `CONNECT` no banco, `USAGE` no schema `public` e `SELECT` nas tabelas, inclusive as que o `bed_app` criar depois (`ALTER DEFAULT PRIVILEGES`). Não cria tabelas nem tabelas temporárias. Além disso, tem `default_transaction_read_only = on`, uma segunda barreira caso um privilégio de escrita seja concedido por engano;
+  - os privilégios padrão valem só para objetos criados pelo `bed_app`; tabela criada por outro usuário precisa de `GRANT SELECT` explícito;
+  - `PUBLIC` perde o acesso ao banco e o `CREATE` no schema `public`;
+  - o script de criação fica em `sql/ddl/00_banco_e_usuarios.sql`. É idempotente e não tem senhas, que são definidas com `\password` e guardadas só no `.env`;
+  - as conexões são montadas em `brasil_em_dados.db`, com `URL.create` do SQLAlchemy, driver `psycopg`, `hide_parameters=True` e tempo limite de conexão de 10 s;
+  - o `.env` é lido com `dotenv_values` num dicionário local, e as variáveis do processo têm precedência. Os segredos não vão para `os.environ`, nem são herdados por subprocessos;
+  - os testes que precisam do banco levam o marcador `integracao`.
+- **Por quê:**
+  - o CLAUDE.md exige acesso somente leitura para os agentes, e o próprio banco garante isso, não só a instrução;
+  - `URL.create` mascara a senha em `str`/`repr`, então ela não vaza em log ou erro;
+  - variável ausente gera erro que cita só o nome dela;
+  - o tempo limite evita que um servidor parado trave o pipeline.
+- **Consequência:**
+  - os testes de integração são pulados quando a porta do banco não aceita conexão, e falham quando o servidor está no ar mas recusa a conexão (senha errada, banco inexistente), para não esconder configuração quebrada;
+  - `pytest -m "not integracao"` roda só os testes sem banco;
+  - a carga (D20 em diante) usa `engine_app()`, e os agentes usam `engine_readonly()`.
+
 ## 2026-11-14 — D16: códigos conferidos no cadastro e aviso de zero no SIDRA
 
 - **Decisão:**

@@ -13,3 +13,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integracao: precisa do PostgreSQL local; pulado quando o banco não está disponível",
+]
