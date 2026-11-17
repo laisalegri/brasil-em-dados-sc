@@ -23,7 +23,7 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 30/11 | **D17** Criar banco e usuário de projeto | PostgreSQL e modelagem | Criar database, usuário de escrita e usuário somente leitura para os agentes; configurar variáveis de ambiente. |
 | ✅ | 01/12 | **D18** Criar dim_municipio e dim_indicador | PostgreSQL e modelagem | Implementar dimensões, chaves, tipos e restrições. |
 | ✅ | 02/12 | **D19** Criar fato_indicador_municipio e controle | PostgreSQL e modelagem | Criar tabela fato, chave única, tipo de medida, unidade, fonte e a tabela `controle_execucao`. |
-| ⬜ | 03/12 | **D20** Carregar dimensões | PostgreSQL e modelagem | Popular municípios e catálogo de indicadores; validar contagem e integridade. |
+| ✅ | 03/12 | **D20** Carregar dimensões | PostgreSQL e modelagem | Popular municípios e catálogo de indicadores; validar contagem e integridade. |
 | ⬜ | 04/12 | **D21** Carregar dados RAW no estágio de trabalho | PostgreSQL e modelagem | Ler JSONs e inserir dados preservando proveniência. |
 | ⬜ | 05/12 | **D22** Criar subagent revisor-de-qualidade-de-dados | SILVER: qualidade e tratamento | Configurar subagent com acesso SQL somente leitura para revisar nulos, duplicidades, chaves, cobertura e regras. |
 | ⬜ | 07/12 | **D23** Normalizar população | SILVER: qualidade e tratamento | Padronizar código IBGE como texto, ano, valor, unidade e tipo de medida. |

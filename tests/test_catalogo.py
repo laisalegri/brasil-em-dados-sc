@@ -22,6 +22,39 @@ def _linhas_dim_serie() -> dict[str, list[str]]:
     return linhas
 
 
+def _linhas_dim_indicador() -> dict[str, list[str]]:
+    """Lê as linhas da tabela 1.1 (dim_indicador) do dicionário, indexadas pelo código."""
+    texto = DICIONARIO.read_text(encoding="utf-8")
+    secao = texto.split("### 1.1", 1)[1].split("\n### ", 1)[0]
+    linhas = {}
+    for linha in secao.splitlines():
+        if linha.startswith("| `"):
+            celulas = [c.strip().strip("`") for c in linha.strip().strip("|").split("|")]
+            linhas[celulas[0]] = celulas
+    return linhas
+
+
+def test_indicadores_do_catalogo_iguais_aos_do_dicionario():
+    assert set(catalogo.INDICADORES) == set(_linhas_dim_indicador())
+
+
+@pytest.mark.parametrize("indicador", catalogo.indicadores(), ids=lambda i: i.codigo_indicador)
+def test_atributos_do_indicador_iguais_aos_do_dicionario(indicador):
+    celulas = _linhas_dim_indicador()[indicador.codigo_indicador]
+    assert celulas[1:] == [indicador.nome, indicador.unidade_armazenada,
+                           indicador.tipo_medida, indicador.descricao]
+
+
+@pytest.mark.parametrize("indicador", catalogo.indicadores(), ids=lambda i: i.codigo_indicador)
+def test_tipo_medida_do_indicador_e_valido(indicador):
+    assert indicador.tipo_medida in {"estimativa", "censo", "nominal"}
+
+
+@pytest.mark.parametrize("serie", catalogo.series(), ids=lambda s: s.cod_serie)
+def test_toda_serie_aponta_para_um_indicador_do_catalogo(serie):
+    assert serie.codigo_indicador in catalogo.INDICADORES
+
+
 def test_chaves_do_catalogo_iguais_ao_cod_serie():
     for chave, fonte in catalogo.FONTES.items():
         assert chave == fonte.cod_serie

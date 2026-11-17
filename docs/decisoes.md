@@ -2,6 +2,27 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-17 — D20: carga das dimensões
+
+- **Decisão:**
+  - **Origem:** a `dim_municipio` vem da última coleta válida de `ibge_localidades_sc` na RAW, revalidada antes da carga (295 municípios, códigos únicos no padrão 42xxxxx). A `dim_indicador` e a `dim_serie` vêm do catálogo `brasil_em_dados.extract.catalogo`, que passou a guardar também os indicadores (`INDICADORES`). Testes conferem as tabelas 1.1 e 1.2 do dicionário contra o catálogo.
+  - **Organização do código:** a transformação fica em `transform/dimensoes.py`, sem I/O. A leitura da RAW e a gravação ficam em `load/dimensoes.py`. O comando é `python -m brasil_em_dados.load dimensoes`, rodado como `bed_app` numa transação.
+  - **Idempotência:** upsert com `INSERT ... ON CONFLICT DO UPDATE ... WHERE (colunas) IS DISTINCT FROM (novos valores)`. Uma linha igual não é reescrita, e a segunda carga não toca no banco.
+  - **Resumo:** o resumo traz linhas inseridas, atualizadas e inalteradas por tabela. As contagens vêm da comparação com o que já estava no banco e são conferidas contra o número de linhas que o PostgreSQL gravou de fato.
+  - **Nada é apagado:** uma linha no banco que não está na fonte é mantida e gera aviso no log.
+  - **Atributos imutáveis:** numa linha que já existe, a carga recusa com `ErroCarga` qualquer mudança em:
+    - `dim_serie`: `fator_conversao`, `unidade_origem` e `codigo_indicador`;
+    - `dim_indicador`: `tipo_medida` e `unidade_armazenada`.
+
+    A mensagem mostra o valor antigo e o novo e orienta: se a série (ou o indicador) mudou de fato, crie um novo `cod_serie` (ou `codigo_indicador`) no catálogo, em vez de alterar o existente. Os campos descritivos (`nome`, `descricao`, `url_extrator`, `data_referencia` e os nomes de municípios e regiões) continuam atualizáveis, e cada linha atualizada aparece no log com o valor antigo e o novo.
+  - **Preparação fora da transação:** as linhas são montadas antes de abrir a transação. Cada tabela é travada (`SHARE ROW EXCLUSIVE`) entre a leitura e a gravação. As contagens de inseridas e de atualizadas são conferidas separadamente contra o que o banco devolve (`RETURNING (xmax = 0)`).
+- **Por quê:**
+  - um catálogo único evita que dicionário, extrator e banco divirjam;
+  - mudar o fator, a unidade ou o indicador de uma série já carregada deixaria a fato com valores convertidos pelo fator antigo, ou com outro rótulo de censo ou estimativa, sem nenhum erro (regras 2 e 11). Uma série nova preserva a rastreabilidade;
+  - o `WHERE ... IS DISTINCT FROM` deixa a reexecução sem efeito no banco (sem novas versões de linha);
+  - apagar dimensão quebraria as FKs da fato e a rastreabilidade.
+- **Consequência:** a primeira carga real (2026-11-17) gravou 4 indicadores, 5 séries e 295 municípios. A segunda carga deu 0 inseridas e 0 atualizadas, e todas as linhas de cada tabela têm o mesmo `xmin`, ou seja, foram gravadas por uma só transação.
+
 ## 2026-11-17 — D18/D19: schemas por camada e regras de dados no banco
 
 - **Decisão:**

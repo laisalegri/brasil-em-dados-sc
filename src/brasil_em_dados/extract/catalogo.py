@@ -1,6 +1,7 @@
-"""Catálogo de séries coletadas: fonte única para extratores e para a carga da dim_serie (D11).
+"""Catálogo de indicadores e séries: fonte única para extratores e para a carga da
+dim_indicador e da dim_serie (D11, D20).
 
-Os valores espelham a tabela 1.2 de docs/dicionario_dados.md; um teste confere os dois.
+Os valores espelham as tabelas 1.1 e 1.2 de docs/dicionario_dados.md; testes conferem os dois.
 """
 
 from dataclasses import dataclass, field
@@ -8,6 +9,31 @@ from typing import Any
 
 TIPO_SERIE = "serie"
 TIPO_DIMENSAO = "dimensao"
+
+
+@dataclass(frozen=True)
+class Indicador:
+    """Um indicador de negócio da dim_indicador (tabela 1.1 do dicionário)."""
+
+    codigo_indicador: str
+    nome: str
+    unidade_armazenada: str
+    tipo_medida: str  # estimativa, censo ou nominal (regra 2)
+    descricao: str
+
+
+_INDICADORES: tuple[Indicador, ...] = (
+    Indicador("pop_estimada", "População residente estimada", "Pessoas", "estimativa",
+              "Estimativa anual de população do IBGE. Não se mistura com censo."),
+    Indicador("pop_censo", "População residente (Censo)", "Pessoas", "censo",
+              "População recenseada nos Censos Demográficos 2010 e 2022."),
+    Indicador("pib_corrente", "PIB a preços correntes", "R$", "nominal",
+              "PIB nominal. Nunca descrever variação como crescimento real (regra 3)."),
+    Indicador("pib_per_capita", "PIB per capita", "R$", "nominal",
+              "Valor publicado pelo IBGE, sem recálculo. Não é renda (regra 4)."),
+)
+
+INDICADORES: dict[str, Indicador] = {i.codigo_indicador: i for i in _INDICADORES}
 
 
 @dataclass(frozen=True)
@@ -119,6 +145,11 @@ def obter(cod_serie: str) -> FonteColeta:
     except KeyError:
         disponiveis = ", ".join(sorted(FONTES))
         raise KeyError(f"cod_serie desconhecido: {cod_serie!r}. Disponíveis: {disponiveis}") from None
+
+
+def indicadores() -> list[Indicador]:
+    """Devolve os indicadores da dim_indicador, na ordem do catálogo."""
+    return list(_INDICADORES)
 
 
 def series() -> list[FonteColeta]:

@@ -28,7 +28,7 @@ Decisão D10: o **indicador** (conceito de negócio) fica na `dim_indicador`; a 
 | `pib_corrente` | PIB a preços correntes | R$ | `nominal` | PIB nominal. Nunca descrever variação como crescimento real (regra 3). |
 | `pib_per_capita` | PIB per capita | R$ | `nominal` | Valor publicado pelo IBGE, sem recálculo. Não é renda (regra 4). |
 
-`tipo_medida` nunca é `NULL`.
+`tipo_medida` nunca é `NULL`. Os valores desta tabela estão no catálogo (`brasil_em_dados.extract.catalogo.INDICADORES`), de onde a `dim_indicador` é carregada (D20). Um teste confere os dois.
 
 ### 1.2 `dim_serie`
 
