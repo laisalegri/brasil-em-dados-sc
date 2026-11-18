@@ -2,6 +2,26 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-18 — D26: quebra de série e dupla contagem em pop_estimada
+
+- **Decisão:**
+  - **Quebra entre 2012 e 2013 (regra 12):**
+    - a GOLD não calcula nem exibe variação de `pop_estimada` entre anos de bases diferentes (≤2012 contra ≥2013) sem aviso explícito;
+    - a série vem com a quebra marcada.
+  - **Dupla contagem em 2012 (regra 13):**
+    - agregações de `pop_estimada` 2012 (estado, região) excluem 4212650 e 4220000 ou levam aviso;
+    - a escolha entre as duas opções fica para o D30;
+    - um teste de qualidade (`test_t16_dupla_contagem_2012_...`, marcador `integracao`) confere que soma municipal de 2012 − total de SC = população dos dois municípios. O total de SC, que não está no banco, vem do valor de referência do dicionário (`TOTAL_SC_6579_2012`).
+- **Por quê:**
+  - **Quebra:** a auditoria de qualidade (alerta A3) achou um salto de +2,55% em média por município em 2013. Os documentos oficiais confirmam a causa: a partir de 2013, as estimativas usam a nova Projeção da População por UF, e o IBGE declara comparáveis só as de 2013 a 2017. O salto é mudança de base, não crescimento populacional.
+  - **Dupla contagem:** em 2012, a soma municipal da 6579 excede o total de SC exatamente pela população dos dois municípios ainda não instalados. Em 2011 e 2013, a soma fecha. A causa é NÃO CONFIRMADA. Somar 2012 sem cuidado contaria essas 20.552 pessoas duas vezes.
+  - O teste avisa se uma revisão do IBGE mudar essa diferença.
+- **Fonte:** `docs/fontes/alertas_qualidade_2026-11.md` (A3 e achado 6).
+- **Consequência:**
+  - as regras 12 e 13 entram no CLAUDE.md;
+  - o dicionário (observações de `pop_estimada`) e `docs/limitacoes.md` (D27) descrevem as duas limitações;
+  - a revisão de 2018 da projeção, sem salto visível em SC, fica documentada como limitação, sem regra própria.
+
 ## 2026-11-18 — D21: carga da fato e do controle de execução
 
 - **Decisão:**

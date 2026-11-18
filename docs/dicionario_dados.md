@@ -1,6 +1,6 @@
 # Dicionário de dados: Brasil em Dados SC
 
-- **Versão:** 2026-11-17 (cartões D18/D19: seção 1.4); base consolidada no D10
+- **Versão:** 2026-11-18 (D21: `data_coleta` e recorte da API de Pesquisas; D26: quebra de série e dupla contagem em `pop_estimada`); seção 1.4 nos D18/D19; base consolidada no D10
 - **Consolidado a partir de:**
   - `docs/fontes/sidra_6579.md`
   - `docs/fontes/sidra_1378.md`
@@ -10,8 +10,9 @@
   - `docs/fontes/ibge_pesquisas_pib_per_capita.md`
   - `docs/fontes/ibge_localidades.md`
   - `docs/fontes/sidra_convencoes.md`
-  - `docs/decisoes.md` (D01, D02, D06–D10)
-  - CLAUDE.md (regras de dados 1–11)
+  - `docs/decisoes.md` (D01, D02, D06–D11, D16–D21, D26)
+  - `docs/fontes/alertas_qualidade_2026-11.md` (quebra de 2013 e dupla contagem de 2012)
+  - CLAUDE.md (regras de dados 1–13)
 
 > **Convenção deste documento:** o que não foi verificado diretamente nas respostas das APIs ou em documento oficial está marcado como **NÃO CONFIRMADO**. Os nomes marcados como **(proposta)** (hoje, só os da extensão de setores) ainda não foram decididos.
 
@@ -72,7 +73,7 @@ Chave única: (`cod_municipio`, `codigo_indicador`, `ano`).
 
 ### 1.4 Implementação no banco (D18/D19)
 
-Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `03_fato_e_controle.sql`). O schema `gold` existe, mas ainda não tem tabelas (D30).
+Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `03_fato_e_controle.sql`; o `04_comentario_data_coleta.sql` atualiza o comentário de `data_coleta`, D21). Os arquivos aplicados ficam registrados em `public.ddl_aplicado`. O schema `gold` existe, mas ainda não tem tabelas (D30).
 
 **Tipos definidos no DDL:**
 
@@ -113,6 +114,18 @@ Não podem ser texto vazio: `nome_municipio`, `nome`, `descricao`, `unidade_arma
 - Data de referência: 1º de julho de cada ano, segundo os PDFs oficiais das estimativas.
 - O nome do município muda de formato conforme o filtro. A chave é sempre o código.
 - URL final: `https://apisidra.ibge.gov.br/values/t/6579/n6/in%20n3%2042/v/9324/p/2011-2021` (3.245 linhas).
+- **Quebra de série entre 2012 e 2013 (D26, regra 12):**
+  - a partir de 2013, as estimativas usam a nova Projeção da População por UF, com os Censos 2000 e 2010 ajustados por cobertura;
+  - o IBGE declara comparáveis só as estimativas de 2013 a 2017;
+  - em SC, a nova base já fica 2,80% acima da estimativa publicada para 2012, enquanto o crescimento pela própria projeção é de 1,43%;
+  - a GOLD não mostra variação entre anos ≤2012 e ≥2013 sem aviso explícito, e a série vem com a quebra marcada;
+  - há outra revisão da projeção em 2018, sem salto visível em SC (ver `docs/limitacoes.md`);
+  - fonte: `docs/fontes/alertas_qualidade_2026-11.md`, A3.
+- **Dupla contagem em 2012 (D26, regra 13):**
+  - a soma municipal de 2012 (6.383.286) excede o total de SC em 20.552 pessoas, exatamente a população de 4212650 (9.416) + 4220000 (11.136), que ainda não estavam instalados. Em 2011 e 2013, a soma fecha com o total;
+  - a causa é **NÃO CONFIRMADA**;
+  - agregações de 2012 (estado, região) excluem os dois municípios ou levam aviso; a escolha fica para o D30;
+  - valor de referência, lido pelo teste de qualidade (consulta R3 do arquivo de alertas): `TOTAL_SC_6579_2012 = 6362734`.
 
 **`pop_censo` (1378)**
 
@@ -265,11 +278,14 @@ Ausência de valor (linha ausente, `NULL` ou sinal) só é aceita para **4212650
 
 **Anos que não existem na fonte:** os anos que a tabela não publica não são "ausência" de município. Por exemplo, 2010, 2022 e 2023 não existem na 6579. O teste deve verificar a grade só nos anos publicados por série, listados na seção 1.2.
 
-**Testes de modelo previstos para o D26:**
+**Testes de modelo (implementados no D26, em `tests/test_qualidade_dados.py`):**
 
-- cada indicador tem exatamente uma `unidade_armazenada` na tabela fato (D09);
-- cada combinação (`codigo_indicador`, `ano`) vem de exatamente uma série (D10);
-- PIB (R$) / população usada pelo IBGE ≈ PIB per capita publicado, dentro de uma tolerância de arredondamento, com as exclusões da seção 1 (D10).
+- cada indicador tem exatamente uma `unidade_armazenada` na tabela fato (D09): T7;
+- cada combinação (`codigo_indicador`, `ano`) vem de exatamente uma série (D10): T3;
+- PIB (R$) / população usada pelo IBGE ≈ PIB per capita publicado, com tolerância de `500/pop + R$ 0,01` (arredondamento do PIB em mil reais) e as exclusões da seção 1 (D10): T11, com 3.534 pares;
+- dupla contagem de 2012 igual à população de 4212650 + 4220000 (D26, regra 13): T16.
+
+A lista completa (T1–T8, T10, T11, T13–T16) está em `docs/metodologia.md`.
 
 ## 6. Verificado diretamente
 

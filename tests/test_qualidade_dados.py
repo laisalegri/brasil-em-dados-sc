@@ -1,16 +1,18 @@
 """Testes de qualidade de dados da SILVER (D22 + D26), a partir de reports/qualidade_20261118.md.
 
-Implementa os testes ERRO aprovados (T1–T8, T10, T11, T13, T14, T15). Só leitura: conecta como
+Implementa os testes ERRO aprovados (T1–T8, T10, T11, T13, T14, T15) e o T16 (D26, regra 13). Só leitura: conecta como
 bed_readonly numa transação READ ONLY que é sempre desfeita. Os valores esperados saem do
 catálogo (extract.catalogo) e das regras de conteúdo (extract.conteudo), não de números soltos.
 """
 
+import re
 from collections.abc import Iterable, Iterator
 from decimal import Decimal
 
 import pytest
 from sqlalchemy import Connection, text
 
+from brasil_em_dados.config import RAIZ_PROJETO
 from brasil_em_dados.extract import catalogo
 from brasil_em_dados.extract.conteudo import (
     ANOS_PESQUISAS,
@@ -443,3 +445,35 @@ def test_t15_soma_anual_do_pib_na_ordem_de_grandeza_esperada(conexao):
             if soma is None or not SOMA_PIB_MIN <= soma <= SOMA_PIB_MAX}
     assert not fora, (f"soma anual do PIB (R$) fora de [{SOMA_PIB_MIN:,.0f}, "
                       f"{SOMA_PIB_MAX:,.0f}]: {fora}")
+
+
+# T16 (D26, regra 13): dupla contagem de 2012 na pop_estimada ---------------------------------
+
+ANO_DUPLA_CONTAGEM = 2012
+DICIONARIO = RAIZ_PROJETO / "docs" / "dicionario_dados.md"
+_REFERENCIA_TOTAL_SC_2012 = re.compile(r"`TOTAL_SC_6579_2012 = (\d+)`")
+
+
+def _total_sc_2012_documentado() -> Decimal:
+    """Total de SC (N3) da 6579 em 2012: não está no banco; vem do valor de referência do
+    dicionário (fonte: docs/fontes/alertas_qualidade_2026-11.md, consulta R3)."""
+    encontrados = _REFERENCIA_TOTAL_SC_2012.findall(DICIONARIO.read_text(encoding="utf-8"))
+    assert len(encontrados) == 1, (
+        "valor de referência TOTAL_SC_6579_2012 ausente ou repetido no dicionário de dados")
+    return Decimal(encontrados[0])
+
+
+def test_t16_dupla_contagem_2012_igual_a_populacao_dos_municipios_novos(conexao):
+    # Em 2012, a soma municipal excede o total de SC exatamente pelos dois municípios ainda não
+    # instalados (causa NÃO CONFIRMADA). Se uma revisão do IBGE mudar isso, este teste avisa e a
+    # regra 13 / o dicionário precisam ser revistos.
+    serie = _serie_unica(IND_POP_ESTIMADA)
+    soma, novos = conexao.execute(text(
+        "SELECT sum(valor), sum(valor) FILTER (WHERE cod_municipio = ANY(:novos)) "
+        "FROM silver.fato_indicador_municipio WHERE cod_serie = :serie AND ano = :ano"),
+        {"serie": serie, "ano": ANO_DUPLA_CONTAGEM, "novos": sorted(CODIGOS_NOVOS)}).one()
+    assert soma is not None and novos is not None, f"{serie} sem valores em 2012"
+    excesso = soma - _total_sc_2012_documentado()
+    assert excesso == novos, (
+        f"2012: soma municipal − total de SC = {excesso}, mas 4212650 + 4220000 = {novos}; "
+        "a dupla contagem documentada (D26, regra 13) mudou")

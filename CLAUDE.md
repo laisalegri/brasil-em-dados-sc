@@ -59,6 +59,8 @@ pytest tests/test_x.py -v          # um arquivo de teste
 9. Sinais especiais do SIDRA: `-` e `0` carregam como 0; `...`, `..`, `X` e letras de faixa carregam como `NULL`. O sinal original fica na coluna `sinal_origem` (texto, `NULL` quando o valor veio numérico). Legenda em `docs/fontes/sidra_convencoes.md`. Na API de Pesquisas, `-` indica ausência e carrega como `NULL`, com `sinal_origem` = `-`.
 10. Cobertura: ausência de valor só é aceita para Pescaria Brava (4212650) e Balneário Rincão (4220000) antes de 2013, ano de instalação. Qualquer outra ausência faz o teste falhar.
 11. A conversão de unidade acontece só na carga para a SILVER, usando o `fator_conversao` da `dim_serie`; nunca converta valores na GOLD, nos dashboards ou em notebooks.
+12. `pop_estimada` tem quebra de série entre 2012 e 2013 (nova projeção por UF; fonte em `docs/fontes/alertas_qualidade_2026-11.md`). A GOLD não calcula nem exibe variação de `pop_estimada` entre anos de bases diferentes (≤2012 contra ≥2013) sem aviso explícito, e a série vem com a quebra marcada.
+13. Em 2012, a soma municipal de `pop_estimada` (6579) excede o total de SC exatamente pela população de 4212650 + 4220000 (causa NÃO CONFIRMADA). Agregações de `pop_estimada` 2012 (estado, região) excluem esses dois municípios ou levam aviso; a escolha fica para o D30.
 
 ## Como trabalhar comigo
 
