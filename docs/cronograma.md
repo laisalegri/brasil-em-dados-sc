@@ -30,7 +30,7 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ↪️ | 08/12 | **D24** Normalizar PIB municipal | SILVER: qualidade e tratamento | **Absorvido pelo D21.** Padronizar valor monetário, ano e município; identificar ausências e inconsistências. |
 | ↪️ | 09/12 | **D25** Tratar população censitária e estimada | SILVER: qualidade e tratamento | **Absorvido pelo D21.** Manter censo e estimativa identificados; não preencher lacunas com zero. |
 | ✅ | 10/12 | **D26** Validar qualidade e criar testes automatizados | SILVER: qualidade e tratamento | Rodar o revisor-de-qualidade e transformar os achados em pytest com o escritor-de-testes. |
-| ⬜ | 11/12 | **D27** Criar subagent documentador e documentar limitações | SILVER: qualidade e tratamento | Configurar subagent para README, dicionário e metodologia; registrar lacunas, limitações e cautelas com PIB nominal. |
+| ✅ | 11/12 | **D27** Criar subagent documentador e documentar limitações | SILVER: qualidade e tratamento | Configurar subagent para README, dicionário e metodologia; registrar lacunas, limitações e cautelas com PIB nominal. |
 | ⬜ | 12/12 | **D28** Estudar ciclo básico do Agent SDK em Python | Claude Agent SDK | Entender cliente, sessão, prompt, ferramentas, permissões e autenticação por chave de API; definir teto de gasto. |
 | ⬜ | 14/12 | **D29** Construir agente de verificação do pipeline | Claude Agent SDK | Agente que roda pipeline e pytest, executa checagens de qualidade read-only e gera relatório em markdown. |
 | ⬜ | 15/12 | **D30** Construir camada GOLD | GOLD e análise exploratória | Criar views/tabelas analíticas para população, PIB e PIB per capita. |
