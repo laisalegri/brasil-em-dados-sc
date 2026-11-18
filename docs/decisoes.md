@@ -2,6 +2,49 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-18 — D30: camada GOLD em views
+
+- **Decisão:**
+  - **Views no schema `gold`:** versionadas em `sql/gold/NN_*.sql`. Os arquivos trazem só `CREATE VIEW gold.*` e `COMMENT ON`.
+  - **`python -m brasil_em_dados.db.aplicar_gold`:** recria todas as views numa transação, como `bed_app`. Faz `DROP VIEW IF EXISTS` em ordem inversa, sem `CASCADE`, e `CREATE` em ordem direta.
+  - **Exceção ao controle `public.ddl_aplicado`:** a GOLD fica fora dele. Views não guardam dados e são derivadas por inteiro da SILVER e dos arquivos versionados, então recriá-las a cada execução é seguro e mantém o banco igual aos arquivos. Por isso, os arquivos de `sql/gold/` podem ser editados, ao contrário dos de `sql/ddl/`, que rodam uma vez só (D18/D19).
+  - **Leitura pelo `bed_readonly`:** vem dos privilégios padrão do schema `gold` (`01_schemas.sql`). No PostgreSQL, `ON TABLES` também vale para views, então uma view recriada recebe o `SELECT` de novo. Há teste para isso.
+  - **Views:**
+    - `dim_municipio`: as duas hierarquias, mais `ano_instalacao`, que é a fonte única dos municípios novos;
+    - `grade_indicador_municipio_ano`: 12.095 linhas, com `status` (`com_valor`, `municipio_nao_instalado`, `sem_dado`) e `aviso`;
+    - `painel_municipio_ano`: colunas `pop_estimada`, `pop_censo`, `pib_corrente_reais` e `pib_per_capita_reais`, sem população mista, e `base_estimativa`;
+    - `variacao_populacao_censo`: 2010 × 2022;
+    - `variacao_anual`: com `comparavel` e `motivo`;
+    - `agregado_regiao_ano`: estado, região intermediária e região imediata;
+    - `participacao_estadual`.
+  - **Sem per capita agregado** (regra 4).
+  - **Quebras da estimativa (regra 12, ampliada):** três bases (`ate_2012`, `2013_2017`, `desde_2018`).
+    - Na variação de 2012 para 2013, o valor é `NULL` e `comparavel = false`.
+    - Na de 2017 para 2018, o valor é calculado, com `comparavel = false` e motivo próprio.
+  - **Dupla contagem de 2012 (regra 13, escolha do D26):** nas agregações e na participação, `pop_estimada` 2012 exclui 4212650 e 4220000. Há aviso na agregação, na grade e no painel (`dupla contagem 2012 (regra 13)`).
+  - **Fonte única dentro da GOLD:**
+    - a `base_estimativa` é calculada uma vez, na grade, a partir do ano, e as outras views herdam a coluna;
+    - a grade junta a fato também por `cod_serie`, então uma segunda série num mesmo (indicador, ano) apareceria como chave repetida (testado), e não como valor trocado;
+    - em `variacao_anual`, `comparavel` é `NULL` quando falta um dos valores;
+    - divisões por zero viram `NULL`, com motivo.
+  - **Validação do `aplicar_gold`:**
+    - lê cada arquivo num único passe (literais e comentários `--` na ordem em que aparecem);
+    - recusa `/* */`, `$` fora de literal, `--` dentro de literal e arquivos `00_*`;
+    - aceita só `CREATE VIEW gold.<nome> AS` e `COMMENT ON VIEW`/`COLUMN` sobre views do próprio arquivo;
+    - valida tudo antes de abrir a conexão.
+  - **Operação:**
+    - depois de editar um arquivo de `sql/gold/`, é preciso rodar o `aplicar_gold` de novo, porque o banco não se atualiza sozinho;
+    - uma view removida ou renomeada nos arquivos continua no banco (o aplicador só avisa no log). A remoção é um `DROP VIEW` manual, feito a pedido da autora.
+  - **Pendência para a reserva (D41/D42):** uma tabela versionada de anos esperados por série. Hoje, a grade deriva os anos da própria fato, e um ano que sumir inteiro some da grade sem status `sem_dado`. O teste de tamanho da grade pega esse caso, mas a view não o sinaliza. Essa tabela é uma decisão de modelagem.
+- **Por quê:**
+  - **2013 e 2018 tratados de forma diferente:**
+    - Em 2013, a nova projeção muda o nível da série: SC já fica 2,80% acima da estimativa publicada para 2012, e o salto aparece em todos os municípios. Uma variação calculada seria lida como crescimento, então fica `NULL`.
+    - Em 2018, o IBGE também troca a base (declara comparáveis só 2013–2017), mas não há salto visível em SC (+1,06% no estado). A variação é informativa e fica calculada, marcada como não comparável.
+  - **Exclusão em 2012:** os dois municípios novos estão na mesma região imediata e intermediária do município de origem (Pescaria Brava e Laguna em 420003; Balneário Rincão e Içara em 420002). Por isso, excluí-los dá totais consistentes em todos os níveis, e o total do estado fica igual ao total de SC publicado (6.362.734). Se um município novo estivesse em outra região, a região de origem continuaria com dupla contagem e a região do novo perderia população. Há um teste que confere que os dois continuam na mesma região.
+- **Consequência:**
+  - as views foram aplicadas no banco real em 2026-11-18;
+  - os testes de integração recriam as views numa transação desfeita, para testar os arquivos atuais sem mudar o banco, e conferem a leitura pelo `bed_readonly` nas views aplicadas.
+
 ## 2026-11-18 — D26: quebra de série e dupla contagem em pop_estimada
 
 - **Decisão:**
@@ -17,6 +60,7 @@ Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra 
   - **Dupla contagem:** em 2012, a soma municipal da 6579 excede o total de SC exatamente pela população dos dois municípios ainda não instalados. Em 2011 e 2013, a soma fecha. A causa é NÃO CONFIRMADA. Somar 2012 sem cuidado contaria essas 20.552 pessoas duas vezes.
   - O teste avisa se uma revisão do IBGE mudar essa diferença.
 - **Fonte:** `docs/fontes/alertas_qualidade_2026-11.md` (A3 e achado 6).
+- **Nota (2026-11-18, D30):** a regra 12 foi ampliada. Ela passa a cobrir também a revisão de 2018, com três bases: `ate_2012`, `2013_2017` e `desde_2018`. A escolha deixada para o D30 na regra 13 foi feita: excluir os dois municípios das agregações de 2012, com coluna de aviso. Ver D30.
 - **Consequência:**
   - as regras 12 e 13 entram no CLAUDE.md;
   - o dicionário (observações de `pop_estimada`) e `docs/limitacoes.md` (D27) descrevem as duas limitações;

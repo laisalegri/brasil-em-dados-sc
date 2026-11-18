@@ -33,7 +33,7 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 11/12 | **D27** Criar subagent documentador e documentar limitações | SILVER: qualidade e tratamento | Configurar subagent para README, dicionário e metodologia; registrar lacunas, limitações e cautelas com PIB nominal. |
 | ⬜ | 12/12 | **D28** Estudar ciclo básico do Agent SDK em Python | Claude Agent SDK | Entender cliente, sessão, prompt, ferramentas, permissões e autenticação por chave de API; definir teto de gasto. |
 | ⬜ | 14/12 | **D29** Construir agente de verificação do pipeline | Claude Agent SDK | Agente que roda pipeline e pytest, executa checagens de qualidade read-only e gera relatório em markdown. |
-| ⬜ | 15/12 | **D30** Construir camada GOLD | GOLD e análise exploratória | Criar views/tabelas analíticas para população, PIB e PIB per capita. |
+| ✅ | 15/12 | **D30** Construir camada GOLD | GOLD e análise exploratória | Criar views/tabelas analíticas para população, PIB e PIB per capita. |
 | ⬜ | 16/12 | **D31** Analisar população e evolução municipal | GOLD e análise exploratória | Explorar distribuição, variações e municípios com maior/menor população. |
 | ⬜ | 17/12 | **D32** Analisar PIB e estrutura econômica | GOLD e análise exploratória | Comparar PIB corrente e composição setorial apenas em anos comparáveis. |
 | ⬜ | 18/12 | **D33** Produzir EDA e conclusões | GOLD e análise exploratória | Criar notebooks reproduzíveis, gráficos, achados e ressalvas. |

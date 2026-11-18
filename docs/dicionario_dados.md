@@ -97,6 +97,22 @@ Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `
 
 Não podem ser texto vazio: `nome_municipio`, `nome`, `descricao`, `unidade_armazenada` e `unidade_origem`. O schema `public` guarda só `public.ddl_aplicado`, o registro dos arquivos de `sql/ddl/` já aplicados (D18/D19).
 
+### 1.5 Camada GOLD (D30)
+
+Views no schema `gold`, recriadas por `python -m brasil_em_dados.db.aplicar_gold` a partir de `sql/gold/`. Não convertem unidades (regra 11): os valores já estão na `unidade_armazenada`.
+
+| View | Grão | Colunas principais |
+|---|---|---|
+| `dim_municipio` | município (295) | as duas hierarquias; `ano_instalacao` (só 4212650 e 4220000: 2013) |
+| `grade_indicador_municipio_ano` | município × indicador × ano publicado (12.095) | `valor`, `sinal_origem`, `status` (`com_valor`, `municipio_nao_instalado`, `sem_dado`), `aviso`, `base_estimativa` (só `pop_estimada`; fonte única), `unidade`, `tipo_medida`, `fonte`, `cod_serie`, `data_referencia`, `data_coleta` |
+| `painel_municipio_ano` | município × ano, 2010–2023 (4.130) | `pop_estimada`, `base_estimativa` (`ate_2012`, `2013_2017`, `desde_2018`), `pop_censo`, `pib_corrente_reais`, `pib_per_capita_reais`, `aviso` |
+| `variacao_populacao_censo` | município (295) | Censo 2010, Censo 2022, variação absoluta e %, `motivo` |
+| `variacao_anual` | município × indicador × ano (`pop_estimada`, `pib_corrente`) | bases dos dois anos, variação absoluta e %, `comparavel` (`NULL` sem um dos valores), `motivo`; PIB nominal |
+| `agregado_regiao_ano` | nível (estado, intermediária, imediata) × região × indicador × ano | soma, municípios somados, sem valor e excluídos, `aviso`, `base_estimativa`; sem per capita |
+| `participacao_estadual` | município × indicador × ano | `base_estimativa`, valor, total do estado, participação %, `aviso` |
+
+Regras aplicadas: 2 (estimativa e Censo em colunas separadas), 3 (PIB nominal), 4 (sem per capita agregado), 12 (bases da estimativa) e 13 (pop_estimada 2012 sem os municípios novos nas agregações).
+
 ### Regra de sinais por indicador
 
 | Indicador | Sinais | Carga |
