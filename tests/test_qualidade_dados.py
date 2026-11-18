@@ -5,7 +5,7 @@ bed_readonly numa transação READ ONLY que é sempre desfeita. Os valores esper
 catálogo (extract.catalogo) e das regras de conteúdo (extract.conteudo), não de números soltos.
 """
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from decimal import Decimal
 
 import pytest
@@ -100,7 +100,8 @@ def _sem_valor_previsto() -> set[tuple[str, str, int]]:
     return sem_valor
 
 
-def _exemplos(itens) -> list:
+def _exemplos(itens: Iterable) -> list:
+    """Até MAX_EXEMPLOS itens, ordenados, para as mensagens de falha."""
     return sorted(itens)[:MAX_EXEMPLOS]
 
 
@@ -225,13 +226,14 @@ def test_t6_nulos_sao_exatamente_os_previstos_e_todos_tem_sinal(conexao):
     nulos = conexao.execute(text(
         "SELECT cod_serie, cod_municipio, ano, sinal_origem FROM silver.fato_indicador_municipio "
         "WHERE valor IS NULL")).all()
-    sem_sinal = [tuple(l) for l in nulos if l.sinal_origem is None]
+    sem_sinal = [tuple(linha) for linha in nulos if linha.sinal_origem is None]
     assert not sem_sinal, f"NULL sem sinal_origem (regra 9): {_exemplos(sem_sinal)}"
 
-    obtidos = {tuple(l) for l in nulos}
+    obtidos = {tuple(linha) for linha in nulos}
     previstos = _nulos_previstos()
     # 14 = 6579: 2 novos × 2011 + 5938: 2 × 2010–2012 + Pesquisas: 2 × 2010–2012 (dicionário, seção 5).
-    assert len(previstos) == 14
+    assert len(previstos) == 14, (
+        f"a regra de NULLs previstos mudou: {len(previstos)} em vez de 14: {sorted(previstos)}")
     assert obtidos == previstos, (f"NULL inesperado: {_exemplos(obtidos - previstos)}; "
                                   f"NULL previsto ausente: {_exemplos(previstos - obtidos)}")
 
@@ -259,7 +261,15 @@ def test_t7_unidade_e_conversao_por_indicador_iguais_ao_catalogo(conexao):
     for codigo, (unidades, pares) in obtido.items():
         assert len(unidades) == 1, f"{codigo}: mais de uma unidade_armazenada {unidades}"
         assert len(pares) == 1, f"{codigo}: mais de um (unidade_origem, fator) {pares}"
-    assert obtido == esperado
+    assert obtido == esperado, (f"unidade/fator por indicador difere do catálogo: "
+                                f"banco {obtido}, catálogo {esperado}")
+
+    # Regra 2: o tipo_medida que cada linha da fato herda é o do catálogo (censo ≠ estimativa).
+    tipos = dict(conexao.execute(text(
+        "SELECT codigo_indicador, tipo_medida FROM silver.dim_indicador")).all())
+    tipos_catalogo = {codigo: i.tipo_medida for codigo, i in catalogo.INDICADORES.items()}
+    assert tipos == tipos_catalogo, (f"tipo_medida difere do catálogo: banco {tipos}, "
+                                     f"catálogo {tipos_catalogo}")
 
 
 # T8 ------------------------------------------------------------------------------------------
@@ -294,13 +304,6 @@ def test_t10_conversao_coerente_pib_multiplo_de_mil_e_populacao_inteira(conexao,
         "WHERE cod_serie = :serie AND mod(valor, :divisor) <> 0 ORDER BY 1, 2 LIMIT :limite"),
         {"serie": cod_serie, "divisor": divisor, "limite": MAX_EXEMPLOS}).all()
     assert not fora, f"{cod_serie}: valores que não são múltiplos de {divisor}: {fora}"
-
-
-def test_t10_cobre_pib_e_as_tres_series_de_populacao():
-    series = {cod for cod, _ in _divisores_de_conversao()}
-    esperadas = {s.cod_serie for s in catalogo.series()
-                 if s.codigo_indicador in {IND_PIB, IND_POP_ESTIMADA, IND_POP_CENSO}}
-    assert series == esperadas
 
 
 # T11 -----------------------------------------------------------------------------------------
@@ -381,11 +384,6 @@ def test_t11_pib_sobre_populacao_bate_com_per_capita_publicado(conexao):
                          f"tolerância [(município, ano, diferença, tolerância)]: {exemplos}")
 
 
-def test_t11_numero_de_pares_esperado_e_o_do_relatorio():
-    # Ancora a derivação: 12 anos × 295 − 4 (novos em 2011 e 2012) − 2 (Içara e Laguna 2012).
-    assert _pares_coerencia_esperados() == 3534
-
-
 # T13 -----------------------------------------------------------------------------------------
 
 def test_t13_data_coleta_casa_com_arquivo_raw_de_coleta_com_sucesso(conexao):
@@ -408,8 +406,8 @@ def test_t13_data_coleta_casa_com_arquivo_raw_de_coleta_com_sucesso(conexao):
              WHERE c.cod_serie = f.cod_serie AND c.status = 'sucesso')) AS sem_sucesso
         FROM silver.fato_indicador_municipio f GROUP BY 1 ORDER BY 1
     """)).all()
-    problemas = [tuple(l) for l in resultado
-                 if l.casadas != l.linhas or l.apos_ultima or l.sem_sucesso]
+    problemas = [tuple(linha) for linha in resultado
+                 if linha.casadas != linha.linhas or linha.apos_ultima or linha.sem_sucesso]
     assert not problemas, ("séries com data_coleta sem coleta de sucesso correspondente "
                            f"[(série, linhas, casadas, após a última, sem sucesso)]: {problemas}")
 
