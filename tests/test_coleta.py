@@ -27,6 +27,9 @@ SIDRA_OK = json.dumps([
 ]).encode()
 
 
+# Todos os anos do recorte (2010–2023), exigidos pela validação da API de Pesquisas.
+ANOS_VALIDOS = {str(a): "1.00" for a in range(2010, 2024)}
+
 def _relogio():
     base = datetime(2026, 11, 14, 15, 30, 0, tzinfo=timezone.utc)
     passos = count()
@@ -138,7 +141,7 @@ def _corpo_cadastro(ids) -> bytes:
 
 
 def _corpo_pesquisas(codigos6) -> bytes:
-    res = [{"localidade": c, "res": {"2021": "1.00"}} for c in codigos6]
+    res = [{"localidade": c, "res": ANOS_VALIDOS} for c in codigos6]
     return json.dumps([{"id": 47001, "res": res}]).encode()
 
 

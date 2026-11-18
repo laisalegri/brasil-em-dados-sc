@@ -24,11 +24,11 @@ Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar 
 | ✅ | 01/12 | **D18** Criar dim_municipio e dim_indicador | PostgreSQL e modelagem | Implementar dimensões, chaves, tipos e restrições. |
 | ✅ | 02/12 | **D19** Criar fato_indicador_municipio e controle | PostgreSQL e modelagem | Criar tabela fato, chave única, tipo de medida, unidade, fonte e a tabela `controle_execucao`. |
 | ✅ | 03/12 | **D20** Carregar dimensões | PostgreSQL e modelagem | Popular municípios e catálogo de indicadores; validar contagem e integridade. |
-| ⬜ | 04/12 | **D21** Carregar dados RAW no estágio de trabalho | PostgreSQL e modelagem | Ler JSONs e inserir dados preservando proveniência. |
+| ✅ | 04/12 | **D21** Carregar a fato e o controle a partir da RAW | PostgreSQL e modelagem | Ler JSONs e inserir dados preservando proveniência. Sem tabela de estágio: o parse é em memória e grava direto na fato (decisão D21). Absorve D23, D24 e D25. |
 | ⬜ | 05/12 | **D22** Criar subagent revisor-de-qualidade-de-dados | SILVER: qualidade e tratamento | Configurar subagent com acesso SQL somente leitura para revisar nulos, duplicidades, chaves, cobertura e regras. |
-| ⬜ | 07/12 | **D23** Normalizar população | SILVER: qualidade e tratamento | Padronizar código IBGE como texto, ano, valor, unidade e tipo de medida. |
-| ⬜ | 08/12 | **D24** Normalizar PIB municipal | SILVER: qualidade e tratamento | Padronizar valor monetário, ano e município; identificar ausências e inconsistências. |
-| ⬜ | 09/12 | **D25** Tratar população censitária e estimada | SILVER: qualidade e tratamento | Manter censo e estimativa identificados; não preencher lacunas com zero. |
+| ↪️ | 07/12 | **D23** Normalizar população | SILVER: qualidade e tratamento | **Absorvido pelo D21.** Padronizar código IBGE como texto, ano, valor, unidade e tipo de medida. |
+| ↪️ | 08/12 | **D24** Normalizar PIB municipal | SILVER: qualidade e tratamento | **Absorvido pelo D21.** Padronizar valor monetário, ano e município; identificar ausências e inconsistências. |
+| ↪️ | 09/12 | **D25** Tratar população censitária e estimada | SILVER: qualidade e tratamento | **Absorvido pelo D21.** Manter censo e estimativa identificados; não preencher lacunas com zero. |
 | ⬜ | 10/12 | **D26** Validar qualidade e criar testes automatizados | SILVER: qualidade e tratamento | Rodar o revisor-de-qualidade e transformar os achados em pytest com o escritor-de-testes. |
 | ⬜ | 11/12 | **D27** Criar subagent documentador e documentar limitações | SILVER: qualidade e tratamento | Configurar subagent para README, dicionário e metodologia; registrar lacunas, limitações e cautelas com PIB nominal. |
 | ⬜ | 12/12 | **D28** Estudar ciclo básico do Agent SDK em Python | Claude Agent SDK | Entender cliente, sessão, prompt, ferramentas, permissões e autenticação por chave de API; definir teto de gasto. |

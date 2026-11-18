@@ -71,6 +71,14 @@ REGRAS_SIDRA: dict[str, RegraSidra] = {
 # Fontes cujos códigos de município são conferidos contra o cadastro (ibge_localidades_sc).
 PRECISAM_DE_CADASTRO = frozenset(REGRAS_SIDRA) | {COD_PESQUISAS}
 
+# API de Pesquisas: anos exigidos e onde '-' (ausência) é aceito — regra 10, municípios novos
+# antes de 2013. A localidade vem com 6 dígitos (sem o verificador).
+ANOS_PESQUISAS = range(2010, 2024)
+TRACO = "-"
+TRACOS_PERMITIDOS_PESQUISAS = frozenset(
+    (codigo[:6], ano) for codigo in CODIGOS_NOVOS for ano in range(2010, 2013))
+_AUSENTE = object()
+
 
 def _exemplos(itens: list) -> list:
     return sorted(itens)[:MAX_EXEMPLOS]
@@ -204,10 +212,11 @@ def codigos_do_cadastro(municipios: Any) -> list[str]:
     return [str(m["id"]) for m in municipios]
 
 
-def _localidades_pesquisas(dados: Any) -> list[str]:
+def _resultados_pesquisas(dados: Any) -> list[tuple[str, Any]]:
+    """(localidade, valores por ano) de cada resultado da API de Pesquisas."""
     if not isinstance(dados, list) or not dados:
         raise ErroValidacao(f"{COD_PESQUISAS}: esperada lista não vazia")
-    localidades = []
+    resultados_validos = []
     for item in dados:
         resultados = item.get("res") if isinstance(item, dict) else None
         if not isinstance(resultados, list):
@@ -215,14 +224,45 @@ def _localidades_pesquisas(dados: Any) -> list[str]:
         for resultado in resultados:
             if not isinstance(resultado, dict) or "localidade" not in resultado:
                 raise ErroValidacao(f"{COD_PESQUISAS}: resultado sem 'localidade': {resultado!r}")
-            localidades.append(str(resultado["localidade"]))
-    return localidades
+            resultados_validos.append((str(resultado["localidade"]), resultado.get("res")))
+    return resultados_validos
+
+
+def _problemas_de_anos_e_sinais(resultados: list[tuple[str, Any]]) -> list[str]:
+    """Regra 10 na API de Pesquisas: todos os anos de 2010 a 2023, número em cada um, e '-'
+    só nos municípios instalados em 2013, antes desse ano."""
+    sem_res, faltando, nulos, sinais = [], [], [], []
+    for localidade, valores in resultados:
+        if not isinstance(valores, dict):
+            sem_res.append(localidade)
+            continue
+        for ano in ANOS_PESQUISAS:
+            valor = valores.get(str(ano), _AUSENTE)
+            if valor is _AUSENTE:
+                faltando.append((localidade, ano))
+            elif valor is None:
+                nulos.append((localidade, ano))
+            elif not (isinstance(valor, str) and _NUMERO.fullmatch(valor)) and (
+                    valor != TRACO or (localidade, ano) not in TRACOS_PERMITIDOS_PESQUISAS):
+                sinais.append((localidade, ano, valor))
+    problemas = []
+    if sem_res:
+        problemas.append(f"localidades sem valores por ano: {_exemplos(sem_res)}")
+    if faltando:
+        problemas.append(f"anos ausentes (localidade, ano): {_exemplos(faltando)}")
+    if nulos:
+        problemas.append(f"valores nulos no recorte (localidade, ano): {_exemplos(nulos)}")
+    if sinais:
+        problemas.append(f"sinais não permitidos: {_exemplos(sinais)}")
+    return problemas
 
 
 def validar_pesquisas(dados: Any, cadastro: list[str]) -> None:
-    """295 localidades com 6 dígitos, em correspondência 1:1 com o cadastro (D09)."""
-    localidades = _localidades_pesquisas(dados)
-    problemas: list[str] = []
+    """295 localidades com 6 dígitos, em correspondência 1:1 com o cadastro (D09), com todos
+    os anos de 2010 a 2023 e '-' só onde a regra 10 aceita ausência."""
+    resultados = _resultados_pesquisas(dados)
+    localidades = [localidade for localidade, _ in resultados]
+    problemas: list[str] = _problemas_de_anos_e_sinais(resultados)
     if len(localidades) != N_MUNICIPIOS:
         problemas.append(f"esperadas {N_MUNICIPIOS} localidades, vieram {len(localidades)}")
     invalidos = [c for c in localidades if not _CODIGO_6.fullmatch(c)]

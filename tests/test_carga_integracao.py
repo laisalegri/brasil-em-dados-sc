@@ -81,7 +81,7 @@ def test_carga_grava_os_valores_da_fonte(carregada):
 def test_mudanca_na_fonte_atualiza_so_a_linha_alterada_e_registra_a_chave(carregada, caplog):
     alterada = copy.deepcopy(AMOSTRA)
     alterada[0]["nome"] = "Florianópolis (nome alterado no teste)"
-    with caplog.at_level(logging.INFO, logger="brasil_em_dados.load.dimensoes"):
+    with caplog.at_level(logging.INFO, logger="brasil_em_dados.load.upsert"):
         resumo = upsert(carregada, DIM_MUNICIPIO, linhas_dim_municipio(alterada))
     assert (resumo.inseridas, resumo.atualizadas, resumo.inalteradas) == (0, 1, 4)
     assert _valor(carregada, "SELECT nome_municipio FROM silver.dim_municipio "

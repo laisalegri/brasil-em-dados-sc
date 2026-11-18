@@ -53,6 +53,9 @@ ESPEC_SIDRA = {
 
 # --- respostas sintéticas -------------------------------------------------------------------
 
+# Todos os anos do recorte (2010–2023), exigidos pela validação da API de Pesquisas.
+ANOS_VALIDOS = {str(a): "1.00" for a in range(2010, 2024)}
+
 def corpo_localidades(ids=TODOS, sufixo_nome: str = "") -> bytes:
     return json.dumps([{"id": int(i), "nome": f"Município {i}{sufixo_nome}"} for i in ids]
                       ).encode()
@@ -80,7 +83,7 @@ def corpo_sidra(cod_serie: str, **kwargs) -> bytes:
 
 def corpo_pesquisas(codigos6=None) -> bytes:
     codigos6 = codigos6 if codigos6 is not None else [c[:6] for c in TODOS]
-    res = [{"localidade": c, "res": {"2021": "1.00"}} for c in codigos6]
+    res = [{"localidade": c, "res": ANOS_VALIDOS} for c in codigos6]
     return json.dumps([{"id": 47001, "res": res}]).encode()
 
 

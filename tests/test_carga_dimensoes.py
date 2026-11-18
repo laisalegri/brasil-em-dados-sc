@@ -14,6 +14,7 @@ from brasil_em_dados.extract import catalogo, raw
 from brasil_em_dados.extract.cliente_http import RespostaHTTP
 from brasil_em_dados.load import __main__ as cli
 from brasil_em_dados.load import dimensoes
+from brasil_em_dados.load import upsert as modulo_upsert
 from brasil_em_dados.load.dimensoes import (
     DIM_INDICADOR,
     DIM_MUNICIPIO,
@@ -79,8 +80,9 @@ def test_coleta_ilegivel_falha(tmp_path):
 # --- SQL do upsert e resumo -------------------------------------------------------------------
 
 def test_sql_do_upsert_so_atualiza_quando_algo_mudou():
-    sql = dimensoes._sql_upsert(DIM_MUNICIPIO)
+    sql = modulo_upsert.sql_upsert(DIM_MUNICIPIO, 2)
     assert sql.startswith("INSERT INTO silver.dim_municipio (cod_municipio, nome_municipio,")
+    assert "VALUES (:cod_municipio_0, " in sql and "(:cod_municipio_1, " in sql  # lote de 2
     assert "ON CONFLICT (cod_municipio) DO UPDATE SET nome_municipio = EXCLUDED.nome_municipio" in sql
     assert "cod_municipio = EXCLUDED.cod_municipio" not in sql  # a chave não é atualizada
     assert "IS DISTINCT FROM" in sql
@@ -99,7 +101,7 @@ def test_cli_com_sucesso_devolve_0_e_registra_o_resumo(caplog):
     resumos = [Resumo("silver.dim_indicador", 4, 0, 0)]
     engine = Mock()
     with patch.object(cli, "configurar_logging"), \
-         patch.object(cli.dimensoes, "executar", return_value=resumos), \
+         patch.object(cli, "executar", return_value=resumos), \
          caplog.at_level("INFO", logger=cli.logger.name):
         assert cli.main(["dimensoes"], engine=engine) == 0
     assert "silver.dim_indicador: 4 inseridas" in caplog.text
@@ -109,7 +111,7 @@ def test_cli_com_sucesso_devolve_0_e_registra_o_resumo(caplog):
 def test_cli_com_erro_devolve_1(caplog):
     engine = Mock()
     with patch.object(cli, "configurar_logging"), \
-         patch.object(cli.dimensoes, "executar", side_effect=ErroCarga("sem coleta")), \
+         patch.object(cli, "executar", side_effect=ErroCarga("sem coleta")), \
          caplog.at_level("ERROR", logger=cli.logger.name):
         assert cli.main(["dimensoes"], engine=engine) == 1
     assert "transação desfeita. sem coleta" in caplog.text
@@ -117,7 +119,7 @@ def test_cli_com_erro_devolve_1(caplog):
 
 def test_cli_recusa_alvo_desconhecido():
     with pytest.raises(SystemExit):
-        cli.main(["fato"])
+        cli.main(["nada"])
 
 
 def test_loggers_ficam_na_hierarquia_do_projeto():
@@ -157,7 +159,8 @@ def _no_banco(linha: dict, **mudancas) -> dict:
 def test_decimal_do_banco_igual_ao_int_do_catalogo_nao_e_mudanca():
     nova = _serie()
     resultado = classificar(DIM_SERIE, _no_banco(nova, fator_conversao=Decimal("1000")), [nova])
-    assert (resultado.inseridas, resultado.atualizadas, resultado.inalteradas) == ([], {}, 1)
+    assert (resultado.inseridas, resultado.atualizadas) == ([], {})
+    assert len(resultado.inalteradas) == 1
 
 
 def test_linha_nova_e_inserida_e_linha_so_no_banco_e_listada():
@@ -165,7 +168,7 @@ def test_linha_nova_e_inserida_e_linha_so_no_banco_e_listada():
     antiga = _serie(cod_serie="sidra_antiga")
     resultado = classificar(DIM_SERIE, _no_banco(antiga), [nova])
     assert resultado.inseridas == [("sidra_5938_v37",)]
-    assert resultado.so_no_banco == [("sidra_antiga",)]
+    assert list(resultado.so_no_banco) == [("sidra_antiga",)]
 
 
 @pytest.mark.parametrize("coluna, antigo", [
@@ -218,11 +221,12 @@ def _conexao_falsa(no_banco: dict, retornos_por_execucao: list[list]):
     def execute(sql, parametros=None):
         resultado = MagicMock()
         if parametros is not None:  # o INSERT do upsert
-            resultado.all.return_value = [SimpleNamespace(inserida=x) for x in next(resultados)]
+            resultado.all.return_value = [SimpleNamespace(cod_serie="sidra_5938_v37", inserida=x)
+                                          for x in next(resultados)]
         return resultado
 
     conexao.execute.side_effect = execute
-    return conexao, patch.object(dimensoes, "_linhas_no_banco", return_value=no_banco)
+    return conexao, patch.object(modulo_upsert, "linhas_no_banco", return_value=no_banco)
 
 
 def test_contagem_divergente_do_banco_e_erro():

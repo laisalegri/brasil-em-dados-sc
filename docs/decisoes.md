@@ -2,6 +2,41 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-18 — D21: carga da fato e do controle de execução
+
+- **Decisão:**
+  - **Origem:**
+    - para cada série da `dim_serie` (lida do banco), a última coleta válida na RAW;
+    - a coleta é revalidada com as mesmas regras da coleta (`validar_conteudo`), usando como cadastro a `dim_municipio` do banco.
+  - **Parsers (`transform/fato.py`, sem I/O):**
+    - **SIDRA:** campos pelo cabeçalho. Pela regra 9, `-` vira 0 com sinal, número (inclusive `0`) vira valor sem sinal, e `...`, `..`, `X` e letras de faixa viram `NULL` com o sinal.
+    - **API de Pesquisas:** código de 6 para 7 dígitos pelo cadastro (1:1), recorte 2010–2023 na carga, e `-` vira `NULL` com sinal `-`.
+    - Um valor fora da legenda ou um `null` dentro do recorte é erro.
+  - **Regra 10 na API de Pesquisas:** a validação de conteúdo, na coleta e na revalidação da carga, exige os anos de 2010 a 2023 em cada localidade, com um número em cada um, e só aceita `-` para 4212650 e 4220000 em 2010–2012. Antes, só as localidades eram conferidas, e um `-` fora do previsto viraria `NULL` em silêncio.
+  - **Conversão (regra 11):** `Decimal(valor) × fator_conversao`, com 2 casas. Nunca `float`. Se o resultado exato tiver mais de 2 casas, a carga é recusada: arredondar mudaria o valor publicado em silêncio (regra 4).
+  - **`data_coleta`:** significa "a coleta que trouxe este valor (valor e sinal)". O comentário da coluna no banco foi atualizado por `sql/ddl/04_comentario_data_coleta.sql`. Só `valor` e `sinal_origem` definem se uma linha mudou; a `data_coleta` é gravada junto quando eles mudam. Uma coleta nova com os mesmos valores não reescreve nada. A coleta mais recente de cada série está em `silver.controle_execucao`.
+  - **Upsert em lote** (`load/upsert.py`, compartilhado com o D20):
+    - só as linhas novas ou alteradas vão ao `INSERT`, então uma linha inalterada não gasta número da sequência nem ida ao banco;
+    - `INSERT` com até 1.000 linhas por comando, limitado pelo número máximo de parâmetros, e `ON CONFLICT ... WHERE ROW(valor, sinal_origem) IS DISTINCT FROM ...`;
+    - o `RETURNING` devolve as chaves, e a conferência compara chave a chave o que o banco gravou com o que a classificação previu;
+    - um valor revisado é atualizado e aparece no log com a chave, o valor antigo e o novo;
+    - uma linha que existe só no banco gera aviso e nunca é apagada;
+    - `cod_serie` é imutável numa linha existente (`ErroCarga`), porque cada (indicador, ano) vem de uma única série.
+  - **Controle:** `data/controle/execucoes.jsonl` é carregado em `silver.controle_execucao` pela chave (`cod_serie`, `inicio`). Uma execução já carregada com conteúdo diferente é recusada, porque o arquivo só recebe acréscimos.
+  - **Sem tabela de estágio:** o parse é em memória e grava direto na fato. O texto do D21 no cronograma foi ajustado. D23, D24 e D25 foram absorvidos.
+  - **Comandos:** `python -m brasil_em_dados.load fato` carrega a fato e o controle; `tudo` carrega dimensões, fato e controle. Cada comando roda numa transação só e mostra o resumo por série.
+- **Por quê:**
+  - comparar a `data_coleta` faria cada coleta nova reescrever as 12.093 linhas, mesmo sem nenhuma mudança de valor;
+  - `Decimal` evita o erro binário do `float` em valores monetários;
+  - a revalidação na carga protege contra uma RAW incompleta ou alterada desde a coleta.
+- **Consequência:**
+  - a primeira carga real (2026-11-18) gravou 12.093 linhas: 3.245 da 6579, 293 da 1378, 295 da 4709, 4.130 da 5938 e 4.130 da API de Pesquisas. Também gravou 24 execuções no controle;
+  - na conferência:
+    - os 14 `NULL` são todos de 4212650 ou 4220000 antes de 2013 (6 com `-`, da API de Pesquisas, e 8 com `...`, do SIDRA);
+    - cada (indicador, ano) vem de uma única série;
+    - não há PIB nem per capita negativo;
+  - a segunda carga (`tudo`) deu tudo inalterado.
+
 ## 2026-11-17 — D20: carga das dimensões
 
 - **Decisão:**

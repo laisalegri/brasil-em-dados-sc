@@ -66,7 +66,7 @@ A coluna `url_extrator` de cada série é a "URL final" listada nas observaçõe
 | `cod_serie` | texto | FK para `dim_serie`; atende a regra 8 |
 | `valor` | `numeric(18,2)` | Já convertido para a `unidade_armazenada`; `NULL` quando veio sinal de ausência |
 | `sinal_origem` | texto | Sinal original da fonte; `NULL` quando o valor veio numérico |
-| `data_coleta` | data/hora | Momento da coleta que gerou o arquivo RAW |
+| `data_coleta` | data/hora | A coleta que trouxe este valor (valor e sinal): o `coletado_em` do `.meta.json` da coleta em que o valor apareceu pela primeira vez ou mudou. Uma coleta nova com o mesmo valor e sinal não altera a linha (D21). A coleta mais recente de cada série está em `silver.controle_execucao`. |
 
 Chave única: (`cod_municipio`, `codigo_indicador`, `ano`).
 
@@ -143,7 +143,7 @@ Não podem ser texto vazio: `nome_municipio`, `nome`, `descricao`, `unidade_arma
   - 2023 bate com a 4709.
   - 2010 não é reproduzível com o SIDRA.
   - 2022 bate em 271 de 295.
-- URL final: `https://servicodados.ibge.gov.br/api/v1/pesquisas/38/indicadores/47001/resultados/N6%5BN3%5B42%5D%5D` (295 localidades, série 1999–2023). O recorte 2010–2023 é feito no extrator.
+- URL final: `https://servicodados.ibge.gov.br/api/v1/pesquisas/38/indicadores/47001/resultados/N6%5BN3%5B42%5D%5D` (295 localidades, série 1999–2023). A RAW guarda a série inteira; o recorte 2010–2023 é feito na carga da fato (D21).
 - **Teste de validação (D10):** PIB (R$) / população ≈ per capita publicado, com a 6579 em 2011–2021 e a 4709 em 2023; excluídos 2010, 2022 e Içara e Laguna em 2012.
 
 ### Fontes descartadas
@@ -235,7 +235,7 @@ As colunas regionais seguem a D06; os demais nomes foram aprovados no D10.
 - **Código 6 → 7 dígitos (D09):**
   - A `localidade` vem sem dígito verificador e é convertida pelo cadastro da `dim_municipio`, casando com os 6 primeiros dígitos.
   - **Teste 1:1 obrigatório:** cada código de 6 dígitos corresponde a exatamente um código de 7 do cadastro, e nenhum fica sem par. Hoje: 295 ↔ 295, sem colisões.
-- **Período:** a resposta traz 1999–2023. O extrator recorta 2010–2023. Os anos de 1999 a 2009 vêm `null`.
+- **Período:** a resposta traz 1999–2023, e a RAW guarda a resposta inteira. A carga da fato recorta 2010–2023 (D21). Os anos de 1999 a 2009 vêm `null`.
 - **Sinais:** `-` carrega como `NULL`, com `sinal_origem` = `-` (regra 9, parte da API de Pesquisas). Diferente do SIDRA, aqui o `-` não é zero.
 - **Notas:** o campo `notas` veio todo `null` para SC.
 

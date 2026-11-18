@@ -19,6 +19,9 @@ TODOS = ANTIGOS + NOVOS
 ROTULOS_PADRAO = {"municipio": "D1C", "variavel": "D2C", "ano": "D3C", "valor": "V"}
 
 
+# Todos os anos do recorte (2010–2023), exigidos pela validação da API de Pesquisas.
+ANOS_VALIDOS = {str(a): "1.00" for a in range(2010, 2024)}
+
 def _sidra(municipios, anos, variavel, sinais=(), chaves=ROTULOS_PADRAO, valor="100"):
     """Monta uma resposta SIDRA sintética; `sinais` lista (município, ano) com '...'."""
     cabecalho = {"NC": "Nível Territorial (Código)",
@@ -248,7 +251,7 @@ PREFIXOS = [c[:6] for c in TODOS]
 
 
 def _pesquisas(codigos6):
-    return [{"id": 47001, "res": [{"localidade": c, "res": {"2021": "1.00"}} for c in codigos6]}]
+    return [{"id": 47001, "res": [{"localidade": c, "res": ANOS_VALIDOS} for c in codigos6]}]
 
 
 def test_pesquisas_valida_com_cadastro_1_para_1():
@@ -455,3 +458,53 @@ def test_codigo_fora_do_padrao_nao_e_repetido_como_fora_do_cadastro():
     with pytest.raises(ErroValidacao, match="fora do padrão 42xxxxx") as erro:
         _validar("sidra_4709_v93", dados)
     assert "fora do cadastro" not in str(erro.value)
+
+
+# --- regra 10 na API de Pesquisas: anos e sinais ------------------------------------------------
+
+def _pesquisas_com(alteracoes: dict[tuple[str, str], object], remover=()):
+    """Resposta válida com valores trocados em (localidade, ano) e anos removidos."""
+    dados = _pesquisas(PREFIXOS)
+    for resultado in dados[0]["res"]:
+        resultado["res"] = dict(resultado["res"])
+        for (localidade, ano), valor in alteracoes.items():
+            if resultado["localidade"] == localidade:
+                resultado["res"][ano] = valor
+        for localidade, ano in remover:
+            if resultado["localidade"] == localidade:
+                del resultado["res"][ano]
+    return dados
+
+
+def test_pesquisas_traco_dos_municipios_novos_antes_de_2013_e_aceito():
+    tracos = {(c[:6], str(a)): "-" for c in NOVOS for a in (2010, 2011, 2012)}
+    _validar("pesquisas_38_i47001", _pesquisas_com(tracos))
+
+
+def test_pesquisas_anos_fora_do_recorte_nulos_sao_aceitos():
+    # A resposta real traz 1999–2009 como null; o recorte da carga é 2010–2023.
+    _validar("pesquisas_38_i47001", _pesquisas_com({(PREFIXOS[0], "2009"): None}))
+
+
+@pytest.mark.parametrize("alteracao, mensagem", [
+    ({("421265", "2013"): "-"}, "sinais não permitidos"),        # novo, mas já instalado
+    ({(PREFIXOS[0], "2011"): "-"}, "sinais não permitidos"),     # município antigo
+    ({(PREFIXOS[0], "2011"): "..."}, "sinais não permitidos"),   # sinal do SIDRA
+    ({(PREFIXOS[0], "2015"): None}, "valores nulos no recorte"),
+    ({(PREFIXOS[0], "2015"): 123.4}, "sinais não permitidos"),   # número sem aspas
+], ids=["traco-novo-em-2013", "traco-antigo", "reticencias", "nulo", "numero-nao-texto"])
+def test_pesquisas_sinal_ou_nulo_fora_da_regra_10_falha(alteracao, mensagem):
+    with pytest.raises(ErroValidacao, match=mensagem):
+        _validar("pesquisas_38_i47001", _pesquisas_com(alteracao))
+
+
+def test_pesquisas_ano_ausente_falha():
+    with pytest.raises(ErroValidacao, match="anos ausentes .*2023"):
+        _validar("pesquisas_38_i47001", _pesquisas_com({}, remover=[(PREFIXOS[0], "2023")]))
+
+
+def test_pesquisas_resultado_sem_valores_por_ano_falha():
+    dados = _pesquisas(PREFIXOS)
+    dados[0]["res"][0]["res"] = ["2010"]
+    with pytest.raises(ErroValidacao, match="sem valores por ano"):
+        _validar("pesquisas_38_i47001", dados)

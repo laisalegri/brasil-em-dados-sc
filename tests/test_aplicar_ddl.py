@@ -239,7 +239,8 @@ def test_logger_fica_na_hierarquia_do_projeto_mesmo_rodando_como_main():
 
 def test_scripts_do_projeto_sao_lidos_pelo_aplicador():
     nomes = [s.nome for s in ler_scripts(PASTA_DDL)]
-    assert nomes == ["01_schemas.sql", "02_dimensoes.sql", "03_fato_e_controle.sql"]
+    assert nomes == ["01_schemas.sql", "02_dimensoes.sql", "03_fato_e_controle.sql",
+                     "04_comentario_data_coleta.sql"]
 
 
 def test_scripts_do_projeto_so_criam_com_if_not_exists():
