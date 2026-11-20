@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30) e agente de verificação (D28–D29). Próximos: EDA (D31–D33) e dashboards (D34–D37). Andamento em [docs/cronograma_realizado.md](docs/cronograma_realizado.md); plano original em [docs/cronograma_previsto.md](docs/cronograma_previsto.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30) e agente de verificação (D28–D29). Próximos: EDA (D31–D33) e dashboards (D34–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -192,5 +192,4 @@ Limitações completas, com evidência e tratamento: [docs/limitacoes.md](docs/l
 - [Dicionário de dados](docs/dicionario_dados.md)
 - [Padrão de coleta](docs/padrao_coleta.md)
 - [Registro de decisões](docs/decisoes.md)
-- [Cronograma realizado](docs/cronograma_realizado.md)
-- [Cronograma previsto (plano original, congelado)](docs/cronograma_previsto.md)
+- [Cronograma](docs/cronograma.md)

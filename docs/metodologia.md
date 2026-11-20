@@ -1,7 +1,7 @@
 # Metodologia
 
 - **Versão:** 2026-11-18 (cartão D27)
-- **Situação:** descreve o que está implementado até o D26: coleta RAW, banco, carga na SILVER e testes de qualidade. A GOLD, a EDA, os dashboards e o agente de verificação ainda não existem (D28 em diante, `docs/cronograma_previsto.md`).
+- **Situação:** descreve o que está implementado até o D26: coleta RAW, banco, carga na SILVER e testes de qualidade. A GOLD, a EDA, os dashboards e o agente de verificação ainda não existem (D28 em diante, `docs/cronograma.md`).
 
 Este documento resume o fluxo e aponta para os documentos de referência. As regras completas estão nos arquivos citados em cada seção.
 
