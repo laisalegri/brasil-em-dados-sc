@@ -2,6 +2,56 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-20 — D29: agente de verificação do pipeline
+
+- **Decisão:** a verificação tem duas partes, executadas com `python -m brasil_em_dados.verificacao [--coleta] [--carga] [--gold]`:
+  - um executor determinístico roda os passos e guarda as saídas;
+  - um agente do Claude Agent SDK lê os resultados com ferramentas próprias de leitura e escreve a análise.
+- **Executor (`verificacao/executor.py`):**
+  - roda sempre o pytest;
+  - coleta, carga e `aplicar_gold` só rodam com a flag correspondente, que só a autora passa (regra "nenhuma alteração de dados sem eu pedir");
+  - se um passo do pipeline falha, os seguintes não rodam, mas o pytest roda;
+  - quem decide se cada passo passou é o executor, pelo código de retorno; o agente só explica.
+- **Modelo:** `claude-sonnet-5-5` fixo, o Sonnet mais recente disponível no SDK, com `max_turns = 20`. Motivos:
+  - o relatório parte de números prontos (código de retorno, consultas fixas), sem decisão difícil para o modelo;
+  - economiza o limite do plano Pro, já que um modelo menor consome menos por execução.
+
+  Na execução real, foram 11 turnos e uma estimativa de US$ 0,06–0,08 a preço de API. O limite começou em 15 e subiu para 20 na revisão, para deixar margem: sem análise, a saída é 1.
+- **Ferramentas (`verificacao/ferramentas.py`):**
+  - `resultado_testes`, `saida_passo`, `controle_execucao`, `consulta_qualidade` e `relatorio_anterior`, todas de leitura;
+  - `entregar_relatorio`, que só guarda a análise na memória. O arquivo é gravado pelo código depois que o agente termina.
+- **Banco:** `controle_execucao` e `consulta_qualidade` usam `bed_readonly`, com `SET TRANSACTION READ ONLY` e a transação sempre desfeita, como o revisor-de-qualidade-de-dados. As consultas vêm de um catálogo fechado em `sql/verificacao/`, cujas regras são verificadas ao carregar:
+  - um `SELECT` ou `WITH` por arquivo;
+  - descrição na primeira linha;
+  - nome em `snake_case`.
+
+  O modelo só escolhe o nome da consulta, e o esquema da ferramenta lista os nomes válidos.
+- **Isolamento do agente:**
+  - `tools=[]`, `disallowed_tools=["mcp__claude_ai_*"]` (os conectores da conta, achado do D28), `allowed_tools` com a lista explícita das seis ferramentas, `permission_mode="dontAsk"` e `setting_sources=[]`;
+  - a mensagem `init` da sessão é conferida em três pontos. Se algum não conferir, o agente é interrompido com `interrupt()` e as ferramentas passam a recusar chamadas:
+    - `apiKeySource` tem de ser `none`, que é o login do plano. É a única prova, vinda da própria sessão, de que não houve chave de API (por exemplo, um `apiKeyHelper`). Se não for, a saída é 2;
+    - o modelo tem de ser `claude-sonnet-5-5`. Se não for, a saída é 3;
+    - a lista de ferramentas tem de ser exatamente a das seis próprias. Se não for, a saída é 3 e o relatório lista os nomes.
+
+    A origem da chave aparece no relatório.
+- **Credenciais:** a trava do D28 roda antes de qualquer passo. Se `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` ou uma variável `CLAUDE_CODE_USE_*` estiver definida, a execução para com código 2, mostrando só o nome, e nada roda.
+- **Segredos:** saídas dos passos, respostas das ferramentas, erros e relatório passam por `limpar_texto`, que troca URLs `postgres…://` e as senhas dos dois perfis por marcadores. Os logs (console e `logs/`) passam pelo mesmo filtro, aplicado nos handlers do logger do projeto, inclusive nos tracebacks.
+- **Relatório:** `reports/verificacao_AAAAMMDDTHHMMSS.md` (UTC), gravado com o modo `x`, então nunca sobrescreve; o caminho é montado a partir do carimbo validado. Se o relatório ou a pasta `execucao_<carimbo>/` já existirem, nada roda. A parte de execução é escrita pelo código:
+  - flags recebidas;
+  - comando e usuário do banco de cada passo (`bed_app` na carga e na GOLD, `bed_app` e `bed_readonly` no pytest, nenhum na coleta);
+  - usuário das ferramentas;
+  - consumo (turnos, tokens, uso por modelo e estimativa de custo rotulada como estimativa).
+
+  Só a seção de análise vem do modelo. As saídas completas ficam em `reports/execucao_<carimbo>/`.
+- **Diferenças em relação ao plano do D28:**
+  - `gravar_relatorio` virou `entregar_relatorio`, porque a gravação do arquivo ficou com o código; assim o consumo, que só se conhece no fim, entra no mesmo arquivo;
+  - entrou `saida_passo`, para ler as saídas de coleta, carga e GOLD.
+- **Ajuste após a primeira execução real:** o prompt passou a citar as regras 12 e 13 como casos conhecidos. Sem isso, o agente marcou a dupla contagem de 2012 como ALERTA.
+- **Limites:**
+  - cada execução consome o limite do plano;
+  - o login do Claude Code expira, e uma execução sem supervisão falharia;
+  - a classificação ERRO, ALERTA ou OBSERVAÇÃO é do modelo e deve ser lida como sugestão, e não como teste.
+
 ## 2026-11-20 — Autenticação do agente de verificação pelo plano Pro (antes do D28)
 
 - **Decisão:** o agente de verificação (D28/D29), feito com o Claude Agent SDK, autentica pelo login do plano Claude Pro (o mesmo do Claude Code). Não usa chave de API.

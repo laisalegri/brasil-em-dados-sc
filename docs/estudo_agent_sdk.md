@@ -117,6 +117,8 @@ Para o D29, o relatório pode registrar `num_turns`, `usage`, `model_usage` e a 
 
 ## Plano aprovado para o D29 (2026-11-20)
 
+O plano foi implementado no D29. As diferenças em relação a ele estão na decisão D29, em `docs/decisoes.md`: `gravar_relatorio` virou `entregar_relatorio`, e entrou `saida_passo`.
+
 1. **Executor determinístico** em `src/brasil_em_dados/verificacao/`:
    - roda sempre o `pytest`;
    - roda a coleta, a carga e o `aplicar_gold` só com as flags `--coleta`, `--carga` e `--gold`, nunca a pedido do agente;
