@@ -7,3 +7,4 @@ jupyter
 matplotlib
 seaborn
 pytest
+claude-agent-sdk==0.2.186
