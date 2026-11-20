@@ -37,6 +37,7 @@ pytest tests/test_x.py -v          # um arquivo de teste
 
 - Python 3.11+. Use sempre o `.venv` da raiz.
 - Credenciais ficam em `.env` (modelo em `.env.example`), lidas com `python-dotenv`.
+- O agente de verificação (Claude Agent SDK, D28/D29) autentica pelo login do plano Claude Pro, sem chave de API. `ANTHROPIC_API_KEY` não deve ser definida: se estiver no ambiente, tem prioridade sobre a assinatura e a cobrança passa a ser por API (decisão de 2026-11-20).
 
 ## Fontes de dados
 

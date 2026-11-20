@@ -2,6 +2,20 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-20 — Autenticação do agente de verificação pelo plano Pro (antes do D28)
+
+- **Decisão:** o agente de verificação (D28/D29), feito com o Claude Agent SDK, autentica pelo login do plano Claude Pro (o mesmo do Claude Code). Não usa chave de API.
+- **Por quê:**
+  - o agente é uma ferramenta pessoal de desenvolvimento, rodada localmente;
+  - logado com o plano, o Agent SDK consome dos limites da assinatura, sem cobrança extra;
+  - não é preciso definir teto de gasto.
+- **Fonte:** https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan. A política mudou algumas vezes em 2026, então a fonte deve ser reconferida no início do D28.
+- **Cuidado:** se `ANTHROPIC_API_KEY` estiver definida no ambiente, ela tem prioridade sobre a assinatura, e a cobrança passa a ser por uso da API. Por isso:
+  - `ANTHROPIC_API_KEY` saiu do `.env.example`, que agora explica que a variável não deve ser definida;
+  - a autora confere pessoalmente que ela não está preenchida no `.env`, que não é lido pelos agentes;
+  - no D28, o agente verifica ao iniciar se `ANTHROPIC_API_KEY` está definida e, se estiver, para com uma mensagem clara, sem mostrar o valor.
+- **Consequência:** o cartão D28 deixa de prever "autenticação por chave de API" e "teto de gasto".
+
 ## 2026-11-18 — D30: camada GOLD em views
 
 - **Decisão:**
