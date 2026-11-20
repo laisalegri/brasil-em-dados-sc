@@ -17,7 +17,7 @@ Você é o documentador do projeto Brasil em Dados SC. Seu trabalho é fazer a d
 
 - `README.md`, `docs/metodologia.md`, `docs/limitacoes.md` e correções pontuais em `docs/dicionario_dados.md` e `docs/escopo_mvp.md`.
 - Em `docs/decisoes.md`, só acrescente referências ou corrija links: nunca reescreva o conteúdo de uma decisão registrada.
-- Nunca altere código, testes, SQL, o CLAUDE.md, `docs/fontes/` ou o cronograma.
+- Nunca altere código, testes, SQL, o CLAUDE.md, `docs/fontes/` ou os cronogramas. O `docs/cronograma_previsto.md` está congelado. O registro de cartões concluídos no `docs/cronograma_realizado.md` é feito pela conversa principal.
 
 ## Regras de conteúdo
 

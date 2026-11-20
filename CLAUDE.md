@@ -1,6 +1,6 @@
 # CLAUDE.md — Brasil em Dados SC
 
-Contexto, regras e comandos para o Claude Code neste repositório. Leia também `docs/escopo_mvp.md`, `docs/decisoes.md` e `docs/cronograma.md` antes de propor mudanças de escopo ou de modelagem.
+Contexto, regras e comandos para o Claude Code neste repositório. Leia também `docs/escopo_mvp.md`, `docs/decisoes.md` e `docs/cronograma_realizado.md` antes de propor mudanças de escopo ou de modelagem.
 
 ## O projeto
 
@@ -8,7 +8,10 @@ Pipeline de dados públicos do IBGE sobre os 295 municípios de Santa Catarina (
 
 É um projeto de portfólio e de aprendizado. A autora trabalha 3 horas por dia, seguindo cartões D01–D42 (Trello). Ao começar uma tarefa, pergunte qual é o cartão do dia se não estiver claro.
 
-O cronograma dos cartões está em `docs/cronograma.md`. Ao concluir um cartão, marque ✅ na linha dele (troque ⬜ por ✅).
+Há dois cronogramas:
+
+- `docs/cronograma_realizado.md`: é onde fica registrado o cartão concluído. No commit que conclui o cartão, troque "Pendente" por "Feito em DD/MM/AAAA" e preencha as principais entregas. Os hashes entram no commit seguinte. Um cartão absorvido aparece como "Absorvido pelo Dxx".
+- `docs/cronograma_previsto.md`: é o plano original, congelado em 20/11/2026. Não o altere.
 
 ## Estrutura
 

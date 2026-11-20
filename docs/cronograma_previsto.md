@@ -1,4 +1,6 @@
-# Cronograma — Brasil em Dados SC
+# Cronograma previsto — Brasil em Dados SC
+
+> **Plano original, congelado em 20/11/2026.** Este arquivo não é mais atualizado: os status abaixo são os daquela data. O andamento real, com datas dos commits e entregas, está em [cronograma_realizado.md](cronograma_realizado.md).
 
 Fonte da verdade: quadro do Trello. O CSV exportado do quadro, usado para gerar esta tabela, fica fora do repositório. Cada cartão prevê 3 horas. Status: ✅ concluído · ⬜ pendente · ↪️ absorvido por outro cartão.
 
