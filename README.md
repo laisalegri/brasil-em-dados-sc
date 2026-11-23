@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30) e agente de verificação (D28–D29). Próximos: EDA (D31–D33) e dashboards (D34–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29) e análise exploratória em notebooks (D31–D33). Próximos: dashboards (D34–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -17,7 +17,8 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Carga da SILVER: 295 municípios, 4 indicadores, 5 séries, 12.093 linhas na fato | Pronto |
 | Testes automatizados (pytest), incluindo testes de qualidade sobre o banco | Pronto |
 | Camada GOLD: 7 views (grade, painel, variações, agregados e participação) | Pronto |
-| Notebooks de EDA, Power BI e Streamlit | Planejado (D31–D37) |
+| Notebooks de EDA (população, PIB e conclusões), lendo só a GOLD | Pronto |
+| Power BI e Streamlit | Planejado (D34–D37) |
 | Agente de verificação com o Claude Agent SDK | Pronto |
 
 ## Arquitetura
@@ -32,7 +33,7 @@ IBGE (API de Localidades, API SIDRA, API de Pesquisas)
  SILVER PostgreSQL (schema silver): dimensões, fato e controle de execução
         │  python -m brasil_em_dados.db.aplicar_gold
         ▼
-  GOLD  PostgreSQL (schema gold), views ──► Power BI · Streamlit · notebooks de EDA (planejados)
+  GOLD  PostgreSQL (schema gold), views ──► notebooks de EDA · Power BI e Streamlit (planejados)
 ```
 
 Detalhes do fluxo em [docs/metodologia.md](docs/metodologia.md).
@@ -44,16 +45,18 @@ Agentes de desenvolvimento: subagents do Claude Code em `.claude/agents/` (pesqu
 | Pasta | Conteúdo |
 | --- | --- |
 | `.claude/agents/` | Subagents do Claude Code usados no desenvolvimento |
-| `src/brasil_em_dados/` | Código do pipeline: `extract` (coleta), `transform` (interpretação e conversão, sem I/O), `load` (carga), `db` (conexões e aplicadores de DDL e da GOLD), `verificacao` (agente de verificação) |
+| `src/brasil_em_dados/` | Código do pipeline: `extract` (coleta), `transform` (interpretação e conversão, sem I/O), `load` (carga), `db` (conexões e aplicadores de DDL e da GOLD), `verificacao` (agente de verificação), `analise` (consultas, cálculos e gráficos da EDA) |
 | `sql/ddl/` | Criação do banco, dos usuários, dos schemas e das tabelas |
 | `sql/gold/` | Views da camada GOLD |
 | `sql/verificacao/` | Catálogo fechado de consultas de qualidade do agente de verificação |
+| `sql/analise/` | Consultas da EDA, só sobre views da GOLD |
 | `scripts/` | Estudos fora do pipeline (exemplo mínimo do Agent SDK) |
 | `tests/` | Testes automatizados (pytest) |
 | `docs/` | Escopo, decisões, dicionário de dados, padrão de coleta, metodologia, limitações e fontes |
 | `data/raw/`, `data/controle/`, `data/processed/` | Gerados pelo pipeline (não versionados) |
 | `logs/`, `reports/` | Logs do pipeline e relatórios de qualidade e de verificação (não versionados) |
-| `notebooks/`, `dashboards/` | EDA, Power BI e Streamlit (vazios por enquanto) |
+| `notebooks/` | EDA: população, PIB e conclusões, versionados com as saídas |
+| `dashboards/` | Power BI e Streamlit (vazios por enquanto) |
 
 ## Como rodar
 

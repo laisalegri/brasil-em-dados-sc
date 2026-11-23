@@ -7,12 +7,13 @@ O .env é lido num dicionário local: os segredos não vão para o ambiente do p
 
 import logging
 import os
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import dotenv_values
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import URL
 
 from brasil_em_dados.config import RAIZ_PROJETO
@@ -99,3 +100,15 @@ def engine_app(ambiente: Mapping[str, str] | None = None) -> Engine:
 def engine_readonly(ambiente: Mapping[str, str] | None = None) -> Engine:
     """Engine do usuário somente leitura (bed_readonly), usado pelos agentes."""
     return _criar_engine(PERFIL_READONLY, ambiente)
+
+
+@contextmanager
+def transacao_somente_leitura(engine: Engine) -> Iterator[Connection]:
+    """Conexão numa transação READ ONLY, sempre desfeita no fim (reforço além do bed_readonly)."""
+    with engine.connect() as conexao:
+        transacao = conexao.begin()
+        try:
+            conexao.execute(text("SET TRANSACTION READ ONLY"))
+            yield conexao
+        finally:
+            transacao.rollback()

@@ -11,14 +11,14 @@ ferramentas MCP do Claude Agent SDK. Regras:
 """
 
 import re
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Connection, Engine, text
+from sqlalchemy import Engine, text
 
+from brasil_em_dados.db import transacao_somente_leitura
 from brasil_em_dados.verificacao.executor import PASSOS_DO_PIPELINE, PYTEST, ResultadoPasso
 from brasil_em_dados.verificacao.seguranca import limpar_texto
 
@@ -90,18 +90,6 @@ def ler_catalogo(pasta: Path) -> dict[str, Consulta]:
     if not catalogo:
         raise ErroCatalogo(f"Nenhuma consulta em {pasta}")
     return catalogo
-
-
-@contextmanager
-def transacao_somente_leitura(engine: Engine) -> Iterator[Connection]:
-    """Conexão numa transação READ ONLY, sempre desfeita no fim."""
-    with engine.connect() as conexao:
-        transacao = conexao.begin()
-        try:
-            conexao.execute(text("SET TRANSACTION READ ONLY"))
-            yield conexao
-        finally:
-            transacao.rollback()
 
 
 def _valor(v: Any) -> str:

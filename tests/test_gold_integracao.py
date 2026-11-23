@@ -257,3 +257,42 @@ def test_variacao_anual_tem_um_par_por_ano_consecutivo(gold):
     anos = _anos_publicados_por_indicador()
     esperado = N_MUNICIPIOS * sum(len(anos[i]) - 1 for i in ("pop_estimada", "pib_corrente"))
     assert _um(gold, "SELECT count(*) FROM gold.variacao_anual")[0] == esperado
+
+
+def test_variacao_do_pib_e_calculada_em_todo_par_com_valores(gold):
+    # Regressão do D31: sem base_estimativa, a quebra virava NULL e zerava a variação do PIB.
+    sem_variacao, errados, nao_comparaveis = _um(gold, """
+        SELECT count(*) FILTER (WHERE variacao_absoluta IS NULL OR variacao_percentual IS NULL),
+               count(*) FILTER (WHERE variacao_absoluta <> valor - valor_anterior),
+               count(*) FILTER (WHERE comparavel IS NOT TRUE)
+        FROM gold.variacao_anual
+        WHERE codigo_indicador = 'pib_corrente'
+          AND valor IS NOT NULL AND valor_anterior IS NOT NULL AND valor_anterior <> 0""")
+    assert (sem_variacao, errados, nao_comparaveis) == (0, 0, 0)
+
+
+def test_variacao_do_pib_preenchida_nos_municipios_antigos(gold):
+    # (a) Todo par de anos consecutivos dos 293 municípios antigos tem variação calculada.
+    pares, preenchidos = _um(gold, """
+        SELECT count(*), count(variacao_absoluta)
+        FROM gold.variacao_anual
+        WHERE codigo_indicador = 'pib_corrente'
+          AND cod_municipio NOT IN ('4212650', '4220000')""")
+    assert pares == (N_MUNICIPIOS - len(CODIGOS_NOVOS)) * 13
+    assert preenchidos == pares
+
+
+def test_variacao_do_pib_dos_municipios_novos_e_nula_ate_2013(gold):
+    # (b) Regra 5: sem PIB em 2010–2012, não há variação até o par 2012→2013; a primeira é 2013→2014.
+    linhas = gold.execute(text("""
+        SELECT cod_municipio, ano, valor_anterior, valor, variacao_absoluta, variacao_percentual,
+               comparavel
+        FROM gold.variacao_anual
+        WHERE codigo_indicador = 'pib_corrente' AND cod_municipio IN ('4212650', '4220000')
+        ORDER BY cod_municipio, ano""")).all()
+    ate_2013 = [l for l in linhas if l.ano <= 2013]
+    depois = [l for l in linhas if l.ano > 2013]
+    assert len(ate_2013) == 6 and len(depois) == 20
+    assert all(l.variacao_absoluta is None and l.variacao_percentual is None for l in ate_2013)
+    assert all(l.comparavel is None for l in ate_2013)  # sem número, sem juízo
+    assert all(l.variacao_absoluta == l.valor - l.valor_anterior for l in depois)

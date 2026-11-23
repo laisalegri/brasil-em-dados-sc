@@ -38,9 +38,9 @@ Fonte do plano: quadro do Trello. O CSV exportado do quadro, usado para gerar a 
 | ✅ | **D28** Estudar ciclo básico do Agent SDK em Python | Claude Agent SDK | 12/12/26 | 20/11/26 | Entender cliente, sessão, prompt, ferramentas e permissões; autenticação pelo plano Pro (sem chave de API). |
 | ✅ | **D29** Construir agente de verificação do pipeline | Claude Agent SDK | 14/12/26 | 20/11/26 | Agente que roda pipeline e pytest, executa checagens de qualidade read-only e gera relatório em markdown. |
 | ✅ | **D30** Construir camada GOLD | GOLD e análise exploratória | 15/12/26 | 18/11/26 | Criar views/tabelas analíticas para população, PIB e PIB per capita. |
-| ⬜ | **D31** Analisar população e evolução municipal | GOLD e análise exploratória | 16/12/26 | — | Explorar distribuição, variações e municípios com maior/menor população. |
-| ⬜ | **D32** Analisar PIB e estrutura econômica | GOLD e análise exploratória | 17/12/26 | — | Comparar PIB corrente e composição setorial apenas em anos comparáveis. |
-| ⬜ | **D33** Produzir EDA e conclusões | GOLD e análise exploratória | 18/12/26 | — | Criar notebooks reproduzíveis, gráficos, achados e ressalvas. |
+| ✅ | **D31** Analisar população e evolução municipal | GOLD e análise exploratória | 16/12/26 | 23/11/26 | Explorar distribuição, variações e municípios com maior/menor população. |
+| ✅ | **D32** Analisar PIB e estrutura econômica | GOLD e análise exploratória | 17/12/26 | 23/11/26 | Comparar PIB corrente e composição setorial apenas em anos comparáveis. |
+| ✅ | **D33** Produzir EDA e conclusões | GOLD e análise exploratória | 18/12/26 | 23/11/26 | Criar notebooks reproduzíveis, gráficos, achados e ressalvas. |
 | ⬜ | **D34** Definir narrativa e KPIs | Dashboards | 19/12/26 | — | Desenhar páginas, filtros, métricas e perguntas respondidas por cada visual. |
 | ⬜ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | — | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal. |
 | ⬜ | **D36** Construir app Streamlit | Dashboards | 22/12/26 | — | Criar filtros por município, ano e indicador usando a camada analítica. |
@@ -60,12 +60,13 @@ As datas realizadas foram reconstruídas em 20/11/2026 a partir do `git log` e d
 - **Consulta usada:** `TZ=America/Sao_Paulo git log --date=format-local:'%d/%m/%Y %H:%M'`.
 - **Atribuição dos commits:** as mensagens não citam o cartão. Cada commit foi atribuído pelo cartão que ele marcou como ✅ no cronograma e pelos arquivos que alterou.
 
-### Resumo (até 20/11/2026)
+### Resumo (até 23/11/2026)
 
 | | Previsto | Realizado |
 |---|---|---|
 | Cartões D01–D30 | 30 cartões em 30 dias de trabalho (11/11 a 15/12) | 26 concluídos e 4 absorvidos, em 6 dias com commits (11, 12, 14, 17, 18 e 20/11) |
-| Cartões pendentes | — | 12 (D31 a D42) |
+| Cartões D31–D33 | 3 cartões em 3 dias (16 a 18/12) | 3 concluídos em 23/11 |
+| Cartões pendentes | — | 9 (D34 a D42) |
 | Fechamento do MVP | D39, em 26/12 | Em andamento |
 
 Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho sem commit não aparece no git. Cada cartão previa 3 horas.
@@ -123,6 +124,9 @@ Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho
 | D28 | Autenticação pelo plano Pro, `scripts/estudo_agent_sdk.py` com a trava de credenciais e `docs/estudo_agent_sdk.md` | `bc87853`, `769081d` |
 | D29 | `python -m brasil_em_dados.verificacao`: executor determinístico, agente Sonnet com ferramentas de leitura, relatório em `reports/` e decisão D29 | `a76cd5b` |
 | D30 | Sete views em `sql/gold/`, `aplicar_gold` e decisão D30 | `f4eb2bd` |
+| D31 | Pacote `brasil_em_dados.analise` (consultas em `sql/analise/`, cálculos e gráficos), `notebooks/01_populacao.ipynb`, correção da variação do PIB em `gold.variacao_anual` e decisão D31 | — |
+| D32 | `notebooks/02_pib.ipynb`: PIB nominal, concentração, participação 2010 × 2023, PIB per capita 2023 e regiões | — |
+| D33 | `notebooks/03_conclusoes.ipynb` e teste que executa os três notebooks | — |
 
 Commit fora de cartão: `12d0db4` (12/11/2026), um ajuste do texto do cronograma (fonte do quadro e datas previstas).
 

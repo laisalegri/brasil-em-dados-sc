@@ -2,6 +2,51 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-23 — D31: análise exploratória em notebooks finos (D31–D33)
+
+- **Decisão:** a EDA fica em três notebooks (`notebooks/01_populacao.ipynb`, `02_pib.ipynb`, `03_conclusoes.ipynb`) que só chamam funções do pacote `brasil_em_dados.analise` e comentam os resultados.
+  - **`consultas`:** cada função lê um arquivo de `sql/analise/` e devolve um DataFrame. O carregador recusa SQL que leia fora do schema `gold`. A conexão é `bed_readonly`, em transação `READ ONLY`. A função `transacao_somente_leitura` foi para `brasil_em_dados.db` e é usada também pelo agente de verificação.
+  - **`calculos`:** funções puras sobre DataFrames (rankings, variações, resumos, participação, segmentos por base).
+  - **`graficos`:** funções que devolvem `matplotlib.figure.Figure`, sem `pyplot`, para cada gráfico aparecer uma vez no notebook.
+- **Padrão dos gráficos:**
+  - título que afirma o achado, montado a partir dos dados;
+  - unidade no rótulo do eixo;
+  - rodapé "Fonte: IBGE (...), elaboração própria.";
+  - paleta fixa: os três primeiros tons da paleta categórica de referência, validados para daltonismo, mais um cinza neutro;
+  - o `$` é escapado em todo texto, porque no matplotlib dois `$` viram fórmula.
+- **Regra 11:** os valores são desenhados como vêm da GOLD (R$, habitantes, %). Os formatadores só abreviam o texto dos rótulos, por exemplo "R$ 513,4 bi". Um teste recusa multiplicação ou divisão por potências de 10 no código dos notebooks.
+- **Regras de leitura aplicadas:**
+  - **Estimativa:** a série estadual tem uma linha por base, sem ligar pontos de bases diferentes, e quebras marcadas em 2013 e 2018 (regra 12). O Censo nunca entra na mesma linha (regra 2). A soma de 2012 exclui os dois municípios novos (regra 13).
+  - **PIB:** sempre rotulado como nominal (regra 3). A mudança relativa é lida pela participação no total do estado, que é uma razão no mesmo ano e por isso não depende da inflação. O notebook explica que ela ainda reflete diferenças de preços entre atividades.
+  - **PIB per capita:** o publicado, com o aviso de que não é renda (regra 4). Por região intermediária, só somas e participações de PIB e de população, nunca per capita agregado.
+- **Correção na GOLD:** a view `gold.variacao_anual` deixava `NULL` a variação de todo o `pib_corrente` e marcava 3.829 pares como comparáveis.
+  - **Causa:** para o PIB, a `base_estimativa` é `NULL`, então a comparação que define a quebra dava `NULL`, e o `CASE WHEN NOT quebra_nivel` nunca calculava.
+  - **Correção:** `COALESCE(..., false)` só nos marcadores booleanos de quebra. A conta `valor - valor_anterior` continua propagando `NULL` (regra 5).
+  - **Aplicação:** reaplicada com `aplicar_gold` em 23/11/2026, com o OK da autora.
+  - **Testes de regressão:**
+    - variação do PIB calculada em todo par com valores;
+    - os 293 municípios antigos com os 13 pares preenchidos;
+    - 4212650 e 4220000 com variação `NULL` até 2012→2013.
+- **Reprodutibilidade:** os notebooks são versionados já executados, com as saídas. O `tests/test_notebooks.py` executa cópias dos três com `nbclient` (marcador `integracao`) e confere:
+  - que não há erro;
+  - que nenhuma saída tem URL de conexão nem as senhas do banco;
+  - que o código das células não converte unidade nem acessa o banco por conta própria.
+
+  O `nbclient` e o `nbconvert` vêm com o pacote `jupyter`, que já está no `requirements.txt`, então não há dependência nova.
+- **Critério de texto (revisão de 23/11):** toda afirmação dos notebooks vem de uma saída da própria célula ou de `docs/`.
+  - Não há comparação com outros estados nem com o Brasil, porque o projeto não tem esses dados (D01).
+  - Não há rótulos geográficos que o banco não tem, como "litoral", "Oeste" ou "balneários". Os textos usam as regiões intermediárias, ou critério explícito, como "com 'Balneário' no nome".
+  - Não há adjetivos sem número.
+  - O que `docs/limitacoes.md` marca como **NÃO CONFIRMADO** aparece como hipótese: a origem de Pescaria Brava e Balneário Rincão, e a causa dos saltos do PIB em municípios pequenos.
+- **Proteções no código:**
+  - as somas da análise usam `min_count=1`, e a participação no total recusa valor ausente, para que ausência nunca vire zero (regra 5);
+  - o carregador de `sql/analise/` recusa tabela sem schema, que seria resolvida pelo `search_path`;
+  - o teste dos notebooks confere que o kernel usa o Python do `.venv`.
+- **Fica de fora:**
+  - composição setorial, que segue como extensão (D10);
+  - recálculo de per capita;
+  - qualquer série que ligue estimativa e Censo.
+
 ## 2026-11-20 — D29: agente de verificação do pipeline
 
 - **Decisão:** a verificação tem duas partes, executadas com `python -m brasil_em_dados.verificacao [--coleta] [--carga] [--gold]`:

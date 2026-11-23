@@ -12,8 +12,14 @@ pares AS (
            a.base_estimativa AS base_anterior, b.base_estimativa,
            -- Regra 12: a troca de base vem da grade. ate_2012 → 2013_2017 é salto de nível
            -- (nova projeção); 2013_2017 → desde_2018 é revisão, sem salto visível em SC.
-           (a.base_estimativa = 'ate_2012' AND b.base_estimativa = '2013_2017') AS quebra_nivel,
-           (a.base_estimativa = '2013_2017' AND b.base_estimativa = 'desde_2018') AS quebra_revisao
+           -- COALESCE só nos marcadores de quebra (booleanos sobre base_estimativa), nunca em
+           -- valor: no PIB a base é NULL, a comparação dava NULL e o CASE abaixo deixava NULL a
+           -- variação de todo o pib_corrente (corrigido no D31). Valor ausente continua NULL, e
+           -- valor - NULL continua NULL (regra 5).
+           coalesce(a.base_estimativa = 'ate_2012' AND b.base_estimativa = '2013_2017', false)
+               AS quebra_nivel,
+           coalesce(a.base_estimativa = '2013_2017' AND b.base_estimativa = 'desde_2018', false)
+               AS quebra_revisao
     FROM serie a
     JOIN serie b ON b.cod_municipio = a.cod_municipio
                 AND b.codigo_indicador = a.codigo_indicador
