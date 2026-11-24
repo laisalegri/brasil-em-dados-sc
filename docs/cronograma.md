@@ -41,9 +41,9 @@ Fonte do plano: quadro do Trello. O CSV exportado do quadro, usado para gerar a 
 | ✅ | **D31** Analisar população e evolução municipal | GOLD e análise exploratória | 16/12/26 | 23/11/26 | Explorar distribuição, variações e municípios com maior/menor população. |
 | ✅ | **D32** Analisar PIB e estrutura econômica | GOLD e análise exploratória | 17/12/26 | 23/11/26 | Comparar PIB corrente e composição setorial apenas em anos comparáveis. |
 | ✅ | **D33** Produzir EDA e conclusões | GOLD e análise exploratória | 18/12/26 | 23/11/26 | Criar notebooks reproduzíveis, gráficos, achados e ressalvas. |
-| ⬜ | **D34** Definir narrativa e KPIs | Dashboards | 19/12/26 | — | Desenhar páginas, filtros, métricas e perguntas respondidas por cada visual. |
-| ⬜ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | — | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal. |
-| ⬜ | **D36** Construir app Streamlit | Dashboards | 22/12/26 | — | Criar filtros por município, ano e indicador usando a camada analítica. |
+| ✅ | **D34** Definir narrativa e KPIs | Dashboards | 19/12/26 | 24/11/26 | Desenhar páginas, filtros, métricas e perguntas respondidas por cada visual. |
+| ⬜ | **D36** Construir app Streamlit | Dashboards | 22/12/26 | — | **Feito antes do D35** (decisão de 24/11). Criar filtros por município, ano e indicador usando a camada analítica. |
+| ⬜ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | — | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal, com o app Streamlit como referência. |
 | ⬜ | **D37** Validar consistência entre dashboards | Dashboards | 23/12/26 | — | Comparar amostras e totais entre SQL, Power BI e Streamlit; incluir a checagem no agente de verificação. |
 | ⬜ | **D38** Revisão final com subagents | Integração e entrega | 24/12/26 | — | Rodar revisor-de-codigo e documentador no repositório inteiro; aplicar correções. |
 | ⬜ | **D39** Pipeline do zero, README e portfólio | Integração e entrega | 26/12/26 | — | Executar pipeline do zero com o agente de verificação, rodar testes, revisar README e publicar no GitHub. |
@@ -60,13 +60,14 @@ As datas realizadas foram reconstruídas em 20/11/2026 a partir do `git log` e d
 - **Consulta usada:** `TZ=America/Sao_Paulo git log --date=format-local:'%d/%m/%Y %H:%M'`.
 - **Atribuição dos commits:** as mensagens não citam o cartão. Cada commit foi atribuído pelo cartão que ele marcou como ✅ no cronograma e pelos arquivos que alterou.
 
-### Resumo (até 23/11/2026)
+### Resumo (até 24/11/2026)
 
 | | Previsto | Realizado |
 |---|---|---|
 | Cartões D01–D30 | 30 cartões em 30 dias de trabalho (11/11 a 15/12) | 26 concluídos e 4 absorvidos, em 6 dias com commits (11, 12, 14, 17, 18 e 20/11) |
 | Cartões D31–D33 | 3 cartões em 3 dias (16 a 18/12) | 3 concluídos em 23/11 |
-| Cartões pendentes | — | 9 (D34 a D42) |
+| Cartão D34 | 1 cartão em 19/12 | Concluído em 24/11 |
+| Cartões pendentes | — | 8 (D35 a D42) |
 | Fechamento do MVP | D39, em 26/12 | Em andamento |
 
 Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho sem commit não aparece no git. Cada cartão previa 3 horas.
@@ -88,7 +89,8 @@ Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho
   - as normalizações da SILVER (D23–D25) entraram na carga da fato (D21), que faz o parse em memória, sem tabela de estágio.
 - **Ordem diferente do plano:**
   - a GOLD (D30) foi feita antes do Agent SDK (D28–D29);
-  - a autenticação do agente passou a ser pelo plano Pro, sem chave de API e sem teto de gasto (decisão de 20/11).
+  - a autenticação do agente passou a ser pelo plano Pro, sem chave de API e sem teto de gasto (decisão de 20/11);
+  - o Streamlit (D36) passa a ser feito antes do Power BI (D35), para servir de referência a ele (decisão de 24/11). As datas previstas dos dois não mudam.
 
 ### Entregas e commits por cartão
 
@@ -124,9 +126,10 @@ Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho
 | D28 | Autenticação pelo plano Pro, `scripts/estudo_agent_sdk.py` com a trava de credenciais e `docs/estudo_agent_sdk.md` | `bc87853`, `769081d` |
 | D29 | `python -m brasil_em_dados.verificacao`: executor determinístico, agente Sonnet com ferramentas de leitura, relatório em `reports/` e decisão D29 | `a76cd5b` |
 | D30 | Sete views em `sql/gold/`, `aplicar_gold` e decisão D30 | `f4eb2bd` |
-| D31 | Pacote `brasil_em_dados.analise` (consultas em `sql/analise/`, cálculos e gráficos), `notebooks/01_populacao.ipynb`, correção da variação do PIB em `gold.variacao_anual` e decisão D31 | — |
-| D32 | `notebooks/02_pib.ipynb`: PIB nominal, concentração, participação 2010 × 2023, PIB per capita 2023 e regiões | — |
-| D33 | `notebooks/03_conclusoes.ipynb` e teste que executa os três notebooks | — |
+| D31 | Pacote `brasil_em_dados.analise` (consultas em `sql/analise/`, cálculos e gráficos), `notebooks/01_populacao.ipynb`, correção da variação do PIB em `gold.variacao_anual` e decisão D31 | `1d5f587` |
+| D32 | `notebooks/02_pib.ipynb`: PIB nominal, concentração, participação 2010 × 2023, PIB per capita 2023 e regiões | `1d5f587` |
+| D33 | `notebooks/03_conclusoes.ipynb` e teste que executa os três notebooks | `1d5f587` |
+| D34 | `docs/dashboards.md`: narrativa, seis páginas com 24 visuais, filtros globais, proibições e 15 números de referência para o D37; D36 antes do D35 e decisão D34 | — |
 
 Commit fora de cartão: `12d0db4` (12/11/2026), um ajuste do texto do cronograma (fonte do quadro e datas previstas).
 

@@ -2,6 +2,21 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-24 — D34: especificação única dos dashboards e Streamlit antes do Power BI
+
+- **Decisão:**
+  - **Ordem:** o app Streamlit (D36) é construído antes do dashboard Power BI (D35). As datas previstas dos dois cartões não mudam; só a ordem de execução.
+  - **Especificação única:** `docs/dashboards.md` vale para os dois dashboards (narrativa, páginas, visuais, filtros, proibições e números de referência). Uma diferença entre eles é defeito.
+  - **Totais só da GOLD:** totais de estado e de região vêm de `gold.agregado_regiao_ano`, e participação no estado de `gold.participacao_estadual`. Os dashboards não somam municípios.
+  - **Filtro de ano:** age sobre PIB, PIB per capita e `pop_estimada`. Os visuais de Censo têm anos fixos (2010 e 2022). Num ano sem estimativa, o visual diz "sem estimativa publicada", sem usar o Censo no lugar.
+  - **Mediana do per capita:** a mediana dos valores publicados de um mesmo ano é a única estatística permitida sobre o per capita. Ela aparece sempre com o rótulo "mediana entre os municípios", em todo lugar onde for exibida, e nunca como per capita do estado ou da região. Soma, média e per capita regional continuam proibidos (regra 4).
+- **Por quê:**
+  - **Streamlit primeiro:** no Streamlit, as consultas e os cálculos ficam em código Python e SQL versionado e testável, como na EDA (D31). O app vira a referência de layout, textos e números para o Power BI, cujo arquivo `.pbix` é binário e mais difícil de revisar. Assim, no D37, a comparação parte de uma implementação já conferida.
+  - **Totais da GOLD:** a soma de `pop_estimada` 2012 por município teria a dupla contagem da regra 13. Ler o total pronto também garante o mesmo número nos dois dashboards.
+  - **Censo com anos fixos:** um filtro de ano que mostrasse Censo em 2010 e 2022 e estimativa nos outros anos montaria, na prática, uma série mista (regra 2).
+  - **Mediana:** descreve a distribuição dos valores publicados sem criar um per capita novo; o notebook `02_pib` já a usa.
+- **Fica de fora:** mapa municipal, que exige a malha do IBGE como fonte nova (extensão).
+
 ## 2026-11-23 — D31: análise exploratória em notebooks finos (D31–D33)
 
 - **Decisão:** a EDA fica em três notebooks (`notebooks/01_populacao.ipynb`, `02_pib.ipynb`, `03_conclusoes.ipynb`) que só chamam funções do pacote `brasil_em_dados.analise` e comentam os resultados.

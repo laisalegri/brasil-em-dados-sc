@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29) e análise exploratória em notebooks (D31–D33). Próximos: dashboards (D34–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29) análise exploratória em notebooks (D31–D33) e especificação dos dashboards (D34). Próximos: app Streamlit e Power BI (D35–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -18,7 +18,8 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Testes automatizados (pytest), incluindo testes de qualidade sobre o banco | Pronto |
 | Camada GOLD: 7 views (grade, painel, variações, agregados e participação) | Pronto |
 | Notebooks de EDA (população, PIB e conclusões), lendo só a GOLD | Pronto |
-| Power BI e Streamlit | Planejado (D34–D37) |
+| Especificação dos dashboards (páginas, KPIs, filtros e números de referência) | Pronto |
+| Streamlit e Power BI | Planejado (D35–D37) |
 | Agente de verificação com o Claude Agent SDK | Pronto |
 
 ## Arquitetura
@@ -194,5 +195,6 @@ Limitações completas, com evidência e tratamento: [docs/limitacoes.md](docs/l
 - [Limitações](docs/limitacoes.md)
 - [Dicionário de dados](docs/dicionario_dados.md)
 - [Padrão de coleta](docs/padrao_coleta.md)
+- [Dashboards: narrativa e KPIs](docs/dashboards.md)
 - [Registro de decisões](docs/decisoes.md)
 - [Cronograma](docs/cronograma.md)
