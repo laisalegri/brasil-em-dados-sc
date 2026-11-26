@@ -1,0 +1,269 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "populacao_pop4_dados",
+  "position": {
+    "x": 24.000000000000004,
+    "y": 2859.8181818181811,
+    "z": 30000,
+    "height": 360,
+    "width": 1232,
+    "tabOrder": 30000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold agregado_regiao_ano"
+                    }
+                  },
+                  "Property": "ano"
+                }
+              },
+              "queryRef": "gold agregado_regiao_ano.ano",
+              "nativeQueryRef": "ano",
+              "displayName": "Ano"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Base da estimativa"
+                }
+              },
+              "queryRef": "Medidas.POP4 Base da estimativa",
+              "nativeQueryRef": "POP4 Base da estimativa",
+              "displayName": "Base da estimativa"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Estimativa – Base até 2012"
+                }
+              },
+              "queryRef": "Medidas.POP4 Estimativa – Base até 2012",
+              "nativeQueryRef": "POP4 Estimativa – Base até 2012",
+              "displayName": "Estimativa (base até 2012)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Estimativa – Base 2013–2017 (nova projeção)"
+                }
+              },
+              "queryRef": "Medidas.POP4 Estimativa – Base 2013–2017 (nova projeção)",
+              "nativeQueryRef": "POP4 Estimativa – Base 2013–2017 (nova projeção)",
+              "displayName": "Estimativa (base 2013–2017)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Estimativa – Base desde 2018 (revisão)"
+                }
+              },
+              "queryRef": "Medidas.POP4 Estimativa – Base desde 2018 (revisão)",
+              "nativeQueryRef": "POP4 Estimativa – Base desde 2018 (revisão)",
+              "displayName": "Estimativa (base desde 2018)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Municípios somados"
+                }
+              },
+              "queryRef": "Medidas.POP4 Municípios somados",
+              "nativeQueryRef": "POP4 Municípios somados",
+              "displayName": "Municípios somados"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Municípios excluídos"
+                }
+              },
+              "queryRef": "Medidas.POP4 Municípios excluídos",
+              "nativeQueryRef": "POP4 Municípios excluídos",
+              "displayName": "Municípios excluídos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Aviso da linha"
+                }
+              },
+              "queryRef": "Medidas.POP4 Aviso da linha",
+              "nativeQueryRef": "POP4 Aviso da linha",
+              "displayName": "Aviso"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "gold agregado_regiao_ano"
+                  }
+                },
+                "Property": "ano"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Dados (POP4)'"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#0b0b0b'"
+                    }
+                  }
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

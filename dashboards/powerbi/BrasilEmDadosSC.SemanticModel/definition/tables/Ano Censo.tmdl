@@ -1,0 +1,15 @@
+/// Tabela desconectada para os seletores locais de Censo (2010 ou 2022) de VG4 e POP1; padrão 2022. Não sincronizar entre páginas.
+table 'Ano Censo'
+	lineageTag: 4fd29b37-2657-4bc0-8eb2-bfafef06dffd
+
+	column 'Ano Censo'
+		formatString: 0
+		lineageTag: daee3daa-23aa-4075-87db-a129d1a78b3d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ano Censo]
+
+	partition 'Ano Censo' = calculated
+		mode: import
+		source = SELECTCOLUMNS({2010, 2022}, "Ano Censo", [Value])
+

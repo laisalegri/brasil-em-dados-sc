@@ -1,0 +1,20 @@
+relationship AutoDetected_88bc6f9f-46e2-4409-9e76-be4f44fd8e3e
+	fromColumn: 'gold grade_indicador_municipio_ano'.cod_municipio
+	toColumn: 'gold dim_municipio'.cod_municipio
+
+relationship AutoDetected_12fa8a94-eec8-4f31-bfbd-9fd124aadd0a
+	fromColumn: 'gold painel_municipio_ano'.cod_municipio
+	toColumn: 'gold dim_municipio'.cod_municipio
+
+relationship AutoDetected_07eb0016-b6ac-4034-85f4-ac8a4f37672b
+	fromColumn: 'gold participacao_estadual'.cod_municipio
+	toColumn: 'gold dim_municipio'.cod_municipio
+
+relationship AutoDetected_557c51e6-2935-48d1-968f-38ac36f32e9b
+	fromColumn: 'gold variacao_anual'.cod_municipio
+	toColumn: 'gold dim_municipio'.cod_municipio
+
+relationship AutoDetected_cdc482e5-0755-4327-b070-7aee90dca8d9
+	fromColumn: 'gold variacao_populacao_censo'.cod_municipio
+	toColumn: 'gold dim_municipio'.cod_municipio
+

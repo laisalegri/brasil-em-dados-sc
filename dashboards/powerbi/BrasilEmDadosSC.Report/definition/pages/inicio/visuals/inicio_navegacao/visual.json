@@ -1,0 +1,262 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "inicio_navegacao",
+  "position": {
+    "x": 24,
+    "y": 184,
+    "z": 4000,
+    "height": 213.21784999999997,
+    "width": 1232,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Páginas",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI Semibold",
+                      "fontSize": "14pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• ",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": "Visão geral:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " o tamanho do estado, a concentração e o peso das regiões.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• ",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": "População:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " quem concentra moradores e como a população variou entre os Censos 2010 e 2022.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• ",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": "Economia:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " PIB nominal, participação no PIB do estado e PIB per capita.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "•",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " Perfil do município:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " um município de cada vez, escolhido no filtro Município.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "•",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": " Sobre os dados: ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  },
+                  {
+                    "value": "fontes, cobertura e regras de leitura.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#0b0b0b"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " A página Comparação existe só no app Streamlit (decisão D35). Os filtros Região, Município e Ano ficam no topo de cada página e valem para todas elas.",
+                    "textStyle": {
+                      "fontStyle": "italic",
+                      "fontSize": "10pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "dropShadow": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

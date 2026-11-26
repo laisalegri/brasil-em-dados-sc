@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29), análise exploratória em notebooks (D31–D33), especificação dos dashboards (D34) e app Streamlit (D36). Próximos: Power BI (D35) e validação entre dashboards (D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29), análise exploratória em notebooks (D31–D33), especificação dos dashboards (D34), app Streamlit (D36) e relatório Power BI (D35). Próximo: validação entre dashboards (D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -20,7 +20,8 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Notebooks de EDA (população, PIB e conclusões), lendo só a GOLD | Pronto |
 | Especificação dos dashboards (páginas, KPIs, filtros e números de referência) | Pronto |
 | App Streamlit com seis páginas, lendo só a GOLD (`streamlit run dashboards/streamlit/app.py`) | Pronto |
-| Power BI e validação entre dashboards | Planejado (D35, D37) |
+| Relatório Power BI com seis páginas, lendo só a GOLD (`dashboards/powerbi/BrasilEmDadosSC.pbip`) | Pronto |
+| Validação entre dashboards | Planejado (D37) |
 | Agente de verificação com o Claude Agent SDK | Pronto |
 
 ## Arquitetura
@@ -35,7 +36,7 @@ IBGE (API de Localidades, API SIDRA, API de Pesquisas)
  SILVER PostgreSQL (schema silver): dimensões, fato e controle de execução
         │  python -m brasil_em_dados.db.aplicar_gold
         ▼
-  GOLD  PostgreSQL (schema gold), views ──► notebooks de EDA · app Streamlit · Power BI (planejado)
+  GOLD  PostgreSQL (schema gold), views ──► notebooks de EDA · app Streamlit · Power BI
 ```
 
 Detalhes do fluxo em [docs/metodologia.md](docs/metodologia.md).
@@ -52,13 +53,13 @@ Agentes de desenvolvimento: subagents do Claude Code em `.claude/agents/` (pesqu
 | `sql/gold/` | Views da camada GOLD |
 | `sql/verificacao/` | Catálogo fechado de consultas de qualidade do agente de verificação |
 | `sql/analise/` | Consultas da EDA, só sobre views da GOLD |
-| `scripts/` | Estudos fora do pipeline (exemplo mínimo do Agent SDK) |
+| `scripts/` | Estudos fora do pipeline (exemplo mínimo do Agent SDK) e `powerbi/`: gerador e verificador das páginas PBIR do Power BI |
 | `tests/` | Testes automatizados (pytest) |
 | `docs/` | Escopo, decisões, dicionário de dados, padrão de coleta, metodologia, limitações e fontes |
 | `data/raw/`, `data/controle/`, `data/processed/` | Gerados pelo pipeline (não versionados) |
 | `logs/`, `reports/` | Logs do pipeline e relatórios de qualidade e de verificação (não versionados) |
 | `notebooks/` | EDA: população, PIB e conclusões, versionados com as saídas |
-| `dashboards/` | `streamlit/`: app (`app.py` e uma página por seção em `paginas/`); `powerbi/`: vazio por enquanto |
+| `dashboards/` | `streamlit/`: app (`app.py` e uma página por seção em `paginas/`); `powerbi/`: projeto Power BI (`BrasilEmDadosSC.pbip`, modelo em TMDL e relatório em PBIR) |
 
 ## Como rodar
 
@@ -134,6 +135,10 @@ streamlit run dashboards/streamlit/app.py
 ```
 
 Abre o app no navegador (por padrão, em http://localhost:8501). O app lê só as views da GOLD, como `bed_readonly`, e segue a especificação de [docs/dashboards.md](docs/dashboards.md). Os filtros de região, município e ano ficam na barra lateral. Os dados ficam em cache: depois de uma nova carga, use "Clear cache" no menu do app ou reinicie o comando. Se o banco não estiver no ar, o app mostra uma mensagem de erro, sem detalhes da conexão.
+
+**9. Power BI**
+
+Abra `dashboards/powerbi/BrasilEmDadosSC.pbip` no Power BI Desktop, com a conexão ao PostgreSQL como `bed_readonly` (as credenciais ficam no Desktop, não no projeto). O PBIP salvo no Desktop é a versão de referência: regenerar as páginas apaga os ajustes manuais, então só faça isso depois de passá-los para o gerador (decisão D35). Com o Desktop fechado, rode, nesta ordem, `ajustar_medidas_tmdl.py`, `gerar_pbir.py`, `baixar_schemas.py` (uma vez) e `verificar_pbir.py`, todos em `scripts/powerbi/`; o uso de cada um está no início do arquivo.
 
 ## Agente de verificação
 

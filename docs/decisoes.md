@@ -2,6 +2,35 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-26 — D35: relatório Power BI com escopo reduzido
+
+- **Decisão:**
+  - **Páginas no Power BI:** Início, Visão geral, População, Economia, Perfil do município e Sobre os dados (seções 4.1 a 4.4 e 4.6 de `docs/dashboards.md`, mais a página inicial do Streamlit). Comparação (4.5) fica só no Streamlit.
+    - Versão inicial (26/11): só as quatro páginas de análise. Na revisão da autora, entraram Início e Sobre os dados.
+    - Sobre os dados usa só a `gold.grade_indicador_municipio_ano`, que já está no modelo (fonte, série, unidade, anos, status e última coleta), como as consultas `fontes_series` e `cobertura` do Streamlit. O Power BI não se conecta à SILVER.
+  - **Formato:** projeto PBIP em `dashboards/powerbi/`, com o relatório em PBIR e o modelo em TMDL, importando as views do schema `gold` como `bed_readonly`.
+  - **Ferramentas:**
+    - o modelo (relacionamentos e medidas DAX) é feito pelo Power BI Modeling MCP, configurado no `.mcp.json` da raiz, com a versão fixada em `1.0.1` (a que funcionou; o EULA foi aceito pela autora em 26/11);
+    - as páginas são geradas nos arquivos JSON do PBIR por `scripts/powerbi/` (gerador e verificador de JSON, schema oficial e referências ao modelo);
+    - o trabalho é feito pelo subagent `especialista-power-bi`.
+  - **Cartões:** usam medidas de texto "… (exibição)", com o valor exato e "sem dado" na ausência (C4, regra 5). As medidas numéricas não mudam, e o verificador falha se um cartão usar medida numérica (o Power BI mostraria "(Em branco)").
+  - **Diferenças em relação ao Streamlit,** por falta de visual nativo:
+    - ECO2 em barras agrupadas, em vez de halteres;
+    - POP2 com os gráficos percentual e absoluto lado a lado, em vez de seletor;
+    - as marcações de 2013 e 2018 (C8) em texto ao lado do gráfico;
+    - sem destaque do ano nos gráficos de linha;
+    - "Santa Catarina" é a segmentação de região sem seleção;
+    - ECO4 ordenado pela variação, não pelo módulo, porque o Power BI só ordena por campo exibido.
+  - **Versão de referência:** depois da geração inicial, o PBIP salvo no Power BI Desktop é a versão de referência. Os ajustes visuais da autora e as correções pontuais nos `visual.json` (ECO4, POP2 e o preenchimento dos cartões de texto) não estão no `gerar_pbir.py`. Ele não roda sobre o PBIP sem antes passar esses ajustes para o código; o aviso está no início do script. Edições nos arquivos só com o Desktop fechado, e depois `verificar_pbir.py`.
+  - **Power BI Service:** a publicação num workspace pessoal, sem "Publicar na Web", serviu só para a revisão por prints. Ela não faz parte do MVP, que continua local (CLAUDE.md: serviços de nuvem fora do escopo).
+  - **Dependências do verificador:** `jsonschema==4.26.0` e `referencing==0.37.0`, fixadas no `requirements.txt` com o OK da autora. Já vinham instaladas por outros pacotes, mas o verificador importa as duas diretamente.
+  - **Arquivos locais fora do Git:** `.pbi/localSettings.json` (assinatura das credenciais desta máquina) e `.pbi/cache.abf` (dados importados). O PBIP versionado tem só servidor e banco (`localhost:5432`, `brasil_em_dados`), sem usuário nem senha.
+- **Motivo:**
+  - terminar o D35 mais rápido, com o Streamlit já completo como referência;
+  - as páginas mantidas cobrem os 15 números de referência R01–R15: só R08 e R09 também aparecem na Comparação, e ambos têm visual no Perfil (PER1 e PER5) e na Economia (ECO2);
+  - Sobre os dados voltou porque um relatório publicado precisa mostrar as fontes e a cobertura sem depender do Streamlit, e os dados dela já estão no modelo.
+- **Fora:** página CMP no Power BI. Se voltar, segue a mesma especificação de `docs/dashboards.md`.
+
 ## 2026-11-24 — D36: app Streamlit
 
 - **Decisão:**

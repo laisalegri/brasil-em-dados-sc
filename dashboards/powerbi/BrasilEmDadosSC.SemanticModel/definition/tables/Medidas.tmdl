@@ -1,0 +1,1051 @@
+/// Tabela só para guardar as medidas explícitas do relatório (docs/dashboards.md, seções 4 e 6).
+table Medidas
+	lineageTag: f4652040-ab22-47d1-8dde-52b996e62e15
+
+	/// Ano do filtro global (padrão 2023).
+	measure 'Ano selecionado' = SELECTEDVALUE ( Anos[Ano], 2023 )
+		formatString: 0
+		displayFolder: 0 Filtros
+		lineageTag: 5934fca2-e4f0-434c-8e6d-1d869cae1dd7
+
+	/// Ano do seletor local de Censo (2010 ou 2022; padrão 2022).
+	measure 'Ano Censo selecionado' = SELECTEDVALUE ( 'Ano Censo'[Ano Censo], 2022 )
+		formatString: 0
+		displayFolder: 0 Filtros
+		lineageTag: b5130c33-024c-4553-b06c-6c0016cc533a
+
+	/// Código da região intermediária escolhida; em branco = Santa Catarina (todas).
+	measure 'Região selecionada (código)' = IF ( ISFILTERED ( 'Filtro territorio'[Região intermediária] ), SELECTEDVALUE ( 'Filtro territorio'[cod_regiao_intermediaria] ) )
+		displayFolder: 0 Filtros
+		lineageTag: 1ab055fe-f367-4762-bd50-a932c61e4948
+
+	/// Nome da região intermediária escolhida; em branco = Santa Catarina (todas).
+	measure 'Região selecionada (nome)' = IF ( ISFILTERED ( 'Filtro territorio'[Região intermediária] ), SELECTEDVALUE ( 'Filtro territorio'[Região intermediária] ) )
+		displayFolder: 0 Filtros
+		lineageTag: ffd52509-f2d1-4068-8f16-6d3429bd5a79
+
+	/// 'Santa Catarina' ou 'região de X', para títulos.
+	measure 'Território (rótulo)' = VAR _nome = [Região selecionada (nome)] RETURN IF ( ISBLANK ( _nome ), "Santa Catarina", "região de " & _nome )
+		displayFolder: 0 Filtros
+		lineageTag: 755f6f2f-128e-4c62-af1c-15863cafb20b
+
+	/// Código IBGE (7 dígitos) do município escolhido no filtro global.
+	measure 'Município selecionado (código)' = IF ( ISFILTERED ( 'Filtro territorio'[Município] ), SELECTEDVALUE ( 'Filtro territorio'[cod_municipio] ) )
+		displayFolder: 0 Filtros
+		lineageTag: f688c6a1-f422-419e-8bb5-051d10a9d626
+
+	/// Nome do município escolhido no filtro global (só para exibição; a chave é o código).
+	measure 'Município selecionado (nome)' = IF ( ISFILTERED ( 'Filtro territorio'[Município] ), SELECTEDVALUE ( 'Filtro territorio'[Município] ) )
+		displayFolder: 0 Filtros
+		lineageTag: 1fafbec2-a538-4172-8c5d-7e5be9a8b4d3
+
+	/// 1 se o município da linha (gold dim_municipio) está na região escolhida (ou se a região é SC); em branco fora do recorte.
+	measure 'Município no recorte' = VAR _r = [Região selecionada (código)] VAR _cod = SELECTEDVALUE ( 'gold dim_municipio'[cod_municipio] ) RETURN IF ( NOT ISBLANK ( _cod ) && ( ISBLANK ( _r ) || SELECTEDVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ) = _r ), 1 )
+		formatString: 0
+		displayFolder: 0 Filtros
+		lineageTag: 0324cef3-3bef-4d85-8485-abc41e4cc95d
+
+	/// Cor para formatação condicional: laranja no município escolhido, azul nos demais (paleta do Streamlit).
+	measure 'Cor destaque município' = IF ( SELECTEDVALUE ( 'gold dim_municipio'[cod_municipio] ) = [Município selecionado (código)], "#eb6834", "#2a78d6" )
+		displayFolder: 0 Filtros
+		lineageTag: 0770c8a6-0a66-4f0f-b934-cbbcb42c6ecc
+
+	/// Rodapé de cada página (C9).
+	measure Rodapé = "Fonte: IBGE (SIDRA e API de Pesquisas), elaboração própria."
+		displayFolder: 0 Filtros
+		lineageTag: bab9bf6b-0d0f-4513-aa82-fa31bfd47fcc
+
+	/// R01: agregado_regiao_ano, estado, pop_censo, 2022 (C1).
+	measure 'R01 População SC Censo 2022' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2022 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 9d787322-a4d8-4c58-ac85-4419c5daad52
+
+	/// R02: agregado_regiao_ano, estado, pop_censo, 2010 (C1).
+	measure 'R02 População SC Censo 2010' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2010 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: c3f5c804-124e-4243-a7c5-1c7acd08c1b3
+
+	/// R02: municípios somados no total de SC do Censo 2010.
+	measure 'R02 Municípios somados Censo 2010' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[municipios_somados] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2010 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: f02fa451-2d9b-4a4c-a7cb-d1c20314b7fd
+
+	/// R03: PIB nominal (valores correntes) de SC em 2023, de agregado_regiao_ano (C1, regra 3).
+	measure 'R03 PIB nominal SC 2023' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente", 'gold agregado_regiao_ano'[ano] = 2023 )
+		formatString: "R$" #,0.00
+		displayFolder: R Referências
+		lineageTag: f9187d8b-426c-4013-89d2-28846046bc29
+
+	/// R04: PIB nominal (valores correntes) de SC em 2010, de agregado_regiao_ano (C1, regra 3).
+	measure 'R04 PIB nominal SC 2010' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente", 'gold agregado_regiao_ano'[ano] = 2010 )
+		formatString: "R$" #,0.00
+		displayFolder: R Referências
+		lineageTag: 02754c2e-813d-4108-b012-be45a2cd8ddd
+
+	/// R05: estimativa de SC em 2012, sem 4212650 e 4220000 (regra 13).
+	measure 'R05 Estimativa SC 2012' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[ano] = 2012 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 347fcac2-6ddf-48c1-a316-3aeadfd0126d
+
+	/// R05: municípios somados na estimativa de SC 2012.
+	measure 'R05 Municípios somados 2012' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[municipios_somados] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[ano] = 2012 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: e766cfcd-ca66-42f3-9620-44534b02be85
+
+	/// R05: municípios excluídos da estimativa de SC 2012 (regra 13).
+	measure 'R05 Municípios excluídos 2012' = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[municipios_excluidos] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[ano] = 2012 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 30ef69dc-05ec-4a9c-abdf-632194ea4541
+
+	/// R06: os 3 maiores municípios no Censo 2022, com população e participação (participacao_estadual).
+	measure 'R06 3 maiores em população Censo 2022' = VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022, NOT ISBLANK ( 'gold participacao_estadual'[valor] ) ) VAR _top = TOPN ( 3, _t, 'gold participacao_estadual'[valor], DESC ) RETURN CONCATENATEX ( _top, 'gold participacao_estadual'[nome_municipio] & " " & FORMAT ( 'gold participacao_estadual'[valor], "#,0" ) & " (" & FORMAT ( 'gold participacao_estadual'[participacao_percentual], "0.0000" ) & "%)", "; ", 'gold participacao_estadual'[valor], DESC )
+		displayFolder: R Referências
+		lineageTag: ec7299b3-dd7f-41e9-8b18-5006ee86ff74
+
+	/// R07: os 3 maiores municípios em PIB nominal 2023, com valor e participação (participacao_estadual).
+	measure 'R07 3 maiores em PIB nominal 2023' = VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = 2023, NOT ISBLANK ( 'gold participacao_estadual'[valor] ) ) VAR _top = TOPN ( 3, _t, 'gold participacao_estadual'[valor], DESC ) RETURN CONCATENATEX ( _top, 'gold participacao_estadual'[nome_municipio] & " R$ " & FORMAT ( 'gold participacao_estadual'[valor], "#,0.00" ) & " (" & FORMAT ( 'gold participacao_estadual'[participacao_percentual], "0.0000" ) & "%)", "; ", 'gold participacao_estadual'[valor], DESC )
+		displayFolder: R Referências
+		lineageTag: 19a05857-4e31-4a51-aac7-0ae0f79ef169
+
+	/// R08: Censo 2010 de Florianópolis (4205407).
+	measure 'R08 Florianópolis Censo 2010' = CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[pop_censo_2010] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = "4205407" )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: e5100523-1c02-42c4-8fc1-6c84c8e47561
+
+	/// R08: Censo 2022 de Florianópolis (4205407).
+	measure 'R08 Florianópolis Censo 2022' = CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[pop_censo_2022] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = "4205407" )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 043a3d9f-1741-4215-bef7-7214410c5e15
+
+	/// R08: variação percentual entre os Censos 2010 e 2022 de Florianópolis.
+	measure 'R08 Florianópolis variação entre os Censos' = CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[variacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = "4205407" )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: R Referências
+		lineageTag: d17c06f0-c138-4c8f-a891-a9f80afbca47
+
+	/// R09: participação de Itajaí (4208203) no PIB nominal de SC em 2010.
+	measure 'R09 Itajaí participação no PIB 2010' = CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[cod_municipio] = "4208203", 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = 2010 )
+		formatString: 0.0000"%"
+		displayFolder: R Referências
+		lineageTag: 2538b076-fac6-4a4b-bc22-8bd90b766ded
+
+	/// R09: participação de Itajaí (4208203) no PIB nominal de SC em 2023.
+	measure 'R09 Itajaí participação no PIB 2023' = CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[cod_municipio] = "4208203", 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = 2023 )
+		formatString: 0.0000"%"
+		displayFolder: R Referências
+		lineageTag: 5a4a4910-1709-4e6a-bc45-ca94abb08a37
+
+	/// R10: municípios com variação percentual entre os Censos (COUNT ignora brancos).
+	measure 'R10 Municípios comparáveis entre os Censos' = CALCULATE ( COUNT ( 'gold variacao_populacao_censo'[variacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), REMOVEFILTERS ( 'gold variacao_populacao_censo' ) )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 4486d1d2-936f-4216-9ad6-e297e09e2a0c
+
+	/// R10: municípios com variacao_absoluta < 0 entre os Censos.
+	measure 'R10 Municípios que perderam população' = CALCULATE ( COUNTROWS ( 'gold variacao_populacao_censo' ), REMOVEFILTERS ( 'gold dim_municipio' ), REMOVEFILTERS ( 'gold variacao_populacao_censo' ), 'gold variacao_populacao_censo'[variacao_absoluta] < 0 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: a473c4a0-f132-4b52-a567-1be37d537d62
+
+	/// R11: município com o maior PIB per capita publicado em 2023 (sem agregação; regra 4).
+	measure 'R11 Maior PIB per capita 2023 (município)' = VAR _t = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[ano] = 2023, NOT ISBLANK ( 'gold painel_municipio_ano'[pib_per_capita_reais] ) ) RETURN CONCATENATEX ( TOPN ( 1, _t, 'gold painel_municipio_ano'[pib_per_capita_reais], DESC ), 'gold painel_municipio_ano'[nome_municipio], ", " )
+		displayFolder: R Referências
+		lineageTag: 4c11447d-ed0e-4afb-adb4-ed2cba5aff74
+
+	/// R11: maior PIB per capita publicado em 2023, valor de um município (não é per capita agregado; regra 4).
+	measure 'R11 Maior PIB per capita 2023 (valor)' = CALCULATE ( MAX ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[ano] = 2023 )
+		formatString: "R$" #,0.00
+		displayFolder: R Referências
+		lineageTag: e54e99d2-80e6-4a57-b0cc-5fb826a6f7f2
+
+	/// R12: mediana entre os municípios do PIB per capita publicado em 2023. Não é o per capita de SC (regra 4).
+	measure 'R12 PIB per capita 2023: mediana entre os municípios' = CALCULATE ( MEDIAN ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[ano] = 2023 )
+		formatString: "R$" #,0.00
+		displayFolder: R Referências
+		lineageTag: 8a6d9517-246e-4192-aa36-f6d5f36a6d42
+
+	/// R12: municípios com PIB per capita publicado em 2023 (base da mediana).
+	measure 'R12 Municípios com PIB per capita 2023' = CALCULATE ( COUNT ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[ano] = 2023 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 65cbd4ef-5f05-4f6e-9965-bf6d41d8a155
+
+	/// R13: variações anuais do PIB nominal com |variação| > 50% (alerta A1).
+	measure 'R13 Saltos de PIB nominal acima de 50% (variações)' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) && ABS ( 'gold variacao_anual'[variacao_percentual] ) > 50 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: e629afd5-2822-419c-814f-00fdaece215d
+
+	/// R13: municípios com ao menos uma variação anual do PIB nominal acima de 50% em módulo (alerta A1).
+	measure 'R13 Saltos de PIB nominal acima de 50% (municípios)' = CALCULATE ( DISTINCTCOUNT ( 'gold variacao_anual'[cod_municipio] ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) && ABS ( 'gold variacao_anual'[variacao_percentual] ) > 50 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 48c79172-fe05-4c5e-84c4-4aa5ea1fec2b
+
+	/// R14: pares municipais da variação da estimativa 2012→2013 (quebra de série; regra 12).
+	measure 'R14 Estimativa 2012→2013 pares' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: f5ab414b-e267-4bd5-899d-7b2d71377906
+
+	/// R14: pares 2012→2013 com variação calculada (esperado 0; regra 12). É uma contagem: zero linhas = 0 (não é ausência de valor).
+	measure 'R14 Estimativa 2012→2013 com variação' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013, NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) ) + 0
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 315edd9a-9f19-449f-930b-c207c28d79f9
+
+	/// R14: pares 2012→2013 com comparavel = verdadeiro (esperado 0; regra 12).
+	measure 'R14 Estimativa 2012→2013 comparáveis' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013, 'gold variacao_anual'[comparavel] = TRUE () ) + 0
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: fe6e1833-0af5-48f9-bb3d-14fcfa7e2ac8
+
+	/// R15: pares municipais da variação da estimativa 2017→2018 (revisão da projeção; regra 12).
+	measure 'R15 Estimativa 2017→2018 pares' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: bd541ad5-28ce-4ac7-9ec9-1ace76e32027
+
+	/// R15: pares 2017→2018 com variação calculada (esperado 295; regra 12).
+	measure 'R15 Estimativa 2017→2018 com variação' = CALCULATE ( COUNT ( 'gold variacao_anual'[variacao_percentual] ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018 )
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 7ece02ef-10db-4e90-8848-ac46bd7dc0e9
+
+	/// R15: pares 2017→2018 com comparavel = verdadeiro (esperado 0; regra 12).
+	measure 'R15 Estimativa 2017→2018 comparáveis' = CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018, 'gold variacao_anual'[comparavel] = TRUE () ) + 0
+		formatString: #,0
+		displayFolder: R Referências
+		lineageTag: 7e4d175a-3597-4613-9b7a-842c1c6a3b4e
+
+	/// Regra 3 (textos.py AVISO_PIB_NOMINAL).
+	measure 'Aviso PIB nominal' = "PIB nominal, a preços correntes: a variação entre anos inclui inflação e não é crescimento real (regra 3)."
+		displayFolder: Avisos
+		lineageTag: 4569a6f3-a5bd-4f7c-80a2-2e2b15d4de5c
+
+	/// Limitações, seção 5 (AVISO_REVISAO_PIB).
+	measure 'Aviso revisão do PIB' = "2021–2023 foram revisados pelo IBGE em 19/12/2025; 2022–2023 ainda estão sujeitos a revisão (limitações, seção 5)."
+		displayFolder: Avisos
+		lineageTag: 9355fad9-d62d-4d29-94a1-dc3facaa8a4d
+
+	/// Limitações, seção 6 (AVISO_DISTRIBUICAO).
+	measure 'Aviso distribuição do PIB' = "O PIB municipal é uma distribuição do PIB estadual feita pelo IBGE por indicadores de atividade, e não uma medição direta (limitações, seção 6)."
+		displayFolder: Avisos
+		lineageTag: 4b92d5a6-9096-4984-95aa-3e1f7a944013
+
+	/// C7, regra 4 (AVISO_PER_CAPITA).
+	measure 'Aviso PIB per capita' = "PIB per capita publicado pelo IBGE; não é renda (regra 4)."
+		displayFolder: Avisos
+		lineageTag: 494d0fae-deac-408f-b487-fc24328e8e39
+
+	/// Limitações, seção 9 (AVISO_DENOMINADOR).
+	measure 'Aviso denominador do per capita' = "O denominador do per capita muda conforme o ano: estimativa até 2021, 1ª apuração do Censo em 2022 (limitações, seção 9)."
+		displayFolder: Avisos
+		lineageTag: ded1faea-ec4d-43ac-a494-2ed1a6395c80
+
+	/// Alerta A1 (AVISO_A1).
+	measure 'Aviso A1' = "Alerta A1: em municípios pequenos, a entrada ou a saída de um estabelecimento pode multiplicar o PIB de um ano para outro; a causa de cada caso é NÃO CONFIRMADA (limitações, seção 6)."
+		displayFolder: Avisos
+		lineageTag: 84edf0cf-96dd-4077-bde7-00dcff963de5
+
+	/// ECO2 e PER5 (AVISO_PARTICIPACAO).
+	measure 'Aviso participação' = "A participação é uma razão entre valores do mesmo ano e não depende da inflação geral, mas reflete diferenças de preços entre atividades."
+		displayFolder: Avisos
+		lineageTag: b059a67f-8c12-4595-ad08-2fdc1a49742c
+
+	/// VG4, regra 4 (AVISO_SEM_PER_CAPITA_REGIONAL).
+	measure 'Aviso sem per capita regional' = "Comparação entre participações; não é PIB per capita regional (regra 4)."
+		displayFolder: Avisos
+		lineageTag: e81031c8-d0c7-4978-b89f-5905fe2469cc
+
+	/// C8, regra 12 (AVISO_QUEBRAS).
+	measure 'Aviso quebras da estimativa' = "Estimativa com três bases (regra 12): de 2012 para 2013 há quebra de série (nova projeção por UF) e a variação não é calculada; de 2017 para 2018 há revisão da projeção, e o IBGE declara comparáveis só 2013–2017. Linhas de bases diferentes não se ligam."
+		displayFolder: Avisos
+		lineageTag: 3d9deaf7-b91f-48ee-998a-b1fd46f8db08
+
+	/// Regra 13 (AVISO_DUPLA_CONTAGEM).
+	measure 'Aviso dupla contagem 2012' = "Em 2012, o total exclui Pescaria Brava (4212650) e Balneário Rincão (4220000), em dupla contagem com o município de origem (regra 13)."
+		displayFolder: Avisos
+		lineageTag: 765b0558-8c81-4f2f-b303-24a632e1ef3c
+
+	/// Regra 2 (AVISO_CENSO_OFICIAL).
+	measure 'Aviso Censo oficial' = "A variação oficial de população é Censo 2010 × Censo 2022; a estimativa não substitui os Censos (regra 2)."
+		displayFolder: Avisos
+		lineageTag: 3a882542-f132-4fb5-941b-f7dc20e432c2
+
+	/// Limitações, seção 8 (AVISO_APURACOES).
+	measure 'Aviso apurações do Censo 2022' = "O Censo 2022 tem duas apurações; a diferença entre elas não foi confirmada (limitações, seção 8)."
+		displayFolder: Avisos
+		lineageTag: 2e78c674-0e1f-45e8-be17-4c75da5cb681
+
+	/// POP2 (AVISO_LAGUNA).
+	measure 'Aviso Laguna' = "Laguna: a queda pode vir do desmembramento de Pescaria Brava (NÃO CONFIRMADO; limitações, seção 10)."
+		displayFolder: Avisos
+		lineageTag: c222e866-8c9d-43f4-a7ef-8e2e786ad6b3
+
+	/// POP3 (AVISO_CRICIUMA).
+	measure 'Aviso Criciúma' = "Região de Criciúma: inclui os 2 municípios instalados em 2013; o território é o mesmo em 2010 e 2022 só se a população deles estava em Laguna e Içara em 2010 (NÃO CONFIRMADO; limitações, seção 10)."
+		displayFolder: Avisos
+		lineageTag: a6ab0ba7-c651-48af-a2e5-e95ca85f7c8c
+
+	/// Regras 6 e 10 (AVISO_NAO_INSTALADO).
+	measure 'Aviso não instalado' = "Município instalado em 2013: sem dado antes disso (regras 6 e 10)."
+		displayFolder: Avisos
+		lineageTag: 00ca6597-d197-4629-b2da-b58912b9dfcb
+
+	/// Regra 12 (AVISO_REVISAO_2018).
+	measure 'Aviso revisão 2018' = "2017→2018: revisão da projeção; a variação é calculada, mas o IBGE declara comparáveis só 2013–2017 (regra 12)."
+		displayFolder: Avisos
+		lineageTag: 4dd0d626-b689-41b0-9f3c-48fcd24f9ea0
+
+	/// 'de Santa Catarina' ou 'da região de X' (textos.de_territorio).
+	measure 'Território (com preposição)' = VAR _nome = [Região selecionada (nome)] RETURN IF ( ISBLANK ( _nome ), "de Santa Catarina", "da região de " & _nome )
+		displayFolder: 0 Filtros
+		lineageTag: 34118e4a-63f5-45ca-8c39-210d1027b199
+
+	/// VG1a: Censo 2022 do estado ou da região escolhida, lido pronto de agregado_regiao_ano (C1). Não responde ao filtro de ano.
+	measure 'VG1a População (Censo 2022)' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2022 )
+		formatString: #,0
+		displayFolder: 1 Visão geral
+		lineageTag: e3dfd0b8-d132-45e6-9543-ffb39d9717eb
+
+	/// VG1b: PIB nominal (valores correntes) do estado ou da região no ano do filtro, de agregado_regiao_ano (C1, regra 3).
+	measure 'VG1b PIB nominal no ano' = VAR _r = [Região selecionada (código)] VAR _a = [Ano selecionado] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente", 'gold agregado_regiao_ano'[ano] = _a )
+		formatString: "R$" #,0.00
+		displayFolder: 1 Visão geral
+		lineageTag: e95ecdbc-0480-49a7-9244-242868883bcc
+
+	/// VG1b: rótulo do cartão, 'PIB nominal AAAA'.
+	measure 'VG1b Rótulo' = "PIB nominal " & [Ano selecionado]
+		displayFolder: 1 Visão geral
+		lineageTag: 71da292d-4a01-4393-950f-a37d7e3d0f91
+
+	/// VG1b: legenda com o valor exato, como no Streamlit.
+	measure 'VG1b Valor exato (texto)' = VAR _v = [VG1b PIB nominal no ano] RETURN "PIB nominal " & [Ano selecionado] & ", valor exato: " & IF ( ISBLANK ( _v ), "sem dado", "R$ " & FORMAT ( _v, "#,0.00" ) ) & "."
+		displayFolder: 1 Visão geral
+		lineageTag: 1c101372-401f-4519-b932-8d36a318483a
+
+	/// VG1c: contagem de municípios em gold.dim_municipio no estado ou na região escolhida.
+	measure 'VG1c Municípios' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold dim_municipio' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ) )
+		formatString: #,0
+		displayFolder: 1 Visão geral
+		lineageTag: 8f936790-bfdd-4052-8080-348881592b52
+
+	/// VG2: PIB nominal por ano (eixo 'gold agregado_regiao_ano'[ano]), estado ou região, de agregado_regiao_ano (C1, regra 3).
+	measure 'VG2 PIB nominal (valores correntes)' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente" )
+		formatString: "R$" #,0.00
+		displayFolder: 1 Visão geral
+		lineageTag: 56182bdb-b1e0-45b6-87e1-2cdd99f152df
+
+	/// VG2: variação nominal (%) sobre o ano anterior, entre dois totais prontos da GOLD; não é crescimento real (regra 3). Em branco em 2010.
+	measure 'VG2 Variação nominal sobre o ano anterior' = VAR _ano = SELECTEDVALUE ( 'gold agregado_regiao_ano'[ano] ) VAR _atual = [VG2 PIB nominal (valores correntes)] VAR _ant = CALCULATE ( [VG2 PIB nominal (valores correntes)], 'gold agregado_regiao_ano'[ano] = _ano - 1 ) RETURN IF ( NOT ISBLANK ( _atual ) && NOT ISBLANK ( _ant ), ( _atual - _ant ) / _ant * 100 )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 1 Visão geral
+		lineageTag: acb90a85-9da5-4045-af0f-678cb4a76fa7
+
+	/// VG2: laranja no ano do filtro, azul nos demais (formatação condicional).
+	measure 'VG2 Cor do ano' = IF ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[ano] ) = [Ano selecionado], "#eb6834", "#2a78d6" )
+		displayFolder: 1 Visão geral
+		lineageTag: 51d31ab4-0fa7-4f6a-8e03-6ac349985675
+
+	/// VG2: título com o achado (textos.titulo_serie_pib). Abreviação só pelo formato (C3).
+	measure 'VG2 Título' = VAR _ini = CALCULATE ( [VG2 PIB nominal (valores correntes)], 'gold agregado_regiao_ano'[ano] = 2010 ) VAR _fim = CALCULATE ( [VG2 PIB nominal (valores correntes)], 'gold agregado_regiao_ano'[ano] = 2023 ) RETURN "PIB nominal " & [Território (com preposição)] & ": de R$ " & FORMAT ( _ini, "0,,,.0" ) & " bi (2010) para R$ " & FORMAT ( _fim, "0,,,.0" ) & " bi (2023), em valores correntes"
+		displayFolder: 1 Visão geral
+		lineageTag: 98cd683d-9ede-4dd1-abac-750d211b2241
+
+	/// VG3a: soma de participacao_percentual dos 10 maiores no Censo 2022 (sempre o estado). Soma participações prontas da GOLD; não monta total.
+	measure 'VG3a Participação dos 10 maiores (Censo 2022)' = VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022, NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) RETURN SUMX ( TOPN ( 10, _t, 'gold participacao_estadual'[participacao_percentual], DESC ), 'gold participacao_estadual'[participacao_percentual] )
+		formatString: 0.0"%"
+		displayFolder: 1 Visão geral
+		lineageTag: f41a57fb-e6ae-4064-952e-2d5ed9918081
+
+	/// VG3b: soma de participacao_percentual dos 10 maiores em PIB nominal no ano do filtro (sempre o estado).
+	measure 'VG3b Participação dos 10 maiores (PIB nominal no ano)' = VAR _a = [Ano selecionado] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a, NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) RETURN SUMX ( TOPN ( 10, _t, 'gold participacao_estadual'[participacao_percentual], DESC ), 'gold participacao_estadual'[participacao_percentual] )
+		formatString: 0.0"%"
+		displayFolder: 1 Visão geral
+		lineageTag: a77b158a-872d-4611-98be-5b1860178168
+
+	/// VG3a: menor número de municípios, do maior para o menor, cuja participação acumulada chega a 50% (analise.calculos.quantos_somam).
+	measure 'VG3a Municípios que somam metade (Censo 2022)' = VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022, NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) VAR _ac = ADDCOLUMNS ( _t, "@acum", VAR _p = 'gold participacao_estadual'[participacao_percentual] RETURN SUMX ( FILTER ( _t, 'gold participacao_estadual'[participacao_percentual] >= _p ), 'gold participacao_estadual'[participacao_percentual] ) ) RETURN COUNTROWS ( FILTER ( _ac, [@acum] < 50 ) ) + 1
+		formatString: #,0
+		displayFolder: 1 Visão geral
+		lineageTag: 7cd41cee-fd15-45cd-bd1e-d99c8e77ad03
+
+	/// VG3b: menor número de municípios cuja participação acumulada no PIB nominal do ano chega a 50%.
+	measure 'VG3b Municípios que somam metade (PIB nominal no ano)' = VAR _a = [Ano selecionado] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a, NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) VAR _ac = ADDCOLUMNS ( _t, "@acum", VAR _p = 'gold participacao_estadual'[participacao_percentual] RETURN SUMX ( FILTER ( _t, 'gold participacao_estadual'[participacao_percentual] >= _p ), 'gold participacao_estadual'[participacao_percentual] ) ) RETURN COUNTROWS ( FILTER ( _ac, [@acum] < 50 ) ) + 1
+		formatString: #,0
+		displayFolder: 1 Visão geral
+		lineageTag: 2c935a5e-3e0e-416a-83a0-1f28dda53306
+
+	/// VG3: título (textos.titulo_concentracao).
+	measure 'VG3 Título' = "Os 10 maiores municípios somam " & FORMAT ( [VG3a Participação dos 10 maiores (Censo 2022)], "0.00" ) & "% da população (Censo 2022) e " & FORMAT ( [VG3b Participação dos 10 maiores (PIB nominal no ano)], "0.00" ) & "% do PIB nominal de " & [Ano selecionado]
+		displayFolder: 1 Visão geral
+		lineageTag: 1f12c574-9262-4180-a9b3-c91371b46298
+
+	/// VG3: texto auxiliar com o menor N que soma metade.
+	measure 'VG3 Texto metade' = "Metade da população (Censo 2022) está em " & [VG3a Municípios que somam metade (Censo 2022)] & " municípios; metade do PIB nominal de " & [Ano selecionado] & ", em " & [VG3b Municípios que somam metade (PIB nominal no ano)] & ". Concentração medida sempre no estado inteiro."
+		displayFolder: 1 Visão geral
+		lineageTag: 8cfa067a-0b2b-4cfc-a665-57e0b0b3a42b
+
+	/// VG4: valor da região ÷ valor do estado, pib_corrente, ano do seletor local (2010 ou 2022). Duas linhas de agregado_regiao_ano (C2). Eixo: 'gold dim_municipio'[nome_regiao_intermediaria].
+	measure 'VG4 Participação no PIB nominal (%)' = VAR _a = [Ano Censo selecionado] VAR _reg = SELECTEDVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ) VAR _v = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "regiao_intermediaria", 'gold agregado_regiao_ano'[cod_regiao] = _reg, 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente", 'gold agregado_regiao_ano'[ano] = _a ) VAR _t = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pib_corrente", 'gold agregado_regiao_ano'[ano] = _a ) RETURN IF ( NOT ISBLANK ( _reg ), DIVIDE ( _v, _t ) * 100 )
+		formatString: 0.00"%"
+		displayFolder: 1 Visão geral
+		lineageTag: 037618cb-937e-4607-a289-4ea4814e4296
+
+	/// VG4: valor da região ÷ valor do estado, pop_censo, ano do seletor local (2010 ou 2022) (C2).
+	measure 'VG4 Participação na população Censo (%)' = VAR _a = [Ano Censo selecionado] VAR _reg = SELECTEDVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ) VAR _v = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "regiao_intermediaria", 'gold agregado_regiao_ano'[cod_regiao] = _reg, 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = _a ) VAR _t = CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = _a ) RETURN IF ( NOT ISBLANK ( _reg ), DIVIDE ( _v, _t ) * 100 )
+		formatString: 0.00"%"
+		displayFolder: 1 Visão geral
+		lineageTag: d2a9f231-3da2-4216-a486-d193614ad560
+
+	/// VG4: participação no PIB menos participação na população, em pontos percentuais. Não é PIB per capita regional (regra 4).
+	measure 'VG4 Diferença (p.p.)' = VAR _pib = [VG4 Participação no PIB nominal (%)] VAR _pop = [VG4 Participação na população Censo (%)] RETURN IF ( NOT ISBLANK ( _pib ) && NOT ISBLANK ( _pop ), _pib - _pop )
+		formatString: +0.00" p.p.";−0.00" p.p.";0.00" p.p."
+		displayFolder: 1 Visão geral
+		lineageTag: d23ab287-d024-4381-a214-fa85c5a5d0c0
+
+	/// VG4: título (textos.titulo_regioes_pib_pop).
+	measure 'VG4 Título' = VAR _t = ADDCOLUMNS ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria], 'gold dim_municipio'[nome_regiao_intermediaria] ), "@d", [VG4 Diferença (p.p.)] ) RETURN "Em " & COUNTROWS ( FILTER ( _t, [@d] > 0 ) ) + 0 & " das " & COUNTROWS ( _t ) & " regiões intermediárias, a participação no PIB nominal supera a participação na população (" & [Ano Censo selecionado] & ")"
+		displayFolder: 1 Visão geral
+		lineageTag: fbeaabb4-813c-44fb-ba63-e6bca134e6cd
+
+	/// POP1: população do Censo (2010 ou 2022, seletor local) do município da linha (eixo 'gold dim_municipio'[nome_municipio]); em branco fora da região escolhida. Sem agregação: no total fica em branco.
+	measure 'POP1 População (Censo)' = VAR _a = [Ano Censo selecionado] RETURN IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[valor] ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = _a ) )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: a3ec4d7a-2238-49d7-ac64-cdadf5c54ac9
+
+	/// POP1: participacao_percentual do município no Censo escolhido (C2).
+	measure 'POP1 Participação no estado (%)' = VAR _a = [Ano Censo selecionado] RETURN IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = _a ) )
+		formatString: 0.0000"%"
+		displayFolder: 2 População
+		lineageTag: 0ef36e11-d1ce-44ec-b96a-81a83da7efe1
+
+	/// POP1: 'não instalado' (regra 6) ou 'sem dado' quando o município não tem Censo no ano escolhido (regra 5).
+	measure 'POP1 Situação' = VAR _a = [Ano Censo selecionado] VAR _inst = SELECTEDVALUE ( 'gold dim_municipio'[ano_instalacao] ) RETURN IF ( [Município no recorte] = 1 && ISBLANK ( [POP1 População (Censo)] ), IF ( NOT ISBLANK ( _inst ) && _inst > _a, "não instalado", "sem dado" ) )
+		displayFolder: 2 População
+		lineageTag: 4caa8365-5996-411b-b208-0c28de43f8aa
+
+	/// POP1: municípios da região sem Censo no ano escolhido, com o aviso de não instalado (regras 6 e 10).
+	measure 'POP1 Sem Censo (texto)' = VAR _a = [Ano Censo selecionado] VAR _r = [Região selecionada (código)] VAR _t = FILTER ( CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = _a ), ISBLANK ( 'gold participacao_estadual'[valor] ) ) RETURN IF ( NOT ISEMPTY ( _t ), "Sem Censo " & _a & ": " & CONCATENATEX ( _t, 'gold participacao_estadual'[nome_municipio], ", ", 'gold participacao_estadual'[nome_municipio], ASC ) & ". " & [Aviso não instalado], "" )
+		displayFolder: 2 População
+		lineageTag: 5f8d6b0f-7e72-491a-ab7f-29cf2639e33f
+
+	/// POP1: título (textos.titulo_lider).
+	measure 'POP1 Título' = VAR _a = [Ano Censo selecionado] VAR _r = [Região selecionada (código)] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = _a, NOT ISBLANK ( 'gold participacao_estadual'[valor] ) ) VAR _top = TOPN ( 1, _t, 'gold participacao_estadual'[valor], DESC ) RETURN MAXX ( _top, 'gold participacao_estadual'[nome_municipio] ) & " lidera a população" & IF ( ISBLANK ( _r ), "", " da região de " & [Região selecionada (nome)] ) & " no Censo " & _a & ", com " & FORMAT ( MAXX ( _top, 'gold participacao_estadual'[participacao_percentual] ), "0.00" ) & "% do estado"
+		displayFolder: 2 População
+		lineageTag: 218b4929-ed64-43ed-b371-58af88b4564e
+
+	/// POP2: variacao_absoluta entre os Censos 2010 e 2022 do município da linha; em branco fora da região ou sem Censo 2010.
+	measure 'POP2 Variação absoluta' = IF ( [Município no recorte] = 1, SELECTEDVALUE ( 'gold variacao_populacao_censo'[variacao_absoluta] ) )
+		formatString: +#,0;−#,0;0
+		displayFolder: 2 População
+		lineageTag: 228ec4cf-2991-4f8a-95e2-cad11c9852ab
+
+	/// POP2: variacao_percentual entre os Censos 2010 e 2022 do município da linha.
+	measure 'POP2 Variação percentual' = IF ( [Município no recorte] = 1, SELECTEDVALUE ( 'gold variacao_populacao_censo'[variacao_percentual] ) )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 2 População
+		lineageTag: 913a2cce-25e1-4613-ac7f-758dde69b39a
+
+	/// POP2: motivo da view quando não há variação (regra 5).
+	measure 'POP2 Motivo' = IF ( [Município no recorte] = 1, SELECTEDVALUE ( 'gold variacao_populacao_censo'[motivo] ) )
+		displayFolder: 2 População
+		lineageTag: bf77cbf4-7fa7-4470-b51c-781f92e0aa9a
+
+	/// POP2: municípios da região com variação entre os Censos (contagem; zero é zero).
+	measure 'POP2 Municípios comparáveis' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNT ( 'gold variacao_populacao_censo'[variacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ) ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: a9c1e1f5-3af9-43f5-850d-781ba3539573
+
+	/// POP2: municípios comparáveis da região com variacao_absoluta > 0 (contagem).
+	measure 'POP2 Cresceram' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_populacao_censo' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), NOT ISBLANK ( 'gold variacao_populacao_censo'[variacao_percentual] ), 'gold variacao_populacao_censo'[variacao_absoluta] > 0 ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: e009d10f-cb1c-4482-b22d-719409fef1d5
+
+	/// POP2: municípios comparáveis da região com variacao_absoluta < 0 (contagem).
+	measure 'POP2 Perderam população' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_populacao_censo' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), NOT ISBLANK ( 'gold variacao_populacao_censo'[variacao_percentual] ), 'gold variacao_populacao_censo'[variacao_absoluta] < 0 ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: d109a4c6-6954-4d93-ab25-88b64ff8b58f
+
+	/// POP2: mediana entre os municípios da região da variação percentual entre os Censos (MEDIAN ignora brancos).
+	measure 'POP2 Variação: mediana entre os municípios' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( MEDIAN ( 'gold variacao_populacao_censo'[variacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ) )
+		formatString: +0.0"%";−0.0"%";0.0"%"
+		displayFolder: 2 População
+		lineageTag: f5e26f07-c3c6-4f0a-95fc-4db3e7ddccc2
+
+	/// POP2: 1 se o município está entre os 10 maiores ganhos ou as 10 maiores perdas percentuais da região (filtro de visual = 1).
+	measure 'POP2 Entre os extremos (percentual)' = VAR _r = [Região selecionada (código)] VAR _v = [POP2 Variação percentual] VAR _u = CALCULATETABLE ( 'gold variacao_populacao_censo', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), NOT ISBLANK ( 'gold variacao_populacao_censo'[variacao_percentual] ) ) RETURN IF ( NOT ISBLANK ( _v ) && ( ( _v > 0 && COUNTROWS ( FILTER ( _u, 'gold variacao_populacao_censo'[variacao_percentual] > _v ) ) < 10 ) || ( _v < 0 && COUNTROWS ( FILTER ( _u, 'gold variacao_populacao_censo'[variacao_percentual] < _v ) ) < 10 ) ), 1 )
+		formatString: 0
+		displayFolder: 2 População
+		lineageTag: eb086a37-b2dc-4204-b773-0a0b42c51817
+
+	/// POP2: 1 se o município está entre os 10 maiores ganhos ou as 10 maiores perdas absolutas da região.
+	measure 'POP2 Entre os extremos (absoluta)' = VAR _r = [Região selecionada (código)] VAR _v = [POP2 Variação absoluta] VAR _u = CALCULATETABLE ( 'gold variacao_populacao_censo', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), NOT ISBLANK ( 'gold variacao_populacao_censo'[variacao_absoluta] ) ) RETURN IF ( NOT ISBLANK ( _v ) && ( ( _v > 0 && COUNTROWS ( FILTER ( _u, 'gold variacao_populacao_censo'[variacao_absoluta] > _v ) ) < 10 ) || ( _v < 0 && COUNTROWS ( FILTER ( _u, 'gold variacao_populacao_censo'[variacao_absoluta] < _v ) ) < 10 ) ), 1 )
+		formatString: 0
+		displayFolder: 2 População
+		lineageTag: 359bc319-39de-432e-a5e5-6fcdace16707
+
+	/// POP2: título (textos.titulo_variacao_censo).
+	measure 'POP2 Título' = [POP2 Perderam população] & " de " & [POP2 Municípios comparáveis] & " municípios " & [Território (com preposição)] & " perderam população entre os Censos 2010 e 2022"
+		displayFolder: 2 População
+		lineageTag: c3ba9265-aa0e-4ea0-81b7-cd3b1b16a00f
+
+	/// POP2: municípios da região sem variação, com o motivo da view.
+	measure 'POP2 Sem variação (texto)' = VAR _r = [Região selecionada (código)] VAR _t = FILTER ( CALCULATETABLE ( 'gold variacao_populacao_censo', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ) ), NOT ISBLANK ( 'gold variacao_populacao_censo'[motivo] ) ) RETURN IF ( NOT ISEMPTY ( _t ), "Sem variação: " & CONCATENATEX ( _t, 'gold variacao_populacao_censo'[nome_municipio] & " (" & 'gold variacao_populacao_censo'[motivo] & ")", "; ", 'gold variacao_populacao_censo'[nome_municipio], ASC ) & ".", "" )
+		displayFolder: 2 População
+		lineageTag: 638c870f-0c4e-4ef1-bd5d-c9ed36f88906
+
+	/// POP3: Censo 2010 da região da linha (eixo 'gold dim_municipio'[nome_regiao_intermediaria]) ou do estado no total, de agregado_regiao_ano (C1).
+	measure 'POP3 Censo 2010 (território)' = VAR _reg = IF ( HASONEVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ), VALUES ( 'gold dim_municipio'[cod_regiao_intermediaria] ) ) RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _reg ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _reg ), "42", _reg ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2010 )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 06652b73-260e-409e-a1af-793eb3e06fad
+
+	/// POP3: Censo 2022 da região da linha ou do estado no total, de agregado_regiao_ano (C1).
+	measure 'POP3 Censo 2022 (território)' = VAR _reg = IF ( HASONEVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ), VALUES ( 'gold dim_municipio'[cod_regiao_intermediaria] ) ) RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _reg ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _reg ), "42", _reg ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_censo", 'gold agregado_regiao_ano'[ano] = 2022 )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: d4874948-fe86-48a3-b943-70019cff9d41
+
+	/// POP3: (Censo 2022 − Censo 2010) ÷ Censo 2010 do território, entre totais prontos da GOLD.
+	measure 'POP3 Variação entre os Censos (%)' = VAR _ini = [POP3 Censo 2010 (território)] VAR _fim = [POP3 Censo 2022 (território)] RETURN IF ( NOT ISBLANK ( _ini ) && NOT ISBLANK ( _fim ), ( _fim - _ini ) / _ini * 100 )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 2 População
+		lineageTag: 3113469c-bc4a-4d91-aa86-eebdfbce3d30
+
+	/// POP3: laranja na região escolhida, azul nas demais.
+	measure 'POP3 Cor da região' = IF ( SELECTEDVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria] ) = [Região selecionada (código)], "#eb6834", "#2a78d6" )
+		displayFolder: 2 População
+		lineageTag: c41617f0-c9e1-4848-8a92-6f1f83658f47
+
+	/// POP3: título (textos.titulo_regioes_censo).
+	measure 'POP3 Título' = VAR _t = ADDCOLUMNS ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria], 'gold dim_municipio'[nome_regiao_intermediaria] ), "@v", [POP3 Variação entre os Censos (%)] ) VAR _max = TOPN ( 1, _t, [@v], DESC ) VAR _min = TOPN ( 1, _t, [@v], ASC ) RETURN "Entre os Censos, a região de " & MAXX ( _max, 'gold dim_municipio'[nome_regiao_intermediaria] ) & " cresceu mais (" & FORMAT ( MAXX ( _max, [@v] ), "+0.0;−0.0" ) & "%) e a de " & MAXX ( _min, 'gold dim_municipio'[nome_regiao_intermediaria] ) & ", menos (" & FORMAT ( MAXX ( _min, [@v] ), "+0.0;−0.0" ) & "%)"
+		displayFolder: 2 População
+		lineageTag: 1a426546-5fde-4a80-8b90-21d754e281e3
+
+	/// POP4: estimativa do estado ou da região (agregado_regiao_ano), só nos anos da base ate_2012 (eixo 'gold agregado_regiao_ano'[ano]). Série separada por base (C8, regra 12); 2012 sem 4212650 e 4220000 (regra 13).
+	measure 'POP4 Estimativa – Base até 2012' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[base_estimativa] = "ate_2012" )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 968f6ee6-b25f-4d4f-90aa-65d29ad47312
+
+	/// POP4: estimativa do estado ou da região, só nos anos da base 2013_2017 (C8, regra 12).
+	measure 'POP4 Estimativa – Base 2013–2017 (nova projeção)' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[base_estimativa] = "2013_2017" )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 58b8ded5-faad-4b9a-8eff-6b8838161b8b
+
+	/// POP4: estimativa do estado ou da região, só nos anos da base desde_2018 (C8, regra 12).
+	measure 'POP4 Estimativa – Base desde 2018 (revisão)' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[base_estimativa] = "desde_2018" )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: efba868d-c4ab-4118-a343-86677f428cda
+
+	/// POP4: base_estimativa do ano da linha (tabela de dados).
+	measure 'POP4 Base da estimativa' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[base_estimativa] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada" )
+		displayFolder: 2 População
+		lineageTag: 1c00c9fa-3611-475f-bfd1-113361e8ff27
+
+	/// POP4: municipios_somados no total do ano da linha.
+	measure 'POP4 Municípios somados' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[municipios_somados] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada" )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: ad8e6182-ae12-4c95-b070-e260bea8524f
+
+	/// POP4: municipios_excluidos no total do ano da linha (regra 13).
+	measure 'POP4 Municípios excluídos' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[municipios_excluidos] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada" )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 29aa4523-799d-4eee-8586-e4fa081f2796
+
+	/// POP4: aviso da view no ano da linha (2012: regra 13).
+	measure 'POP4 Aviso da linha' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[aviso] ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada" )
+		displayFolder: 2 População
+		lineageTag: 83f6a9a7-3910-4266-9c33-034312eb6bd4
+
+	/// POP4: estimativa do território no ano do filtro; em branco em 2010, 2022 e 2023 (sem estimativa publicada; o Censo não é usado no lugar).
+	measure 'POP4 Estimativa no ano selecionado' = VAR _r = [Região selecionada (código)] VAR _a = [Ano selecionado] RETURN CALCULATE ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[valor] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", 'gold agregado_regiao_ano'[ano] = _a )
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: c3c7c8bc-9a1f-461b-adcc-64b8f0c36892
+
+	/// POP4: aviso quando o ano do filtro não tem estimativa publicada (seção 3).
+	measure 'POP4 Sem estimativa (texto)' = VAR _a = [Ano selecionado] VAR _anos = CALCULATETABLE ( VALUES ( 'gold agregado_regiao_ano'[ano] ), REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = "estado", 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", NOT ISBLANK ( 'gold agregado_regiao_ano'[valor] ) ) RETURN IF ( NOT ( _a IN _anos ), "Sem estimativa publicada em " & _a & ": a tabela 6579 cobre " & MINX ( _anos, [ano] ) & "–" & MAXX ( _anos, [ano] ) & ". O Censo não é usado no lugar (limitações, seção 4).", "" )
+		displayFolder: 2 População
+		lineageTag: 9bf9b022-ab5a-46f0-8723-0413f44765bf
+
+	/// POP4: destaque do ano do filtro (formatação condicional de marcadores).
+	measure 'POP4 Cor do ano' = IF ( SELECTEDVALUE ( 'gold agregado_regiao_ano'[ano] ) = [Ano selecionado], "#eb6834", "#a3a29d" )
+		displayFolder: 2 População
+		lineageTag: f29dead7-f8c1-4c1e-9aa0-f1f31b5457e0
+
+	/// POP4: título sem variação, porque as bases não se comparam (textos.titulo_estimativa).
+	measure 'POP4 Título' = VAR _r = [Região selecionada (código)] VAR _t = CALCULATETABLE ( 'gold agregado_regiao_ano', REMOVEFILTERS ( 'gold agregado_regiao_ano' ), 'gold agregado_regiao_ano'[nivel] = IF ( ISBLANK ( _r ), "estado", "regiao_intermediaria" ), 'gold agregado_regiao_ano'[cod_regiao] = IF ( ISBLANK ( _r ), "42", _r ), 'gold agregado_regiao_ano'[codigo_indicador] = "pop_estimada", NOT ISBLANK ( 'gold agregado_regiao_ano'[valor] ) ) VAR _ini = TOPN ( 1, _t, 'gold agregado_regiao_ano'[ano], ASC ) VAR _fim = TOPN ( 1, _t, 'gold agregado_regiao_ano'[ano], DESC ) VAR _vi = MAXX ( _ini, 'gold agregado_regiao_ano'[valor] ) VAR _vf = MAXX ( _fim, 'gold agregado_regiao_ano'[valor] ) RETURN "Estimativa de população " & [Território (com preposição)] & ": " & IF ( _vi >= 1000000, FORMAT ( _vi, "0,,.00" ) & " mi", FORMAT ( _vi, "0,.0" ) & " mil" ) & " em " & MAXX ( _ini, 'gold agregado_regiao_ano'[ano] ) & " e " & IF ( _vf >= 1000000, FORMAT ( _vf, "0,,.00" ) & " mi", FORMAT ( _vf, "0,.0" ) & " mil" ) & " em " & MAXX ( _fim, 'gold agregado_regiao_ano'[ano] ) & ", em três bases"
+		displayFolder: 2 População
+		lineageTag: dd542619-8fe1-4a27-8e48-7a5650c7ff78
+
+	/// POP4: pares municipais da região na variação 2012→2013 da estimativa (regra 12).
+	measure 'POP4 Pares 2012→2013' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013 ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 9cf20926-de4d-4fe8-8eaa-4799feaab3e1
+
+	/// POP4: pares 2012→2013 com variação calculada (esperado 0: quebra de série; regra 12).
+	measure 'POP4 Com variação 2012→2013' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013, NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 1d9d6127-884d-486e-8273-d473f09a4041
+
+	/// POP4: motivo da view para a variação 2012→2013 (proibição 4: a variação não é exibida).
+	measure 'POP4 Motivo 2012→2013' = CALCULATE ( CONCATENATEX ( VALUES ( 'gold variacao_anual'[motivo] ), 'gold variacao_anual'[motivo], "; " ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013, NOT ISBLANK ( 'gold variacao_anual'[motivo] ) )
+		displayFolder: 2 População
+		lineageTag: fa1df8d5-3229-4278-9308-527b6cca7349
+
+	/// POP4: pares municipais da região na variação 2017→2018 da estimativa (regra 12).
+	measure 'POP4 Pares 2017→2018' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018 ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 24e8e569-0e0d-4482-ae1d-dde29c5c0aed
+
+	/// POP4: pares 2017→2018 com variação calculada; só exibir com o Aviso revisão 2018 (regra 12).
+	measure 'POP4 Com variação 2017→2018' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018, NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) ) + 0
+		formatString: #,0
+		displayFolder: 2 População
+		lineageTag: 283e1579-781f-427d-bba6-5583db02dfc6
+
+	/// POP4: motivo da view para a variação 2017→2018 (comparavel = falso).
+	measure 'POP4 Motivo 2017→2018' = CALCULATE ( CONCATENATEX ( VALUES ( 'gold variacao_anual'[motivo] ), 'gold variacao_anual'[motivo], "; " ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2018, NOT ISBLANK ( 'gold variacao_anual'[motivo] ) )
+		displayFolder: 2 População
+		lineageTag: c0f098dc-02d8-4f8e-99a2-feb316558d3d
+
+	/// ECO1: PIB nominal (valores correntes) do município da linha no ano do filtro (participacao_estadual); em branco fora da região (regra 3).
+	measure 'ECO1 PIB nominal no ano' = VAR _a = [Ano selecionado] RETURN IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[valor] ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a ) )
+		formatString: "R$" #,0.00
+		displayFolder: 3 Economia
+		lineageTag: a6960f2e-2cc6-4c90-a273-2311da42fdc0
+
+	/// ECO1: participacao_percentual do município no PIB nominal do estado no ano (C2).
+	measure 'ECO1 Participação no estado (%)' = VAR _a = [Ano selecionado] RETURN IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a ) )
+		formatString: 0.0000"%"
+		displayFolder: 3 Economia
+		lineageTag: bcd2f415-8cb1-4904-ba23-57e7131ed4f8
+
+	/// ECO1: título (textos.titulo_lider).
+	measure 'ECO1 Título' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a, NOT ISBLANK ( 'gold participacao_estadual'[valor] ) ) VAR _top = TOPN ( 1, _t, 'gold participacao_estadual'[valor], DESC ) RETURN MAXX ( _top, 'gold participacao_estadual'[nome_municipio] ) & " lidera o PIB nominal" & IF ( ISBLANK ( _r ), "", " da região de " & [Região selecionada (nome)] ) & " de " & _a & ", com " & FORMAT ( MAXX ( _top, 'gold participacao_estadual'[participacao_percentual] ), "0.00" ) & "% do estado"
+		displayFolder: 3 Economia
+		lineageTag: 523a3dd5-7b79-4de7-bd48-17c916b79be4
+
+	/// ECO2: participação do município no PIB nominal do estado em 2010.
+	measure 'ECO2 Participação 2010' = IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = 2010 ) )
+		formatString: 0.0000"%"
+		displayFolder: 3 Economia
+		lineageTag: 44d57673-4460-4123-9241-9bd484859d22
+
+	/// ECO2: participação do município no PIB nominal do estado no ano do filtro.
+	measure 'ECO2 Participação no ano' = [ECO1 Participação no estado (%)]
+		formatString: 0.0000"%"
+		displayFolder: 3 Economia
+		lineageTag: a07c5239-7c2d-43ba-9a71-9bf99d6ff4fe
+
+	/// ECO2: participação no ano menos participação em 2010, em pontos percentuais; em branco se faltar um dos dois.
+	measure 'ECO2 Diferença (p.p.)' = VAR _ini = [ECO2 Participação 2010] VAR _fim = [ECO2 Participação no ano] RETURN IF ( NOT ISBLANK ( _ini ) && NOT ISBLANK ( _fim ), _fim - _ini )
+		formatString: +0.00" p.p.";−0.00" p.p.";0.00" p.p."
+		displayFolder: 3 Economia
+		lineageTag: 903904c0-ab98-4230-8030-f128e4c7df06
+
+	/// ECO2: mensagem quando o ano do filtro é 2010.
+	measure 'ECO2 Aviso ano 2010' = IF ( [Ano selecionado] = 2010, "Escolha um ano depois de 2010 para comparar com 2010.", "" )
+		displayFolder: 3 Economia
+		lineageTag: d49d0fdb-30a6-4e29-a219-d93eb4028d4f
+
+	/// ECO2: título (textos.titulo_ganhos_participacao), sobre os 10 maiores do ano dentro da região.
+	measure 'ECO2 Título' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] VAR _t = TOPN ( 10, CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a, NOT ISBLANK ( 'gold participacao_estadual'[valor] ) ), 'gold participacao_estadual'[valor], DESC ) VAR _d = ADDCOLUMNS ( _t, "@ini", VAR _c = 'gold participacao_estadual'[cod_municipio] RETURN CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[cod_municipio] = _c, 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = 2010 ) ) VAR _d2 = ADDCOLUMNS ( FILTER ( _d, NOT ISBLANK ( [@ini] ) ), "@dif", 'gold participacao_estadual'[participacao_percentual] - [@ini] ) VAR _maior = TOPN ( 1, _d2, [@dif], DESC ) RETURN IF ( _a <> 2010, "Dos " & COUNTROWS ( _t ) & " maiores municípios em PIB nominal de " & _a & ", " & COUNTROWS ( FILTER ( _d2, [@dif] > 0 ) ) + 0 & " ganharam participação no estado desde 2010; maior variação: " & MAXX ( _maior, 'gold participacao_estadual'[nome_municipio] ) & " (" & FORMAT ( MAXX ( _maior, [@dif] ), "+0.00;−0.00" ) & " p.p.)" )
+		displayFolder: 3 Economia
+		lineageTag: f191312d-9f36-4f9b-9f2f-2f4d3d64170e
+
+	/// ECO3: PIB per capita publicado do município da linha no ano do filtro, sem agregação (no total fica em branco). Não é renda (regra 4).
+	measure 'ECO3 PIB per capita no ano' = VAR _a = [Ano selecionado] RETURN IF ( [Município no recorte] = 1, CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), 'gold painel_municipio_ano'[ano] = _a ) )
+		formatString: "R$" #,0.00
+		displayFolder: 3 Economia
+		lineageTag: 1a1899f1-8c5b-4207-b549-39f315edd95d
+
+	/// ECO3: mediana entre os municípios (da região, se escolhida) do PIB per capita publicado no ano. Única estatística permitida sobre o per capita; nunca é o per capita do estado ou da região (regra 4, proibição 1).
+	measure 'ECO3 PIB per capita: mediana entre os municípios' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] RETURN CALCULATE ( MEDIAN ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold dim_municipio' ), REMOVEFILTERS ( 'gold painel_municipio_ano'[ano] ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold painel_municipio_ano'[ano] = _a )
+		formatString: "R$" #,0.00
+		displayFolder: 3 Economia
+		lineageTag: 6a0ba410-0d9c-48fc-a3dd-558eed52cc36
+
+	/// ECO3: rótulo obrigatório 'mediana entre os municípios' (textos.rotulo_mediana).
+	measure 'ECO3 Rótulo da mediana' = VAR _n = [Região selecionada (nome)] RETURN IF ( ISBLANK ( _n ), "mediana entre os municípios", "mediana entre os municípios da região de " & _n )
+		displayFolder: 3 Economia
+		lineageTag: 50faa7bb-2247-4e25-95b1-b54d7222d189
+
+	/// ECO3: municípios da região com PIB per capita publicado no ano (base da mediana; contagem).
+	measure 'ECO3 Municípios com valor' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNT ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold dim_municipio' ), REMOVEFILTERS ( 'gold painel_municipio_ano'[ano] ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold painel_municipio_ano'[ano] = _a ) + 0
+		formatString: #,0
+		displayFolder: 3 Economia
+		lineageTag: 61b10ccd-3573-42a0-a508-5ea4cd0be09a
+
+	/// ECO3: 'maior' se está entre os 10 maiores, 'menor' se está entre os 10 menores da região no ano; em branco nos demais (filtro de visual: não em branco).
+	measure 'ECO3 Grupo (10 maiores ou 10 menores)' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] VAR _v = [ECO3 PIB per capita no ano] VAR _u = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold painel_municipio_ano'[ano] = _a, NOT ISBLANK ( 'gold painel_municipio_ano'[pib_per_capita_reais] ) ) VAR _acima = COUNTROWS ( FILTER ( _u, 'gold painel_municipio_ano'[pib_per_capita_reais] > _v ) ) + 0 VAR _abaixo = COUNTROWS ( FILTER ( _u, 'gold painel_municipio_ano'[pib_per_capita_reais] < _v ) ) + 0 RETURN IF ( NOT ISBLANK ( _v ), IF ( _acima < 10, "maior", IF ( _abaixo < 10, "menor" ) ) )
+		displayFolder: 3 Economia
+		lineageTag: b93f4cd6-19eb-4e54-9cd7-29394dd8827a
+
+	/// ECO3: laranja no município escolhido, azul nos 10 maiores, cinza nos 10 menores (como no Streamlit).
+	measure 'ECO3 Cor' = IF ( SELECTEDVALUE ( 'gold dim_municipio'[cod_municipio] ) = [Município selecionado (código)], "#eb6834", IF ( [ECO3 Grupo (10 maiores ou 10 menores)] = "maior", "#2a78d6", "#a3a29d" ) )
+		displayFolder: 3 Economia
+		lineageTag: e090128a-d368-44c1-adc3-34bca7d474e4
+
+	/// ECO3: título (textos.titulo_per_capita). A razão é entre dois valores municipais publicados, não um per capita novo.
+	measure 'ECO3 Título' = VAR _a = [Ano selecionado] VAR _r = [Região selecionada (código)] VAR _u = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold painel_municipio_ano'[ano] = _a, NOT ISBLANK ( 'gold painel_municipio_ano'[pib_per_capita_reais] ) ) VAR _max = TOPN ( 1, _u, 'gold painel_municipio_ano'[pib_per_capita_reais], DESC ) VAR _min = TOPN ( 1, _u, 'gold painel_municipio_ano'[pib_per_capita_reais], ASC ) VAR _vmax = MAXX ( _max, 'gold painel_municipio_ano'[pib_per_capita_reais] ) VAR _vmin = MAXX ( _min, 'gold painel_municipio_ano'[pib_per_capita_reais] ) RETURN "Em " & _a & ", o PIB per capita de " & MAXX ( _max, 'gold painel_municipio_ano'[nome_municipio] ) & " (R$ " & FORMAT ( _vmax, "#,0" ) & ") é " & FORMAT ( DIVIDE ( _vmax, _vmin ), "0.0" ) & " vezes o de " & MAXX ( _min, 'gold painel_municipio_ano'[nome_municipio] ) & " (R$ " & FORMAT ( _vmin, "#,0" ) & ")"
+		displayFolder: 3 Economia
+		lineageTag: a421152a-faa7-4c59-93d5-9757af59c46f
+
+	/// ECO4: variações anuais do PIB nominal com |variação| > 50% na região (alerta A1; contagem).
+	measure 'ECO4 Variações acima de 50% em módulo' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( COUNTROWS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) && ABS ( 'gold variacao_anual'[variacao_percentual] ) > 50 ) + 0
+		formatString: #,0
+		displayFolder: 3 Economia
+		lineageTag: a75d70cb-82fe-4e61-b755-db23aea9aa0a
+
+	/// ECO4: municípios da região com ao menos um salto anual do PIB nominal acima de 50% (contagem).
+	measure 'ECO4 Municípios com saltos' = VAR _r = [Região selecionada (código)] RETURN CALCULATE ( DISTINCTCOUNT ( 'gold variacao_anual'[cod_municipio] ), REMOVEFILTERS ( 'gold dim_municipio' ), FILTER ( ALL ( 'gold dim_municipio'[cod_regiao_intermediaria] ), ISBLANK ( _r ) || 'gold dim_municipio'[cod_regiao_intermediaria] = _r ), 'gold variacao_anual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) && ABS ( 'gold variacao_anual'[variacao_percentual] ) > 50 ) + 0
+		formatString: #,0
+		displayFolder: 3 Economia
+		lineageTag: 461d7e08-8f3b-4db8-9f18-9770a6ad9cf5
+
+	/// ECO4: 1 se a linha da tabela (gold variacao_anual) é PIB nominal com |variação| > 50% e o município está na região (filtro de visual = 1).
+	measure 'ECO4 Salto na linha' = VAR _r = [Região selecionada (código)] VAR _cod = SELECTEDVALUE ( 'gold variacao_anual'[cod_municipio] ) VAR _v = SELECTEDVALUE ( 'gold variacao_anual'[variacao_percentual] ) VAR _reg = LOOKUPVALUE ( 'gold dim_municipio'[cod_regiao_intermediaria], 'gold dim_municipio'[cod_municipio], _cod ) RETURN IF ( SELECTEDVALUE ( 'gold variacao_anual'[codigo_indicador] ) = "pib_corrente" && NOT ISBLANK ( _v ) && ABS ( _v ) > 50 && ( ISBLANK ( _r ) || _reg = _r ), 1 )
+		formatString: 0
+		displayFolder: 3 Economia
+		lineageTag: fc1ec1b1-a01a-4909-8269-a02b53c49d1b
+
+	/// ECO4: |variacao_percentual| da linha, para ordenar a tabela pelo módulo.
+	measure 'ECO4 Módulo da variação' = VAR _v = SELECTEDVALUE ( 'gold variacao_anual'[variacao_percentual] ) RETURN IF ( NOT ISBLANK ( _v ), ABS ( _v ) )
+		formatString: 0.00
+		displayFolder: 3 Economia
+		lineageTag: 5eb795e0-7a42-4ad2-a215-9f1440b5768b
+
+	/// ECO4: '◀' na linha do município escolhido.
+	measure 'ECO4 Destaque' = IF ( SELECTEDVALUE ( 'gold variacao_anual'[cod_municipio] ) = [Município selecionado (código)], "◀" )
+		displayFolder: 3 Economia
+		lineageTag: 4658f707-5948-4dcb-8521-55961d6a6f9d
+
+	/// ECO4: título (textos.titulo_saltos).
+	measure 'ECO4 Título' = [ECO4 Variações acima de 50% em módulo] & " variações anuais do PIB nominal passaram de 50% em módulo, em " & [ECO4 Municípios com saltos] & " municípios"
+		displayFolder: 3 Economia
+		lineageTag: 95576843-ee32-43f3-8e68-ce525b62e3f0
+
+	/// PER: 'Perfil: Município'.
+	measure 'PER Título da página' = "Perfil: " & [Município selecionado (nome)]
+		displayFolder: 4 Perfil
+		lineageTag: 8e9f3eaf-9cd3-4ba2-8e25-43cbd0938122
+
+	/// PER: código IBGE e regiões intermediária e imediata do município escolhido.
+	measure 'PER Identificação' = VAR _m = [Município selecionado (código)] RETURN IF ( NOT ISBLANK ( _m ), "Código IBGE " & _m & " · região intermediária de " & LOOKUPVALUE ( 'gold dim_municipio'[nome_regiao_intermediaria], 'gold dim_municipio'[cod_municipio], _m ) & " · região imediata de " & LOOKUPVALUE ( 'gold dim_municipio'[nome_regiao_imediata], 'gold dim_municipio'[cod_municipio], _m ), "" )
+		displayFolder: 4 Perfil
+		lineageTag: d7b03625-20ac-4e4c-804b-babfa7145660
+
+	/// PER1: para 4212650 e 4220000, aviso de município instalado depois de 2010 (regras 6 e 10). Ano lido de dim_municipio.
+	measure 'PER Aviso instalação' = VAR _inst = LOOKUPVALUE ( 'gold dim_municipio'[ano_instalacao], 'gold dim_municipio'[cod_municipio], [Município selecionado (código)] ) RETURN IF ( NOT ISBLANK ( _inst ), "Município instalado em " & _inst & ": sem dado antes disso (regras 6 e 10).", "" )
+		displayFolder: 4 Perfil
+		lineageTag: fadd66d8-cf46-497a-9ffb-b04d9cfe4b15
+
+	/// PER1: Censo 2010 do município escolhido (variacao_populacao_censo); em branco se não instalado.
+	measure 'PER1 População (Censo 2010)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[pop_censo_2010] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = _m )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: d89a9507-4152-4862-b62a-58f806b6e603
+
+	/// PER1: Censo 2022 do município escolhido.
+	measure 'PER1 População (Censo 2022)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[pop_censo_2022] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = _m )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: f77fd82c-bc27-42b9-a18c-b24cebdc308f
+
+	/// PER1: variação percentual entre os Censos 2010 e 2022 do município escolhido; em branco com motivo (PER1 Motivo).
+	measure 'PER1 Variação entre os Censos' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[variacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = _m )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 4 Perfil
+		lineageTag: 38c65173-0b00-4ce0-b0f4-1f35846c3c86
+
+	/// PER1: motivo da view quando não há variação entre os Censos.
+	measure 'PER1 Motivo' = VAR _m = [Município selecionado (código)] VAR _mot = CALCULATE ( SELECTEDVALUE ( 'gold variacao_populacao_censo'[motivo] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_populacao_censo'[cod_municipio] = _m ) RETURN IF ( NOT ISBLANK ( _mot ), "Variação entre os Censos: " & _mot & ".", "" )
+		displayFolder: 4 Perfil
+		lineageTag: 2c214024-852f-4712-94fc-b45b5957ccd3
+
+	/// PER1: PIB nominal (valores correntes) do município escolhido no ano do filtro (regra 3).
+	measure 'PER1 PIB nominal no ano' = VAR _m = [Município selecionado (código)] VAR _a = [Ano selecionado] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pib_corrente_reais] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), 'gold painel_municipio_ano'[cod_municipio] = _m, 'gold painel_municipio_ano'[ano] = _a )
+		formatString: "R$" #,0.00
+		displayFolder: 4 Perfil
+		lineageTag: 61e8b9ae-e229-4312-806c-57ccc00a365b
+
+	/// PER1: PIB per capita publicado do município escolhido no ano; não é renda (regra 4).
+	measure 'PER1 PIB per capita no ano' = VAR _m = [Município selecionado (código)] VAR _a = [Ano selecionado] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), 'gold painel_municipio_ano'[cod_municipio] = _m, 'gold painel_municipio_ano'[ano] = _a )
+		formatString: "R$" #,0.00
+		displayFolder: 4 Perfil
+		lineageTag: fdf470f7-2e69-49a2-86ef-7d1c27d3b595
+
+	/// PER1: posição no ranking de pib_corrente do ano (ordem de valor em participacao_estadual), 'Nº de N' ou 'sem dado'.
+	measure 'PER1 Posição no PIB nominal' = VAR _a = [Ano selecionado] VAR _m = [Município selecionado (código)] VAR _v = CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[valor] ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[cod_municipio] = _m, 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a ) VAR _n = CALCULATE ( COUNT ( 'gold participacao_estadual'[valor] ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a ) VAR _acima = CALCULATE ( COUNTROWS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", 'gold participacao_estadual'[ano] = _a, 'gold participacao_estadual'[valor] > _v ) + 0 RETURN IF ( ISBLANK ( _v ), "sem dado", ( _acima + 1 ) & "º de " & _n )
+		displayFolder: 4 Perfil
+		lineageTag: b83822e3-d2dd-4daf-a856-040776b0a208
+
+	/// PER1: posição no ranking de pop_censo 2022 (participacao_estadual), 'Nº de N' ou 'sem dado'.
+	measure 'PER1 Posição em população (Censo 2022)' = VAR _m = [Município selecionado (código)] VAR _v = CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[valor] ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[cod_municipio] = _m, 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022 ) VAR _n = CALCULATE ( COUNT ( 'gold participacao_estadual'[valor] ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022 ) VAR _acima = CALCULATE ( COUNTROWS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold participacao_estadual' ), 'gold participacao_estadual'[codigo_indicador] = "pop_censo", 'gold participacao_estadual'[ano] = 2022, 'gold participacao_estadual'[valor] > _v ) + 0 RETURN IF ( ISBLANK ( _v ), "sem dado", ( _acima + 1 ) & "º de " & _n )
+		displayFolder: 4 Perfil
+		lineageTag: 4f4bb1b2-7a5d-4841-8175-aeacc2430306
+
+	/// PER1: legenda com o PIB nominal exato do ano.
+	measure 'PER1 Valor exato do PIB (texto)' = VAR _v = [PER1 PIB nominal no ano] RETURN "PIB nominal " & [Ano selecionado] & ", valor exato: " & IF ( ISBLANK ( _v ), "sem dado", "R$ " & FORMAT ( _v, "#,0.00" ) ) & "."
+		displayFolder: 4 Perfil
+		lineageTag: f88fbbf5-690e-4c9a-a5e9-5dcee516f76d
+
+	/// PER2: PIB nominal do município escolhido por ano (eixo 'gold painel_municipio_ano'[ano]); em branco antes da instalação (regra 3, regra 5).
+	measure 'PER2 PIB nominal (valores correntes)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pib_corrente_reais] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m )
+		formatString: "R$" #,0.00
+		displayFolder: 4 Perfil
+		lineageTag: c8b92f58-c601-454e-acd3-96b6cfa69d14
+
+	/// PER2: variacao_percentual de variacao_anual (pib_corrente) no ano da linha; variação nominal, não crescimento real (regra 3).
+	measure 'PER2 Variação nominal sobre o ano anterior' = VAR _m = [Município selecionado (código)] VAR _y = SELECTEDVALUE ( 'gold painel_municipio_ano'[ano] ) RETURN CALCULATE ( SELECTEDVALUE ( 'gold variacao_anual'[variacao_percentual] ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[cod_municipio] = _m, 'gold variacao_anual'[codigo_indicador] = "pib_corrente", 'gold variacao_anual'[ano] = _y )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 4 Perfil
+		lineageTag: 5c38ede1-c473-4ac9-86f0-14f74a4dbeb3
+
+	/// PER2 e PER4: laranja no ano do filtro, azul nos demais.
+	measure 'PER Cor do ano (painel)' = IF ( SELECTEDVALUE ( 'gold painel_municipio_ano'[ano] ) = [Ano selecionado], "#eb6834", "#2a78d6" )
+		displayFolder: 4 Perfil
+		lineageTag: fa6f9f27-2dc9-4355-873f-ecac6066c56c
+
+	/// PER2: lista das variações anuais do PIB nominal acima de 50% em módulo, com o alerta A1; em branco se não houver.
+	measure 'PER2 Saltos acima de 50% (texto)' = VAR _m = [Município selecionado (código)] VAR _t = CALCULATETABLE ( 'gold variacao_anual', REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[cod_municipio] = _m, 'gold variacao_anual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold variacao_anual'[variacao_percentual] ) && ABS ( 'gold variacao_anual'[variacao_percentual] ) > 50 ) RETURN IF ( NOT ISEMPTY ( _t ), "Variações acima de 50% em módulo: " & CONCATENATEX ( _t, 'gold variacao_anual'[ano_anterior] & "→" & 'gold variacao_anual'[ano] & " (" & FORMAT ( 'gold variacao_anual'[variacao_percentual], "+0.0;−0.0" ) & "%)", ", ", ABS ( 'gold variacao_anual'[variacao_percentual] ), DESC ) & ". " & [Aviso A1], "" )
+		displayFolder: 4 Perfil
+		lineageTag: b18a19c3-f3e7-4f03-87a0-93fe1d3a72b8
+
+	/// PER2: título (textos.titulo_serie_pib) com o primeiro e o último ano com valor.
+	measure 'PER2 Título' = VAR _m = [Município selecionado (código)] VAR _t = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, NOT ISBLANK ( 'gold painel_municipio_ano'[pib_corrente_reais] ) ) VAR _ini = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], ASC ) VAR _fim = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], DESC ) VAR _vi = MAXX ( _ini, 'gold painel_municipio_ano'[pib_corrente_reais] ) VAR _vf = MAXX ( _fim, 'gold painel_municipio_ano'[pib_corrente_reais] ) RETURN "PIB nominal de " & [Município selecionado (nome)] & ": de R$ " & IF ( _vi >= 1000000000, FORMAT ( _vi, "0,,,.0" ) & " bi", IF ( _vi >= 1000000, FORMAT ( _vi, "0,,.0" ) & " mi", FORMAT ( _vi, "#,0" ) ) ) & " (" & MAXX ( _ini, 'gold painel_municipio_ano'[ano] ) & ") para R$ " & IF ( _vf >= 1000000000, FORMAT ( _vf, "0,,,.0" ) & " bi", IF ( _vf >= 1000000, FORMAT ( _vf, "0,,.0" ) & " mi", FORMAT ( _vf, "#,0" ) ) ) & " (" & MAXX ( _fim, 'gold painel_municipio_ano'[ano] ) & "), em valores correntes"
+		displayFolder: 4 Perfil
+		lineageTag: 39ac08e3-d4c9-4a19-a307-767b7d620439
+
+	/// PER3a: pop_estimada do município escolhido, só nos anos da base ate_2012 (eixo 'gold painel_municipio_ano'[ano]; C8, regra 12).
+	measure 'PER3a Estimativa – Base até 2012' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pop_estimada] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, 'gold painel_municipio_ano'[base_estimativa] = "ate_2012" )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: 9ebd7b2a-1a12-428e-81a5-99392e1f749c
+
+	/// PER3a: pop_estimada do município escolhido, só nos anos da base 2013_2017 (C8, regra 12).
+	measure 'PER3a Estimativa – Base 2013–2017 (nova projeção)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pop_estimada] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, 'gold painel_municipio_ano'[base_estimativa] = "2013_2017" )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: 369fd148-83fa-4b52-9519-27205e97f420
+
+	/// PER3a: pop_estimada do município escolhido, só nos anos da base desde_2018 (C8, regra 12).
+	measure 'PER3a Estimativa – Base desde 2018 (revisão)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pop_estimada] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, 'gold painel_municipio_ano'[base_estimativa] = "desde_2018" )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: 77d69638-4dab-40a4-bc06-88e86cf8d3ed
+
+	/// PER3b: pop_censo do município escolhido (só 2010 e 2022 têm valor); gráfico separado da estimativa (regra 2).
+	measure 'PER3b População (Censo)' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pop_censo] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m )
+		formatString: #,0
+		displayFolder: 4 Perfil
+		lineageTag: bbe5881f-c6ef-47d5-90ea-d6a64c6efd1e
+
+	/// PER3: motivo da view para a variação 2012→2013 do município (quebra de série; regra 12).
+	measure 'PER3 Motivo 2012→2013' = VAR _m = [Município selecionado (código)] VAR _mot = CALCULATE ( SELECTEDVALUE ( 'gold variacao_anual'[motivo] ), REMOVEFILTERS ( 'gold variacao_anual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold variacao_anual'[cod_municipio] = _m, 'gold variacao_anual'[codigo_indicador] = "pop_estimada", 'gold variacao_anual'[ano] = 2013 ) RETURN IF ( NOT ISBLANK ( _mot ), "Variação 2012→2013: " & _mot & ".", "" )
+		displayFolder: 4 Perfil
+		lineageTag: 6fafa846-7a35-419b-8bb2-eb2387b33ecf
+
+	/// PER3: aviso da view (painel_municipio_ano) nos 2 municípios novos, com o aviso da regra 13.
+	measure 'PER3 Aviso 2012' = VAR _m = [Município selecionado (código)] VAR _t = CALCULATETABLE ( VALUES ( 'gold painel_municipio_ano'[aviso] ), REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, NOT ISBLANK ( 'gold painel_municipio_ano'[aviso] ) ) RETURN IF ( NOT ISEMPTY ( _t ), "2012: " & CONCATENATEX ( _t, 'gold painel_municipio_ano'[aviso], "; " ) & ". " & [Aviso dupla contagem 2012], "" )
+		displayFolder: 4 Perfil
+		lineageTag: 71de6301-8448-41fa-9fbf-6ae4db9333ec
+
+	/// PER3a: título da estimativa, sem variação entre bases (textos.titulo_estimativa).
+	measure 'PER3a Título' = VAR _m = [Município selecionado (código)] VAR _t = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, NOT ISBLANK ( 'gold painel_municipio_ano'[pop_estimada] ) ) VAR _ini = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], ASC ) VAR _fim = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], DESC ) VAR _vi = MAXX ( _ini, 'gold painel_municipio_ano'[pop_estimada] ) VAR _vf = MAXX ( _fim, 'gold painel_municipio_ano'[pop_estimada] ) RETURN "Estimativa de população de " & [Município selecionado (nome)] & ": " & IF ( _vi >= 1000000, FORMAT ( _vi, "0,,.00" ) & " mi", IF ( _vi >= 1000, FORMAT ( _vi, "0,.0" ) & " mil", FORMAT ( _vi, "#,0" ) ) ) & " em " & MAXX ( _ini, 'gold painel_municipio_ano'[ano] ) & " e " & IF ( _vf >= 1000000, FORMAT ( _vf, "0,,.00" ) & " mi", IF ( _vf >= 1000, FORMAT ( _vf, "0,.0" ) & " mil", FORMAT ( _vf, "#,0" ) ) ) & " em " & MAXX ( _fim, 'gold painel_municipio_ano'[ano] ) & ", em três bases"
+		displayFolder: 4 Perfil
+		lineageTag: d075368f-f8b9-4ddd-a01c-42699a59dede
+
+	/// PER3b: título do Censo (textos.titulo_censos); 'sem dado' quando ausente (regra 5).
+	measure 'PER3b Título' = VAR _c10 = [PER1 População (Censo 2010)] VAR _c22 = [PER1 População (Censo 2022)] RETURN "Censo de " & [Município selecionado (nome)] & ": " & IF ( ISBLANK ( _c10 ), "sem dado", FORMAT ( _c10, "#,0" ) ) & " pessoas em 2010 e " & IF ( ISBLANK ( _c22 ), "sem dado", FORMAT ( _c22, "#,0" ) ) & " em 2022"
+		displayFolder: 4 Perfil
+		lineageTag: e87e7936-a43f-426e-b0ab-d8116a7db97c
+
+	/// PER4: PIB per capita publicado do município escolhido por ano (eixo 'gold painel_municipio_ano'[ano]); não é renda (regra 4).
+	measure 'PER4 PIB per capita' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold painel_municipio_ano'[pib_per_capita_reais] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m )
+		formatString: "R$" #,0.00
+		displayFolder: 4 Perfil
+		lineageTag: ceb2eeb9-bfc6-42dd-b4b3-2e22b3fadd87
+
+	/// PER4: valores publicados no primeiro e no último ano, sem variação (o denominador muda; textos.titulo_per_capita_municipio).
+	measure 'PER4 Título' = VAR _m = [Município selecionado (código)] VAR _t = CALCULATETABLE ( 'gold painel_municipio_ano', REMOVEFILTERS ( 'gold painel_municipio_ano' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold painel_municipio_ano'[cod_municipio] = _m, NOT ISBLANK ( 'gold painel_municipio_ano'[pib_per_capita_reais] ) ) VAR _ini = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], ASC ) VAR _fim = TOPN ( 1, _t, 'gold painel_municipio_ano'[ano], DESC ) RETURN "PIB per capita de " & [Município selecionado (nome)] & ": R$ " & FORMAT ( MAXX ( _ini, 'gold painel_municipio_ano'[pib_per_capita_reais] ), "#,0" ) & " em " & MAXX ( _ini, 'gold painel_municipio_ano'[ano] ) & " e R$ " & FORMAT ( MAXX ( _fim, 'gold painel_municipio_ano'[pib_per_capita_reais] ), "#,0" ) & " em " & MAXX ( _fim, 'gold painel_municipio_ano'[ano] ) & " (valores publicados, correntes)"
+		displayFolder: 4 Perfil
+		lineageTag: 7ae72c1d-0ebd-4f36-a07c-4029e88bdcc2
+
+	/// PER5: participacao_percentual de pib_corrente do município escolhido por ano (eixo 'gold participacao_estadual'[ano]).
+	measure 'PER5 Participação no PIB nominal do estado' = VAR _m = [Município selecionado (código)] RETURN CALCULATE ( SELECTEDVALUE ( 'gold participacao_estadual'[participacao_percentual] ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[cod_municipio] = _m, 'gold participacao_estadual'[codigo_indicador] = "pib_corrente" )
+		formatString: 0.0000"%"
+		displayFolder: 4 Perfil
+		lineageTag: 0b6b6e84-85bc-4d3d-8c02-bb69883a87a4
+
+	/// PER5: laranja no ano do filtro, azul nos demais.
+	measure 'PER5 Cor do ano' = IF ( SELECTEDVALUE ( 'gold participacao_estadual'[ano] ) = [Ano selecionado], "#eb6834", "#2a78d6" )
+		displayFolder: 4 Perfil
+		lineageTag: 6db53501-cbaf-488b-9a72-23e48b0380d5
+
+	/// PER5: título (textos.titulo_participacao), do primeiro ano com valor ao ano do filtro (ou ao último ano com valor).
+	measure 'PER5 Título' = VAR _m = [Município selecionado (código)] VAR _a = [Ano selecionado] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[cod_municipio] = _m, 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) VAR _anoIni = MINX ( _t, 'gold participacao_estadual'[ano] ) VAR _anoFim = IF ( ISEMPTY ( FILTER ( _t, 'gold participacao_estadual'[ano] = _a ) ), MAXX ( _t, 'gold participacao_estadual'[ano] ), _a ) VAR _vi = MAXX ( FILTER ( _t, 'gold participacao_estadual'[ano] = _anoIni ), 'gold participacao_estadual'[participacao_percentual] ) VAR _vf = MAXX ( FILTER ( _t, 'gold participacao_estadual'[ano] = _anoFim ), 'gold participacao_estadual'[participacao_percentual] ) VAR _verbo = IF ( _vf > _vi, "ganhou", IF ( _vf < _vi, "perdeu", "manteve" ) ) RETURN [Município selecionado (nome)] & " " & _verbo & " participação no PIB nominal do estado: " & FORMAT ( _vi, "0.00" ) & "% em " & _anoIni & " e " & FORMAT ( _vf, "0.00" ) & "% em " & _anoFim
+		displayFolder: 4 Perfil
+		lineageTag: c8b7c607-4f9d-4174-b4fc-8a1b8e653e8c
+
+	/// PER5: aviso quando o ano do filtro não tem participação (o título usa o último ano com valor).
+	measure 'PER5 Aviso ano sem valor' = VAR _m = [Município selecionado (código)] VAR _a = [Ano selecionado] VAR _t = CALCULATETABLE ( 'gold participacao_estadual', REMOVEFILTERS ( 'gold participacao_estadual' ), REMOVEFILTERS ( 'gold dim_municipio' ), 'gold participacao_estadual'[cod_municipio] = _m, 'gold participacao_estadual'[codigo_indicador] = "pib_corrente", NOT ISBLANK ( 'gold participacao_estadual'[participacao_percentual] ) ) RETURN IF ( NOT ISEMPTY ( _t ) && ISEMPTY ( FILTER ( _t, 'gold participacao_estadual'[ano] = _a ) ), "Sem participação no PIB em " & _a & "; o título usa o último ano com valor (" & MAXX ( _t, 'gold participacao_estadual'[ano] ) & ").", "" )
+		displayFolder: 4 Perfil
+		lineageTag: 34c4b4e5-6ae3-44a1-8727-b18188457105
+
+	/// POP2: ganho em azul, perda em laranja, ausente em cinza e o município escolhido em verde (figuras.cores_por_sinal e barras_divergentes do Streamlit). Compara o código, nunca o nome (regra 1).
+	measure 'POP2 Cor por sinal' = VAR _cod = SELECTEDVALUE ( 'gold dim_municipio'[cod_municipio] ) VAR _v = [POP2 Variação percentual] RETURN IF ( NOT ISBLANK ( _cod ) && _cod = [Município selecionado (código)], "#1baf7a", IF ( ISBLANK ( _v ), "#a3a29d", IF ( _v < 0, "#eb6834", "#2a78d6" ) ) )
+		displayFolder: 2 População
+		lineageTag: d7628662-4806-48c7-bf6c-6da430f5f1a5
+
+	/// ECO4: variação percentual do PIB nominal da linha (gold variacao_anual), para exibir e ordenar a tabela. Em medida, mantém a linha visível (o Power BI esconde linhas sem nenhuma medida preenchida).
+	measure 'ECO4 Variação nominal' = SELECTEDVALUE ( 'gold variacao_anual'[variacao_percentual] )
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		displayFolder: 3 Economia
+		lineageTag: adf198bc-d533-49a4-b3d9-ee4d752d364d
+
+	/// Exibição em texto de [VG1a População (Censo 2022)] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'VG1a População (Censo 2022) (exibição)' = VAR _v = [VG1a População (Censo 2022)] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 1 Visão geral
+		lineageTag: 0cc64180-1ea6-4a30-b71e-19fe378756ff
+
+	/// Exibição em texto de [VG1b PIB nominal no ano] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'VG1b PIB nominal no ano (exibição)' = VAR _v = [VG1b PIB nominal no ano] RETURN IF ( ISBLANK ( _v ), "sem dado", IF ( _v >= 1000000000, "R$ " & FORMAT ( _v, "0,,,.0" ) & " bi", IF ( _v >= 1000000, "R$ " & FORMAT ( _v, "0,,.0" ) & " mi", "R$ " & FORMAT ( _v, "#,0" ) ) ) )
+		displayFolder: 1 Visão geral
+		lineageTag: 9014d92a-3b5c-4315-8152-72a25e10d892
+
+	/// Exibição em texto de [VG1c Municípios] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'VG1c Municípios (exibição)' = VAR _v = [VG1c Municípios] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 1 Visão geral
+		lineageTag: f80b4721-3092-4dbd-9feb-fab61bd6a2f9
+
+	/// Exibição em texto de [POP2 Municípios comparáveis] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'POP2 Municípios comparáveis (exibição)' = VAR _v = [POP2 Municípios comparáveis] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 2 População
+		lineageTag: 63e3595a-c679-46e8-b67c-25444827ec53
+
+	/// Exibição em texto de [POP2 Cresceram] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'POP2 Cresceram (exibição)' = VAR _v = [POP2 Cresceram] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 2 População
+		lineageTag: 45d4b3ca-8f1c-437b-b371-1b85e1f9c192
+
+	/// Exibição em texto de [POP2 Perderam população] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'POP2 Perderam população (exibição)' = VAR _v = [POP2 Perderam população] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 2 População
+		lineageTag: d06a0432-449d-41cf-8855-69c1ad8674cf
+
+	/// Exibição em texto de [POP2 Variação: mediana entre os municípios] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'POP2 Variação: mediana entre os municípios (exibição)' = VAR _v = [POP2 Variação: mediana entre os municípios] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "+0.0;−0.0;0.0" ) & "%" )
+		displayFolder: 2 População
+		lineageTag: 5fc76061-05ea-4305-bb5b-47d9673da6e8
+
+	/// Exibição em texto de [POP4 Estimativa no ano selecionado] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'POP4 Estimativa no ano selecionado (exibição)' = VAR _v = [POP4 Estimativa no ano selecionado] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 2 População
+		lineageTag: 3b7575ca-d8f0-4769-955e-c7079f80fb35
+
+	/// Exibição em texto de [ECO3 PIB per capita: mediana entre os municípios] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'ECO3 PIB per capita: mediana entre os municípios (exibição)' = VAR _v = [ECO3 PIB per capita: mediana entre os municípios] RETURN IF ( ISBLANK ( _v ), "sem dado", "R$ " & FORMAT ( _v, "#,0.00" ) )
+		displayFolder: 3 Economia
+		lineageTag: 0cb315dd-13de-4748-8286-bc5c8d648942
+
+	/// Exibição em texto de [ECO3 Municípios com valor] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'ECO3 Municípios com valor (exibição)' = VAR _v = [ECO3 Municípios com valor] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 3 Economia
+		lineageTag: f3ddb5b3-e516-4bf5-92ed-555e51b5cffc
+
+	/// Exibição em texto de [ECO4 Variações acima de 50% em módulo] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'ECO4 Variações acima de 50% em módulo (exibição)' = VAR _v = [ECO4 Variações acima de 50% em módulo] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 3 Economia
+		lineageTag: dde22f92-198d-4bfd-b627-997c65113dfe
+
+	/// Exibição em texto de [ECO4 Municípios com saltos] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'ECO4 Municípios com saltos (exibição)' = VAR _v = [ECO4 Municípios com saltos] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 3 Economia
+		lineageTag: e4905fd2-9a74-43f7-a225-a4dabd9c2034
+
+	/// Exibição em texto de [PER1 População (Censo 2010)] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'PER1 População (Censo 2010) (exibição)' = VAR _v = [PER1 População (Censo 2010)] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 4 Perfil
+		lineageTag: ab96c761-c0f4-44ab-8da5-4130c1cfc593
+
+	/// Exibição em texto de [PER1 População (Censo 2022)] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'PER1 População (Censo 2022) (exibição)' = VAR _v = [PER1 População (Censo 2022)] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )
+		displayFolder: 4 Perfil
+		lineageTag: db7b118b-fe4d-4967-8ee2-8158de92a7fe
+
+	/// Exibição em texto de [PER1 Variação entre os Censos] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'PER1 Variação entre os Censos (exibição)' = VAR _v = [PER1 Variação entre os Censos] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "+0.00;−0.00;0.00" ) & "%" )
+		displayFolder: 4 Perfil
+		lineageTag: d0b3e8dc-5754-4ec4-aa4f-9db3774e329a
+
+	/// Exibição em texto de [PER1 PIB nominal no ano] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'PER1 PIB nominal no ano (exibição)' = VAR _v = [PER1 PIB nominal no ano] RETURN IF ( ISBLANK ( _v ), "sem dado", IF ( _v >= 1000000000, "R$ " & FORMAT ( _v, "0,,,.0" ) & " bi", IF ( _v >= 1000000, "R$ " & FORMAT ( _v, "0,,.0" ) & " mi", "R$ " & FORMAT ( _v, "#,0" ) ) ) )
+		displayFolder: 4 Perfil
+		lineageTag: 113eff61-d433-4c6b-b560-03a57b726272
+
+	/// Exibição em texto de [PER1 PIB per capita no ano] para cartão: 'sem dado' quando ausente (C4, regra 5), valor exato como no Streamlit.
+	measure 'PER1 PIB per capita no ano (exibição)' = VAR _v = [PER1 PIB per capita no ano] RETURN IF ( ISBLANK ( _v ), "sem dado", "R$ " & FORMAT ( _v, "#,0.00" ) )
+		displayFolder: 4 Perfil
+		lineageTag: 246b3932-eb09-4a8e-bd94-59cdfa123fbf
+
+	/// Início: abertura com o número de municípios e os anos da GOLD (app.py).
+	measure 'INI Texto de abertura' = "População e PIB dos " & COUNTROWS ( 'gold dim_municipio' ) & " municípios de Santa Catarina, de " & MIN ( 'gold grade_indicador_municipio_ano'[ano] ) & " a " & MAX ( 'gold grade_indicador_municipio_ano'[ano] ) & ", a partir de dados públicos do IBGE."
+		displayFolder: 0 Início
+		lineageTag: e947a740-d600-46b0-8e34-16589d1c1f5c
+
+	/// Início: pergunta central com os anos da GOLD (app.py).
+	measure 'INI Pergunta central' = "Pergunta central: como os municípios de Santa Catarina se diferenciam em população e dimensão econômica, e como esses indicadores evoluíram entre " & MIN ( 'gold grade_indicador_municipio_ano'[ano] ) & " e " & MAX ( 'gold grade_indicador_municipio_ano'[ano] ) & "?"
+		displayFolder: 0 Início
+		lineageTag: c202cd25-86a1-4dc1-a51c-872979e2e256
+
+	/// SOB1: anos cobertos pela série (mín.–máx.), como em sql/analise/fontes_series.sql.
+	measure 'SOB1 Anos' = VAR _i = MIN ( 'gold grade_indicador_municipio_ano'[ano] ) VAR _f = MAX ( 'gold grade_indicador_municipio_ano'[ano] ) RETURN IF ( NOT ISBLANK ( _i ), _i & "–" & _f )
+		displayFolder: 5 Sobre
+		lineageTag: a4ff8815-76b1-446b-91c0-a53923bb80a3
+
+	/// SOB1: data da última coleta da série (max(data_coleta)).
+	measure 'SOB1 Última coleta' = VAR _d = MAX ( 'gold grade_indicador_municipio_ano'[data_coleta] ) RETURN IF ( NOT ISBLANK ( _d ), FORMAT ( _d, "dd/MM/yyyy" ) )
+		displayFolder: 5 Sobre
+		lineageTag: 58d85ea4-212e-4075-bf62-be5082e7f7a3
+
+	/// SOB2: linhas da grade por indicador e status, como em sql/analise/cobertura.sql (contagem).
+	measure 'SOB2 Linhas (município × ano)' = COUNTROWS ( 'gold grade_indicador_municipio_ano' )
+		formatString: #,0
+		displayFolder: 5 Sobre
+		lineageTag: f47ed9d5-394f-463c-803e-971d9ed5ea97
+
+	column _
+		isHidden
+		lineageTag: bb0bc029-98f0-4238-bfb8-67b8229dcef2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [_]
+
+	partition Medidas = calculated
+		mode: import
+		source = ROW("_", BLANK())
+

@@ -1,0 +1,354 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "sobre_sob1",
+  "position": {
+    "x": 24,
+    "y": 180,
+    "z": 4000,
+    "height": 260,
+    "width": 1232,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold grade_indicador_municipio_ano"
+                    }
+                  },
+                  "Property": "cod_serie"
+                }
+              },
+              "queryRef": "gold grade_indicador_municipio_ano.cod_serie",
+              "nativeQueryRef": "cod_serie",
+              "displayName": "Série"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold grade_indicador_municipio_ano"
+                    }
+                  },
+                  "Property": "fonte"
+                }
+              },
+              "queryRef": "gold grade_indicador_municipio_ano.fonte",
+              "nativeQueryRef": "fonte",
+              "displayName": "Fonte"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold grade_indicador_municipio_ano"
+                    }
+                  },
+                  "Property": "codigo_indicador"
+                }
+              },
+              "queryRef": "gold grade_indicador_municipio_ano.codigo_indicador",
+              "nativeQueryRef": "codigo_indicador",
+              "displayName": "Indicador"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold grade_indicador_municipio_ano"
+                    }
+                  },
+                  "Property": "tipo_medida"
+                }
+              },
+              "queryRef": "gold grade_indicador_municipio_ano.tipo_medida",
+              "nativeQueryRef": "tipo_medida",
+              "displayName": "Tipo de medida"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "gold grade_indicador_municipio_ano"
+                    }
+                  },
+                  "Property": "unidade"
+                }
+              },
+              "queryRef": "gold grade_indicador_municipio_ano.unidade",
+              "nativeQueryRef": "unidade",
+              "displayName": "Unidade"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "SOB1 Anos"
+                }
+              },
+              "queryRef": "Medidas.SOB1 Anos",
+              "nativeQueryRef": "SOB1 Anos",
+              "displayName": "Anos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "SOB1 Última coleta"
+                }
+              },
+              "queryRef": "Medidas.SOB1 Última coleta",
+              "nativeQueryRef": "SOB1 Última coleta",
+              "displayName": "Última coleta"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "SOB1 Anos"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "237.00000300614735D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "Medidas.SOB1 Última coleta"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "117.87945178931172D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "Medidas.SOB1 Anos"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "146.75007987030017D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "gold grade_indicador_municipio_ano.unidade"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "179.2806064495498D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "gold grade_indicador_municipio_ano.tipo_medida"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "141.2499724626725D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "gold grade_indicador_municipio_ano.codigo_indicador"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "150.99999781449645D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "gold grade_indicador_municipio_ano.fonte"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "174.0000033618738D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "gold grade_indicador_municipio_ano.cod_serie"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Uma linha por série de origem'"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#0b0b0b'"
+                    }
+                  }
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

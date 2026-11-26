@@ -1,0 +1,16 @@
+/// Tabela desconectada para o filtro global de ano (2010–2023, seleção única; padrão 2023). Não tem relacionamento: as medidas leem o ano escolhido com SELECTEDVALUE.
+table Anos
+	lineageTag: 04e82547-2a07-4d0e-b9f6-19dfd27d577a
+
+	/// Ano do filtro global (2010–2023).
+	column Ano
+		formatString: 0
+		lineageTag: 89d032d2-d444-4f98-a948-807bce0f02d7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ano]
+
+	partition Anos = calculated
+		mode: import
+		source = SELECTCOLUMNS(GENERATESERIES(2010, 2023, 1), "Ano", [Value])
+

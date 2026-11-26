@@ -1,0 +1,192 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "sobre_sob3",
+  "position": {
+    "x": 24,
+    "y": 891,
+    "z": 9000,
+    "height": 339,
+    "width": 1232,
+    "tabOrder": 9000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "• Censo e estimativa são medidas diferentes (regra 2). Nunca aparecem na mesma série. A variação oficial de população é Censo 2010 × Censo 2022; a estimativa não substitui os Censos (regra 2).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• PIB é nominal (regra 3). PIB nominal, a preços correntes: a variação entre anos inclui inflação e não é crescimento real (regra 3). 2021–2023 foram revisados pelo IBGE em 19/12/2025; 2022–2023 ainda estão sujeitos a revisão (limitações, seção 5).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• PIB per capita é o publicado (regra 4). PIB per capita publicado pelo IBGE; não é renda (regra 4). Não há per capita de região ou do estado; a única estatística mostrada é a mediana entre os municípios. O denominador do per capita muda conforme o ano: estimativa até 2021, 1ª apuração do Censo em 2022 (limitações, seção 9).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Ausência não é zero (regra 5). Valor ausente aparece como \"sem dado\" e não é interpolado.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Estimativa em três bases (regra 12). Estimativa com três bases (regra 12): de 2012 para 2013 há quebra de série (nova projeção por UF) e a variação não é calculada; de 2017 para 2018 há revisão da projeção, e o IBGE declara comparáveis só 2013–2017. Linhas de bases diferentes não se ligam.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Dupla contagem em 2012 (regra 13). Em 2012, o total exclui Pescaria Brava (4212650) e Balneário Rincão (4220000), em dupla contagem com o município de origem (regra 13).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Saltos do PIB em municípios pequenos. Alerta A1: em municípios pequenos, a entrada ou a saída de um estabelecimento pode multiplicar o PIB de um ano para outro; a causa de cada caso é NÃO CONFIRMADA (limitações, seção 6).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• PIB municipal é distribuição do PIB estadual. O PIB municipal é uma distribuição do PIB estadual feita pelo IBGE por indicadores de atividade, e não uma medição direta (limitações, seção 6).",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Detalhes em docs/limitacoes.md e docs/dashboards.md no repositório.",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#52514e"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "dropShadow": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

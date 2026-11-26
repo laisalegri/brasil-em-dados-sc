@@ -33,6 +33,11 @@ reports/*
 dashboards/powerbi/*.pbix.bak
 ~$*
 
+# Power BI (PBIP): arquivos locais do Desktop. localSettings.json guarda a assinatura das
+# credenciais desta máquina; cache.abf é a cópia dos dados importados (gerada pelo refresh).
+dashboards/powerbi/**/.pbi/localSettings.json
+dashboards/powerbi/**/.pbi/cache.abf
+
 # Claude Code: configurações locais (os subagents em .claude/agents/ SÃO versionados)
 .claude/settings.local.json
 
@@ -41,3 +46,6 @@ dashboards/powerbi/*.pbix.bak
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Schemas PBIR baixados por scripts/powerbi/baixar_schemas.py (cópia local dos oficiais)
+scripts/powerbi/schemas/

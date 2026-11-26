@@ -1,0 +1,135 @@
+table 'gold painel_municipio_ano'
+	lineageTag: fc1e651e-ffe4-4a59-8499-d924676f005c
+
+	column cod_municipio
+		dataType: string
+		lineageTag: 90a29b36-b77a-4fda-a6a8-3db58b4b365b
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_municipio
+		dataType: string
+		lineageTag: 04067f3c-0986-4014-8197-0a54f51e8c78
+		summarizeBy: none
+		sourceColumn: nome_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_regiao_intermediaria
+		dataType: string
+		lineageTag: 21f404a8-8846-4af9-9418-9b5041d1d7c9
+		summarizeBy: none
+		sourceColumn: cod_regiao_intermediaria
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_regiao_intermediaria
+		dataType: string
+		lineageTag: 4da5c8c8-835f-43a1-9cff-ad9315269c57
+		summarizeBy: none
+		sourceColumn: nome_regiao_intermediaria
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_regiao_imediata
+		dataType: string
+		lineageTag: 9a08ba99-9493-4bbf-aa01-84e9a2315021
+		summarizeBy: none
+		sourceColumn: cod_regiao_imediata
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_regiao_imediata
+		dataType: string
+		lineageTag: 4dbd869b-a2f4-4e62-a378-612a20d514a0
+		summarizeBy: none
+		sourceColumn: nome_regiao_imediata
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: 11c765b8-c5b7-4980-b66c-1a56136a89a3
+		summarizeBy: none
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Estimativa de população (pessoas), tabela 6579; ver base_estimativa (regra 12).
+	column pop_estimada
+		dataType: double
+		formatString: #,0
+		lineageTag: f42a8aff-ad4c-4cf2-b49a-fb6dcaab1df1
+		summarizeBy: none
+		sourceColumn: pop_estimada
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column base_estimativa
+		dataType: string
+		lineageTag: e44a1fab-6bac-4197-99a3-b2e99423d422
+		summarizeBy: none
+		sourceColumn: base_estimativa
+
+		annotation SummarizationSetBy = Automatic
+
+	/// População do Censo (pessoas), só 2010 e 2022.
+	column pop_censo
+		dataType: double
+		formatString: #,0
+		lineageTag: 7c449955-3bca-43ed-8c3b-cbaa8aec2c5b
+		summarizeBy: none
+		sourceColumn: pop_censo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// PIB nominal (R$, valores correntes).
+	column pib_corrente_reais
+		dataType: double
+		formatString: "R$" #,0.00
+		lineageTag: 0d33add6-fe2e-4a78-b6d3-8fe8ea0d08f1
+		summarizeBy: none
+		sourceColumn: pib_corrente_reais
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// PIB per capita publicado pelo IBGE; não é renda (regra 4). Nunca agregar.
+	column pib_per_capita_reais
+		dataType: double
+		formatString: "R$" #,0.00
+		lineageTag: f175c46c-3ee6-4c47-b7f2-45ba84de40c2
+		summarizeBy: none
+		sourceColumn: pib_per_capita_reais
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column aviso
+		dataType: string
+		lineageTag: b8297cbc-a0e2-4d5e-9513-f3a725f68478
+		summarizeBy: none
+		sourceColumn: aviso
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold painel_municipio_ano' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "painel_municipio_ano"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

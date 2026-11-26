@@ -43,7 +43,7 @@ Fonte do plano: quadro do Trello. O CSV exportado do quadro, usado para gerar a 
 | ✅ | **D33** Produzir EDA e conclusões | GOLD e análise exploratória | 18/12/26 | 23/11/26 | Criar notebooks reproduzíveis, gráficos, achados e ressalvas. |
 | ✅ | **D34** Definir narrativa e KPIs | Dashboards | 19/12/26 | 24/11/26 | Desenhar páginas, filtros, métricas e perguntas respondidas por cada visual. |
 | ✅ | **D36** Construir app Streamlit | Dashboards | 22/12/26 | 26/11/26 | **Feito antes do D35** (decisão de 24/11). Criar filtros por município, ano e indicador usando a camada analítica. |
-| ⬜ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | — | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal, com o app Streamlit como referência. |
+| ✅ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | 26/11/26 | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal, com o app Streamlit como referência. |
 | ⬜ | **D37** Validar consistência entre dashboards | Dashboards | 23/12/26 | — | Comparar amostras e totais entre SQL, Power BI e Streamlit; incluir a checagem no agente de verificação. |
 | ⬜ | **D38** Revisão final com subagents | Integração e entrega | 24/12/26 | — | Rodar revisor-de-codigo e documentador no repositório inteiro; aplicar correções. |
 | ⬜ | **D39** Pipeline do zero, README e portfólio | Integração e entrega | 26/12/26 | — | Executar pipeline do zero com o agente de verificação, rodar testes, revisar README e publicar no GitHub. |
@@ -66,8 +66,8 @@ As datas realizadas foram reconstruídas em 20/11/2026 a partir do `git log` e d
 |---|---|---|
 | Cartões D01–D30 | 30 cartões em 30 dias de trabalho (11/11 a 15/12) | 26 concluídos e 4 absorvidos, em 6 dias com commits (11, 12, 14, 17, 18 e 20/11) |
 | Cartões D31–D33 | 3 cartões em 3 dias (16 a 18/12) | 3 concluídos em 23/11 |
-| Cartões D34 e D36 | 2 cartões (19 e 22/12) | Concluídos em 24/11 (D34) e 26/11 (D36) |
-| Cartões pendentes | — | 7 (D35 e D37 a D42) |
+| Cartões D34 a D36 | 3 cartões (19, 21 e 22/12) | Concluídos em 24/11 (D34) e 26/11 (D35 e D36) |
+| Cartões pendentes | — | 6 (D37 a D42) |
 | Fechamento do MVP | D39, em 26/12 | Em andamento |
 
 Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho sem commit não aparece no git. Cada cartão previa 3 horas.
@@ -130,7 +130,8 @@ Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho
 | D32 | `notebooks/02_pib.ipynb`: PIB nominal, concentração, participação 2010 × 2023, PIB per capita 2023 e regiões | `1d5f587` |
 | D33 | `notebooks/03_conclusoes.ipynb` e teste que executa os três notebooks | `1d5f587` |
 | D34 | `docs/dashboards.md`: narrativa, seis páginas com 24 visuais, filtros globais, proibições e 15 números de referência para o D37; D36 antes do D35 e decisão D34 | `bb582ae` |
-| D36 | App Streamlit em `dashboards/streamlit/` (seis páginas, filtros globais com `st.navigation`), pacote `brasil_em_dados.dashboard`, cinco consultas novas em `sql/analise/`, testes com AppTest (R01–R15, Censo fixo, erro de conexão sem detalhes), streamlit e plotly fixados e decisão D36 | — |
+| D36 | App Streamlit em `dashboards/streamlit/` (seis páginas, filtros globais com `st.navigation`), pacote `brasil_em_dados.dashboard`, cinco consultas novas em `sql/analise/`, testes com AppTest (R01–R15, Censo fixo, erro de conexão sem detalhes), streamlit e plotly fixados e decisão D36 | `929556f` |
+| D35 | Relatório Power BI em `dashboards/powerbi/` (PBIP: modelo em TMDL e relatório em PBIR), com seis páginas (Início, Visão geral, População, Economia, Perfil e Sobre os dados); modelo pelo Power BI Modeling MCP (relacionamentos só por `cod_municipio`, 189 medidas, R01–R15 conferidos em DAX); gerador e verificador em `scripts/powerbi/`; `.mcp.json`, `.gitignore` dos arquivos locais do PBIP e decisão D35 | — |
 
 Commit fora de cartão: `12d0db4` (12/11/2026), um ajuste do texto do cronograma (fonte do quadro e datas previstas).
 

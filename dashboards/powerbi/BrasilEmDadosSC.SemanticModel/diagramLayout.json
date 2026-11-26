@@ -1,0 +1,165 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 433,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 858.348449975314,
+            "y": 676.25894766943452
+          },
+          "nodeIndex": "gold agregado_regiao_ano",
+          "nodeLineageTag": "8b021ce8-1387-4a93-bd1d-0ee87c24f508",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 462.51431695492749,
+            "y": 322.2714165743929
+          },
+          "nodeIndex": "gold dim_municipio",
+          "nodeLineageTag": "76a96c4c-4414-46ea-b6ef-472b25204fcb",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 749.348449975314,
+            "y": 322.36305792546079
+          },
+          "nodeIndex": "gold grade_indicador_municipio_ano",
+          "nodeLineageTag": "53cafc61-2e7e-4e7b-bdd1-5cfb41a497a2",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": -50
+          },
+          "nodeIndex": "gold painel_municipio_ano",
+          "nodeLineageTag": "fc1e651e-ffe4-4a59-8499-d924676f005c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 175.54018338070881,
+            "y": 660.51789533886893
+          },
+          "nodeIndex": "gold participacao_estadual",
+          "nodeLineageTag": "1baef622-779b-438a-a942-164c6793de05",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 462.8001621252468,
+            "y": -33.618501367931231
+          },
+          "nodeIndex": "gold variacao_anual",
+          "nodeLineageTag": "0dcc3fdc-8533-4e56-9fd5-f58d44fb8e31",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 175.8144868086323,
+            "y": 303.3844920024178
+          },
+          "nodeIndex": "gold variacao_populacao_censo",
+          "nodeLineageTag": "b8a17019-48d8-42c4-8f77-faed90a16a12",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1217.348449975314,
+            "y": 405.25894766943446
+          },
+          "nodeIndex": "Anos",
+          "nodeLineageTag": "04e82547-2a07-4d0e-b9f6-19dfd27d577a",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1501.348449975314,
+            "y": 405.25894766943446
+          },
+          "nodeIndex": "Medidas",
+          "nodeLineageTag": "f4652040-ab22-47d1-8dde-52b996e62e15",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1735.348449975314,
+            "y": 417.25894766943446
+          },
+          "nodeIndex": "Filtro territorio",
+          "nodeLineageTag": "008e459a-3fd9-4a06-a96e-106639476d00",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1969.348449975314,
+            "y": 405.25894766943446
+          },
+          "nodeIndex": "Ano Censo",
+          "nodeLineageTag": "4fd29b37-2657-4bc0-8eb2-bfafef06dffd",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Todas as tabelas",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Todas as tabelas",
+  "defaultDiagram": "Todas as tabelas"
+}

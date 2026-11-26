@@ -1,0 +1,222 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "populacao_pop4_bases",
+  "position": {
+    "x": 24.000000000000004,
+    "y": 3227.8181818181811,
+    "z": 31000,
+    "height": 190,
+    "width": 1232,
+    "tabOrder": 31000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Pares 2012→2013"
+                }
+              },
+              "queryRef": "Medidas.POP4 Pares 2012→2013",
+              "nativeQueryRef": "POP4 Pares 2012→2013",
+              "displayName": "Pares 2012→2013"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Com variação 2012→2013"
+                }
+              },
+              "queryRef": "Medidas.POP4 Com variação 2012→2013",
+              "nativeQueryRef": "POP4 Com variação 2012→2013",
+              "displayName": "Com variação 2012→2013"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Motivo 2012→2013"
+                }
+              },
+              "queryRef": "Medidas.POP4 Motivo 2012→2013",
+              "nativeQueryRef": "POP4 Motivo 2012→2013",
+              "displayName": "Motivo 2012→2013"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Pares 2017→2018"
+                }
+              },
+              "queryRef": "Medidas.POP4 Pares 2017→2018",
+              "nativeQueryRef": "POP4 Pares 2017→2018",
+              "displayName": "Pares 2017→2018"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Com variação 2017→2018"
+                }
+              },
+              "queryRef": "Medidas.POP4 Com variação 2017→2018",
+              "nativeQueryRef": "POP4 Com variação 2017→2018",
+              "displayName": "Com variação 2017→2018"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "POP4 Motivo 2017→2018"
+                }
+              },
+              "queryRef": "Medidas.POP4 Motivo 2017→2018",
+              "nativeQueryRef": "POP4 Motivo 2017→2018",
+              "displayName": "Motivo 2017→2018"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'POP4 · variações entre bases (pares municipais)'"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#0b0b0b'"
+                    }
+                  }
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

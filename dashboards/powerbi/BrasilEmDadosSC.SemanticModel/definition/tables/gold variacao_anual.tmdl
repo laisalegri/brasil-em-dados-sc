@@ -1,0 +1,150 @@
+table 'gold variacao_anual'
+	lineageTag: 0dcc3fdc-8533-4e56-9fd5-f58d44fb8e31
+
+	column cod_municipio
+		dataType: string
+		lineageTag: 38241669-0357-4902-b161-957c606f00c3
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_municipio
+		dataType: string
+		lineageTag: 7fb5c66c-307f-49d2-afbc-2b373da4a926
+		summarizeBy: none
+		sourceColumn: nome_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_indicador
+		dataType: string
+		lineageTag: df60ccf7-30fd-4a2f-90cd-79b3a48b869a
+		summarizeBy: none
+		sourceColumn: codigo_indicador
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_medida
+		dataType: string
+		lineageTag: 771ef15e-bd3a-4446-9442-42ba7d7e7c58
+		summarizeBy: none
+		sourceColumn: tipo_medida
+
+		annotation SummarizationSetBy = Automatic
+
+	column unidade
+		dataType: string
+		lineageTag: af0a3339-bf3b-4175-bd97-6cb03d15049d
+		summarizeBy: none
+		sourceColumn: unidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano_anterior
+		dataType: int64
+		formatString: 0
+		lineageTag: 7d7f1333-db90-40b1-857a-618df0a297d4
+		summarizeBy: none
+		sourceColumn: ano_anterior
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: d4e07934-8ca9-4d6c-a9d9-03a90204712c
+		summarizeBy: none
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	column base_anterior
+		dataType: string
+		lineageTag: 41d6b2e0-ad20-4e7c-a690-d36dd64e78f4
+		summarizeBy: none
+		sourceColumn: base_anterior
+
+		annotation SummarizationSetBy = Automatic
+
+	column base_estimativa
+		dataType: string
+		lineageTag: d6e71f65-89fa-4d84-a2ea-dd151077adab
+		summarizeBy: none
+		sourceColumn: base_estimativa
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_anterior
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 59814b34-0a7e-45ac-a20c-d574c3e3cc22
+		summarizeBy: none
+		sourceColumn: valor_anterior
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column valor
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 90170974-f730-4b55-9c16-3900aa706893
+		summarizeBy: none
+		sourceColumn: valor
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column variacao_absoluta
+		dataType: double
+		formatString: +#,0.00;−#,0.00;0
+		lineageTag: f03e17c7-6de2-468e-8c59-fccc6ff64bd6
+		summarizeBy: none
+		sourceColumn: variacao_absoluta
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Variação sobre o ano anterior; para PIB, variação nominal (regra 3). NULL entre bases 2012→2013 (regra 12).
+	column variacao_percentual
+		dataType: double
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		lineageTag: 6eb731f8-32df-4d63-8b72-65c821270fde
+		summarizeBy: none
+		sourceColumn: variacao_percentual
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column comparavel
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 1e768d69-2cac-497a-b6ba-b99bd66f5870
+		summarizeBy: none
+		sourceColumn: comparavel
+
+		annotation SummarizationSetBy = Automatic
+
+	column motivo
+		dataType: string
+		lineageTag: ae5d74c6-8fe8-448b-b5c2-03f31bb442e6
+		summarizeBy: none
+		sourceColumn: motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold variacao_anual' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "variacao_anual"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

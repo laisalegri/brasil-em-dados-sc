@@ -1,0 +1,82 @@
+table 'gold variacao_populacao_censo'
+	lineageTag: b8a17019-48d8-42c4-8f77-faed90a16a12
+
+	column cod_municipio
+		dataType: string
+		lineageTag: 8c6931af-8a76-489c-bb5e-b9251c301ade
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_municipio
+		dataType: string
+		lineageTag: 8043a2a6-5ee2-4ba4-8f57-18f8f76502e6
+		summarizeBy: none
+		sourceColumn: nome_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column pop_censo_2010
+		dataType: double
+		formatString: #,0
+		lineageTag: 3356b162-70a8-4e78-8191-5fc722d56688
+		summarizeBy: none
+		sourceColumn: pop_censo_2010
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column pop_censo_2022
+		dataType: double
+		formatString: #,0
+		lineageTag: 47a8bad2-b2d5-4355-894d-dbe8031e3fc6
+		summarizeBy: none
+		sourceColumn: pop_censo_2022
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column variacao_absoluta
+		dataType: double
+		formatString: +#,0;−#,0;0
+		lineageTag: 8bda523a-8f81-44ab-a408-7691355b4f60
+		summarizeBy: none
+		sourceColumn: variacao_absoluta
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column variacao_percentual
+		dataType: double
+		formatString: +0.00"%";−0.00"%";0.00"%"
+		lineageTag: 52b4abe1-cfb6-454f-9d7f-19937dfe1464
+		summarizeBy: none
+		sourceColumn: variacao_percentual
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column motivo
+		dataType: string
+		lineageTag: 3b378a4a-ec0b-4ed1-a58e-9c071d31b875
+		summarizeBy: none
+		sourceColumn: motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold variacao_populacao_censo' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "variacao_populacao_censo"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

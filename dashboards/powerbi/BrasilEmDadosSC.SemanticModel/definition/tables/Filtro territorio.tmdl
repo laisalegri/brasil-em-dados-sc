@@ -1,0 +1,34 @@
+/// Tabela desconectada (cópia da dim_municipio) para as segmentações globais de Região e Município. Sem relacionamento, para que o município escolhido seja só destacado nos rankings, sem filtrar os outros (docs/dashboards.md, seção 3). As medidas leem a seleção com SELECTEDVALUE.
+table 'Filtro territorio'
+	lineageTag: 008e459a-3fd9-4a06-a96e-106639476d00
+
+	column cod_municipio
+		isHidden
+		lineageTag: 8b2ea572-5cfe-4e8b-9097-c1b2006fe3e7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [cod_municipio]
+
+	column Município
+		lineageTag: 5e402cab-a13d-4546-b5b4-b7263d26eea2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Município]
+
+	column cod_regiao_intermediaria
+		isHidden
+		lineageTag: 086a3b55-54f9-44f7-b0a4-a75986beb031
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [cod_regiao_intermediaria]
+
+	column 'Região intermediária'
+		lineageTag: 02e55958-5dc5-40e0-bf9d-2d5f41a6aa7b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Região intermediária]
+
+	partition 'Filtro territorio' = calculated
+		mode: import
+		source = SELECTCOLUMNS('gold dim_municipio', "cod_municipio", 'gold dim_municipio'[cod_municipio], "Município", 'gold dim_municipio'[nome_municipio], "cod_regiao_intermediaria", 'gold dim_municipio'[cod_regiao_intermediaria], "Região intermediária", 'gold dim_municipio'[nome_regiao_intermediaria])
+

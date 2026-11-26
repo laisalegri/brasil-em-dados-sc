@@ -1,0 +1,126 @@
+table 'gold agregado_regiao_ano'
+	lineageTag: 8b021ce8-1387-4a93-bd1d-0ee87c24f508
+
+	column nivel
+		dataType: string
+		lineageTag: 4617e0c2-ea55-415d-87a2-65c4e2df8632
+		summarizeBy: none
+		sourceColumn: nivel
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_regiao
+		dataType: string
+		lineageTag: 0d323695-d6fb-44a6-96cf-580da234fb3f
+		summarizeBy: none
+		sourceColumn: cod_regiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_regiao
+		dataType: string
+		lineageTag: d07e470d-bedd-4385-b165-1bada40abbb4
+		summarizeBy: none
+		sourceColumn: nome_regiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_indicador
+		dataType: string
+		lineageTag: a5cceab1-64d6-4e54-a621-09ee5b2b4e6a
+		summarizeBy: none
+		sourceColumn: codigo_indicador
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_medida
+		dataType: string
+		lineageTag: 360459ef-abbf-4d93-8c18-b38e5345fb4f
+		summarizeBy: none
+		sourceColumn: tipo_medida
+
+		annotation SummarizationSetBy = Automatic
+
+	column unidade
+		dataType: string
+		lineageTag: 7deb29c0-bb21-4cdc-acb8-ac4dfc8c09da
+		summarizeBy: none
+		sourceColumn: unidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: 97f43f9e-68fd-4ff7-8148-0012114aeb8a
+		summarizeBy: none
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	column base_estimativa
+		dataType: string
+		lineageTag: 8f489235-6e62-412d-b258-9d43b10b0469
+		summarizeBy: none
+		sourceColumn: base_estimativa
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Total pronto do estado ou da região (soma feita na GOLD; regra 13 em pop_estimada 2012). Unidade na coluna unidade: pessoas ou reais.
+	column valor
+		dataType: double
+		formatString: #,0.00
+		lineageTag: bd192ebf-0361-44d7-a091-da940021efe0
+		summarizeBy: none
+		sourceColumn: valor
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column municipios_somados
+		dataType: int64
+		formatString: #,0
+		lineageTag: ff3a498d-910f-4504-8806-11ab71b4c4b0
+		summarizeBy: none
+		sourceColumn: municipios_somados
+
+		annotation SummarizationSetBy = Automatic
+
+	column municipios_sem_valor
+		dataType: int64
+		formatString: #,0
+		lineageTag: 85a55c77-6a05-4ca0-a8e8-5f26d534c8ef
+		summarizeBy: none
+		sourceColumn: municipios_sem_valor
+
+		annotation SummarizationSetBy = Automatic
+
+	column municipios_excluidos
+		dataType: int64
+		formatString: #,0
+		lineageTag: 662aa8a4-01d1-4c40-bf5d-b2a4d6899426
+		summarizeBy: none
+		sourceColumn: municipios_excluidos
+
+		annotation SummarizationSetBy = Automatic
+
+	column aviso
+		dataType: string
+		lineageTag: 10301d5d-f9a9-4768-b8ed-4070ea31a128
+		summarizeBy: none
+		sourceColumn: aviso
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold agregado_regiao_ano' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "agregado_regiao_ano"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

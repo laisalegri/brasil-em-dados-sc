@@ -1,0 +1,29 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+annotation PBI_QueryOrder = ["gold agregado_regiao_ano","gold dim_municipio","gold grade_indicador_municipio_ano","gold painel_municipio_ano","gold participacao_estadual","gold variacao_anual","gold variacao_populacao_censo"]
+
+ref table 'gold agregado_regiao_ano'
+ref table 'gold dim_municipio'
+ref table 'gold grade_indicador_municipio_ano'
+ref table 'gold painel_municipio_ano'
+ref table 'gold participacao_estadual'
+ref table 'gold variacao_anual'
+ref table 'gold variacao_populacao_censo'
+ref table Anos
+ref table Medidas
+ref table 'Filtro territorio'
+ref table 'Ano Censo'
+
+ref cultureInfo pt-BR
+

@@ -1,0 +1,119 @@
+table 'gold dim_municipio'
+	lineageTag: 76a96c4c-4414-46ea-b6ef-472b25204fcb
+
+	column cod_municipio
+		dataType: string
+		lineageTag: 2e5105d1-b31d-45d6-8621-c1a13f4fee5a
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_municipio
+		dataType: string
+		lineageTag: 92ea99a7-8e24-4bd9-a3ec-27d1859d97f7
+		summarizeBy: none
+		sourceColumn: nome_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_regiao_imediata
+		dataType: string
+		lineageTag: 4801a501-f3e5-44c0-a1a0-77e43521c16d
+		summarizeBy: none
+		sourceColumn: cod_regiao_imediata
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_regiao_imediata
+		dataType: string
+		lineageTag: e6b5e878-bab1-4ee9-a45c-c28ca03d92c5
+		summarizeBy: none
+		sourceColumn: nome_regiao_imediata
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_regiao_intermediaria
+		dataType: string
+		lineageTag: 480ff5a8-bc5e-4ec9-aba2-a0d28278617d
+		summarizeBy: none
+		sourceColumn: cod_regiao_intermediaria
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_regiao_intermediaria
+		dataType: string
+		lineageTag: 64c36bb5-4a07-4589-bfca-672451045c8b
+		summarizeBy: none
+		sourceColumn: nome_regiao_intermediaria
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_microrregiao
+		dataType: string
+		lineageTag: fe0dc76e-1fdf-4f20-9659-45ba7cc3cca0
+		summarizeBy: none
+		sourceColumn: cod_microrregiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_microrregiao
+		dataType: string
+		lineageTag: 5bfed342-6693-4b9a-88a9-896b9b4c3de9
+		summarizeBy: none
+		sourceColumn: nome_microrregiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_mesorregiao
+		dataType: string
+		lineageTag: 9f39c3a1-50a5-49f5-959a-f345fa26a3ba
+		summarizeBy: none
+		sourceColumn: cod_mesorregiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_mesorregiao
+		dataType: string
+		lineageTag: 3e58532a-8aff-4fc4-a4d1-0cf63cb0986a
+		summarizeBy: none
+		sourceColumn: nome_mesorregiao
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_uf
+		dataType: string
+		lineageTag: cf3c23eb-28d8-4f84-9217-1172cf209d93
+		summarizeBy: none
+		sourceColumn: cod_uf
+
+		annotation SummarizationSetBy = Automatic
+
+	column sigla_uf
+		dataType: string
+		lineageTag: 729dc36b-9426-4946-94f1-c2c904c2efd5
+		summarizeBy: none
+		sourceColumn: sigla_uf
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano_instalacao
+		dataType: int64
+		formatString: 0
+		lineageTag: 1a7299f6-6d4e-4c20-929b-b7c404d28cb6
+		summarizeBy: none
+		sourceColumn: ano_instalacao
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold dim_municipio' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "dim_municipio"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

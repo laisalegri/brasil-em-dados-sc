@@ -1,0 +1,131 @@
+table 'gold grade_indicador_municipio_ano'
+	lineageTag: 53cafc61-2e7e-4e7b-bdd1-5cfb41a497a2
+
+	column cod_municipio
+		dataType: string
+		lineageTag: c4226322-f39e-46c0-ba02-634ec55c687e
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_indicador
+		dataType: string
+		lineageTag: 75cbadf8-f146-44ae-965a-ac6b691f6957
+		summarizeBy: none
+		sourceColumn: codigo_indicador
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: 246da6c2-e442-42b9-a53f-1062ce65a3f0
+		summarizeBy: none
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor
+		dataType: double
+		formatString: #,0.00
+		lineageTag: b9c7dc01-1637-4520-b77b-564b631b4c17
+		summarizeBy: none
+		sourceColumn: valor
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column sinal_origem
+		dataType: string
+		lineageTag: b1968f19-d4fc-4e43-9694-767a74e6f032
+		summarizeBy: none
+		sourceColumn: sinal_origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: a08819c5-6d26-482e-b2fd-e1583b4992ac
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column aviso
+		dataType: string
+		lineageTag: 584b31eb-ce77-4f7f-9505-0eb05e9de15b
+		summarizeBy: none
+		sourceColumn: aviso
+
+		annotation SummarizationSetBy = Automatic
+
+	column base_estimativa
+		dataType: string
+		lineageTag: 6af56904-b622-42b7-9032-2cf9fcdfc404
+		summarizeBy: none
+		sourceColumn: base_estimativa
+
+		annotation SummarizationSetBy = Automatic
+
+	column unidade
+		dataType: string
+		lineageTag: 76ea46f1-4c92-44d3-b6c7-4c89464ac709
+		summarizeBy: none
+		sourceColumn: unidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_medida
+		dataType: string
+		lineageTag: 5e004105-bf3f-4ce4-8444-0014ef5158b1
+		summarizeBy: none
+		sourceColumn: tipo_medida
+
+		annotation SummarizationSetBy = Automatic
+
+	column fonte
+		dataType: string
+		lineageTag: 4eabed95-8d23-4285-9001-c01ab81b8a08
+		summarizeBy: none
+		sourceColumn: fonte
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_serie
+		dataType: string
+		lineageTag: 967f848f-7602-4e73-afd6-82103a2e6d0a
+		summarizeBy: none
+		sourceColumn: cod_serie
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_referencia
+		dataType: string
+		lineageTag: 657e7ead-e868-4d1c-8809-481e8fe374c0
+		summarizeBy: none
+		sourceColumn: data_referencia
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_coleta
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1ac94958-2adb-4b54-b096-f18a6ed59320
+		summarizeBy: none
+		sourceColumn: data_coleta
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold grade_indicador_municipio_ano' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "grade_indicador_municipio_ano"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,105 @@
+table 'gold participacao_estadual'
+	lineageTag: 1baef622-779b-438a-a942-164c6793de05
+
+	column cod_municipio
+		dataType: string
+		lineageTag: fcac591c-f6bf-431e-880f-7e5c86af7ba6
+		summarizeBy: none
+		sourceColumn: cod_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column nome_municipio
+		dataType: string
+		lineageTag: 6225b625-4e76-4cde-8ecd-a9694947fcbd
+		summarizeBy: none
+		sourceColumn: nome_municipio
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_indicador
+		dataType: string
+		lineageTag: 81f29def-6b79-466d-9042-26b6ee532490
+		summarizeBy: none
+		sourceColumn: codigo_indicador
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_medida
+		dataType: string
+		lineageTag: c1b2848a-4d24-4d5c-a95a-848ff7a8da37
+		summarizeBy: none
+		sourceColumn: tipo_medida
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: 63f247a4-e4d3-42db-b278-42786770677a
+		summarizeBy: none
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	column base_estimativa
+		dataType: string
+		lineageTag: 8dfc7759-a809-4efb-aae1-b2192ff207ff
+		summarizeBy: none
+		sourceColumn: base_estimativa
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 891259d5-a5c6-4eb9-8894-fb48001cc9d9
+		summarizeBy: none
+		sourceColumn: valor
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_estado
+		dataType: double
+		formatString: #,0.00
+		lineageTag: f582b720-c5a1-44fa-acf2-f5e8316ed742
+		summarizeBy: none
+		sourceColumn: total_estado
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Participação no total do estado, já em pontos percentuais (8,0984 = 8,0984%).
+	column participacao_percentual
+		dataType: double
+		formatString: 0.0000"%"
+		lineageTag: 9f21d029-8520-463d-b343-02a99750eb46
+		summarizeBy: none
+		sourceColumn: participacao_percentual
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column aviso
+		dataType: string
+		lineageTag: a9bb50f1-672e-4a39-827d-db3546a3536b
+		summarizeBy: none
+		sourceColumn: aviso
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'gold participacao_estadual' = m
+		mode: import
+		source =
+				let
+				  Origem = PostgreSQL.Database("localhost:5432", "brasil_em_dados"),
+				  #"Navegação 1" = Origem{[Schema = "gold", Item = "participacao_estadual"]}[Data]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_ResultType = Table
+
