@@ -94,8 +94,11 @@ def test_engine_e_criado_sem_conectar_e_log_nao_mostra_senha(caplog):
         engine_ro = db.engine_readonly(AMBIENTE)
     assert engine_app.url.username == "bed_app"
     assert engine_ro.url.username == "bed_readonly"
-    assert "bed_app" in caplog.text and "bed_readonly" in caplog.text
+    # Desde a revisão do D36, o log traz só o perfil: sem senha, usuário, host ou banco.
+    assert "perfil app" in caplog.text and "perfil readonly" in caplog.text
     assert SENHA_APP not in caplog.text and SENHA_RO not in caplog.text
+    for detalhe in ("bed_app", "bed_readonly", "localhost", "postgresql"):
+        assert detalhe not in caplog.text
     engine_app.dispose()
     engine_ro.dispose()
 

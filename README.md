@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29) análise exploratória em notebooks (D31–D33) e especificação dos dashboards (D34). Próximos: app Streamlit e Power BI (D35–D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29), análise exploratória em notebooks (D31–D33), especificação dos dashboards (D34) e app Streamlit (D36). Próximos: Power BI (D35) e validação entre dashboards (D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -19,7 +19,8 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Camada GOLD: 7 views (grade, painel, variações, agregados e participação) | Pronto |
 | Notebooks de EDA (população, PIB e conclusões), lendo só a GOLD | Pronto |
 | Especificação dos dashboards (páginas, KPIs, filtros e números de referência) | Pronto |
-| Streamlit e Power BI | Planejado (D35–D37) |
+| App Streamlit com seis páginas, lendo só a GOLD (`streamlit run dashboards/streamlit/app.py`) | Pronto |
+| Power BI e validação entre dashboards | Planejado (D35, D37) |
 | Agente de verificação com o Claude Agent SDK | Pronto |
 
 ## Arquitetura
@@ -34,7 +35,7 @@ IBGE (API de Localidades, API SIDRA, API de Pesquisas)
  SILVER PostgreSQL (schema silver): dimensões, fato e controle de execução
         │  python -m brasil_em_dados.db.aplicar_gold
         ▼
-  GOLD  PostgreSQL (schema gold), views ──► notebooks de EDA · Power BI e Streamlit (planejados)
+  GOLD  PostgreSQL (schema gold), views ──► notebooks de EDA · app Streamlit · Power BI (planejado)
 ```
 
 Detalhes do fluxo em [docs/metodologia.md](docs/metodologia.md).
@@ -57,7 +58,7 @@ Agentes de desenvolvimento: subagents do Claude Code em `.claude/agents/` (pesqu
 | `data/raw/`, `data/controle/`, `data/processed/` | Gerados pelo pipeline (não versionados) |
 | `logs/`, `reports/` | Logs do pipeline e relatórios de qualidade e de verificação (não versionados) |
 | `notebooks/` | EDA: população, PIB e conclusões, versionados com as saídas |
-| `dashboards/` | Power BI e Streamlit (vazios por enquanto) |
+| `dashboards/` | `streamlit/`: app (`app.py` e uma página por seção em `paginas/`); `powerbi/`: vazio por enquanto |
 
 ## Como rodar
 
@@ -125,6 +126,14 @@ Os testes marcados `integracao` são pulados quando o banco não aceita conexão
 ```powershell
 python -m brasil_em_dados.db.aplicar_gold   # recria as views de sql/gold/ numa transação
 ```
+
+**8. App Streamlit**
+
+```powershell
+streamlit run dashboards/streamlit/app.py
+```
+
+Abre o app no navegador (por padrão, em http://localhost:8501). O app lê só as views da GOLD, como `bed_readonly`, e segue a especificação de [docs/dashboards.md](docs/dashboards.md). Os filtros de região, município e ano ficam na barra lateral. Os dados ficam em cache: depois de uma nova carga, use "Clear cache" no menu do app ou reinicie o comando. Se o banco não estiver no ar, o app mostra uma mensagem de erro, sem detalhes da conexão.
 
 ## Agente de verificação
 

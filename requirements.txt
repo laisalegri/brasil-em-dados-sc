@@ -8,3 +8,5 @@ matplotlib
 seaborn
 pytest
 claude-agent-sdk==0.2.186
+streamlit==1.67.0
+plotly==7.1.0

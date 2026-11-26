@@ -82,3 +82,29 @@ def variacao_anual(engine: Engine, indicador: str) -> pd.DataFrame:
     """Variação ano a ano por município (pop_estimada ou pib_corrente)."""
     _exigir(indicador, ("pop_estimada", "pib_corrente"), "Indicador")
     return consultar(engine, "variacao_anual", indicador=indicador)
+
+
+def municipios(engine: Engine) -> pd.DataFrame:
+    """Os municípios de SC com regiões e ano de instalação (ordem alfabética)."""
+    return consultar(engine, "municipios")
+
+
+def painel_serie(engine: Engine) -> pd.DataFrame:
+    """Painel de todos os anos (uma linha por município e ano)."""
+    return consultar(engine, "painel_serie")
+
+
+def participacao_serie(engine: Engine, indicador: str) -> pd.DataFrame:
+    """Participação no total de SC em todos os anos do indicador."""
+    _exigir(indicador, ("pop_estimada", "pop_censo", "pib_corrente"), "Indicador")
+    return consultar(engine, "participacao_serie", indicador=indicador)
+
+
+def fontes_series(engine: Engine) -> pd.DataFrame:
+    """Uma linha por série de origem, com anos cobertos e última coleta."""
+    return consultar(engine, "fontes_series")
+
+
+def cobertura(engine: Engine) -> pd.DataFrame:
+    """Linhas da grade por indicador e status."""
+    return consultar(engine, "cobertura")

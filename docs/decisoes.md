@@ -2,6 +2,35 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-24 — D36: app Streamlit
+
+- **Decisão:**
+  - **Dependências:** `streamlit==1.67.0` e `plotly==7.1.0`, fixadas no `requirements.txt` com o OK da autora.
+  - **Estrutura:** `dashboards/streamlit/app.py` é o ponto de entrada e a página inicial. Ele monta os três filtros globais na barra lateral e a navegação com `st.navigation`. Cada seção de `docs/dashboards.md` tem uma página em `dashboards/streamlit/paginas/`.
+  - **Filtros no ponto de entrada:** widgets montados no ponto de entrada do `st.navigation` mantêm o valor ao trocar de página. Montados em cada página, o Streamlit poderia descartar o estado na troca.
+  - **Pacote `brasil_em_dados.dashboard`:**
+    - `textos`, `calculos` e `figuras` não importam o Streamlit e são testados sem banco;
+    - `dados` lê só pelas funções de `brasil_em_dados.analise.consultas` (views gold, `bed_readonly`, transação `READ ONLY`), com `st.cache_data`;
+    - as páginas não têm SQL nem conexão própria (testado).
+  - **Consultas novas em `sql/analise/`:** cadastro de municípios, painel de todos os anos, participação de todos os anos, fontes e cobertura.
+  - **Gráficos em plotly,** com a paleta, as fontes e os formatadores do `analise.graficos` dos notebooks.
+  - **Tabela de dados por visual:** cada visual tem um expansor "Dados — ID" com os números formatados. Os testes leem essas tabelas para conferir R01–R15, e o D37 pode compará-las com o Power BI.
+  - **Erro de conexão:** vira `ErroDados`, sem a mensagem original. A tela mostra uma mensagem fixa. O log guarda só o tipo do erro e o código SQLSTATE: por exemplo, `28P01` (senha recusada), `3D000` (banco inexistente) ou "sem código" (falha de rede, como servidor fora do ar). O código tem 5 caracteres e não traz host, usuário nem banco; um valor fora desse formato nunca vai para o log.
+  - **Log do engine:** `db._criar_engine` passou a registrar só o nome do perfil, sem usuário, host ou banco (achado M1 da revisão).
+- **Por quê:**
+  - o plotly dá interação (dica de ferramenta, zoom) sem perder o padrão dos notebooks;
+  - o AppTest (`streamlit.testing`) roda o app em processo, sem navegador, e permite testar páginas, filtros e números no pytest.
+- **Nota de diagnóstico (24/11/2026): o app falhava ao conectar só quando rodado no terminal do VS Code.**
+  - **Sintoma:** a tela mostrava a mensagem de erro, e o log, `Falha ao ler a GOLD (OperationalError, SQLSTATE sem código)`. "Sem código" quer dizer que o PostgreSQL nem chegou a responder: o processo não alcançou o host e a porta que recebeu. Fora do VS Code, a mesma conexão funcionava, e os testes com AppTest passavam.
+  - **Causa:** o `.vscode/settings.json` local tinha `"python.terminal.useEnvFile": true`. Com isso, a extensão Python do VS Code lê o `.env` com o parser dela e injeta as variáveis `PG_*` no terminal. Esse parser não lê o arquivo do mesmo jeito que o `python-dotenv`. Como `db.ler_ambiente` dá prioridade às variáveis do processo, os valores injetados venciam os do `.env`, e a conexão apontava para um endereço errado. A causa foi confirmada assim: com as variáveis `PG_*` removidas da janela (`Get-ChildItem env:PG_* | Remove-Item`), o app abriu. A linha exata do `.env` que o VS Code interpretou diferente não foi identificada, porque o arquivo não é lido por agentes.
+  - **Solução:** `"python.terminal.useEnvFile": false` no `.vscode/settings.json`. O projeto lê o `.env` só pelo `python-dotenv` (`db.ler_ambiente`), então a injeção do VS Code era desnecessária. Esse arquivo está no `.gitignore`, portanto a mudança é local e precisa ser repetida em outra máquina. Terminais abertos antes da mudança continuam com as variáveis: é preciso abrir um terminal novo ou rodar o mesmo `Remove-Item`.
+  - **Diagnóstico daqui em diante:** o log do app traz o SQLSTATE. "Sem código" aponta para servidor fora do ar, host ou porta errados ou variáveis do processo que sobrepõem o `.env`; `28P01` indica senha recusada e `3D000`, banco inexistente.
+- **Revisão:** o revisor-de-codigo não achou bloqueantes. Os achados I1–I5 e M1–M9 foram corrigidos antes do commit:
+  - "de a região" nos títulos com região;
+  - maiores e menores no ECO3 em regiões com até 20 municípios;
+  - "sem dado" nas barras ausentes;
+  - testes com região, anos-limite, municípios de 2013 e persistência dos filtros.
+
 ## 2026-11-24 — D34: especificação única dos dashboards e Streamlit antes do Power BI
 
 - **Decisão:**

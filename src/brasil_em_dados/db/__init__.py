@@ -86,7 +86,8 @@ def descrever_url(url: URL) -> str:
 def _criar_engine(perfil: Perfil, ambiente: Mapping[str, str] | None) -> Engine:
     """Cria o engine do perfil (sem conectar); sem `ambiente`, lê o .env e o processo."""
     url = montar_url(perfil, ler_ambiente() if ambiente is None else ambiente)
-    logger.info("Engine do perfil %s: %s", perfil.nome, descrever_url(url))
+    # Só o nome do perfil: usuário, host e banco também ficam fora do log (revisão do D36).
+    logger.info("Engine do perfil %s criado.", perfil.nome)
     # hide_parameters: valores de parâmetros SQL não entram nas mensagens de erro.
     return create_engine(url, hide_parameters=True, pool_pre_ping=True,
                          connect_args={"connect_timeout": TIMEOUT_CONEXAO_S})

@@ -46,6 +46,7 @@ def test_sql_fora_da_gold_e_recusado(tmp_path, sql):
     lambda e: consultas.agregado(e, "pais", "pop_censo"),
     lambda e: consultas.agregado(e, "estado", "pib_per_capita"),
     lambda e: consultas.variacao_anual(e, "pop_censo"),
+    lambda e: consultas.participacao_serie(e, "pib_per_capita"),
 ])
 def test_parametro_invalido_falha_antes_de_tocar_no_banco(chamada):
     engine = Mock()
@@ -94,3 +95,20 @@ def test_cte_e_subconsulta_sao_aceitas(tmp_path):
            "SELECT * FROM base JOIN outra ON true JOIN (SELECT 1) t ON true")
     (tmp_path / "x.sql").write_text(sql, encoding="utf-8")
     assert consultas.ler_sql("x", tmp_path) == sql
+
+
+@pytest.mark.integracao
+def test_consultas_dos_dashboards(engine_readonly):
+    municipios = consultas.municipios(engine_readonly)
+    assert len(municipios) == 295 and municipios["cod_municipio"].is_unique
+    assert municipios["nome_regiao_intermediaria"].nunique() == 7
+    novos = municipios.dropna(subset=["ano_instalacao"])
+    assert set(novos["cod_municipio"]) == {"4212650", "4220000"}
+    painel = consultas.painel_serie(engine_readonly)
+    assert len(painel) == 295 * 14 and not painel.duplicated(["cod_municipio", "ano"]).any()
+    serie = consultas.participacao_serie(engine_readonly, "pib_corrente")
+    assert sorted(serie["ano"].unique()) == list(range(2010, 2024))
+    fontes = consultas.fontes_series(engine_readonly)
+    assert set(fontes["codigo_indicador"]) == set(consultas.INDICADORES)
+    cobertura = consultas.cobertura(engine_readonly)
+    assert "sem_dado" not in set(cobertura["status"])  # só ausência esperada (regra 10)
