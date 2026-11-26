@@ -2,6 +2,16 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-26 — D37: validação entre dashboards
+
+- **Decisão:**
+  - os 15 números de referência (R01–R15) são comparados pelo valor, não pelo texto formatado: inteiros exatos, reais em centavos, participações com 4 casas e a variação entre os Censos com 2 casas; ausência nunca confere, nem com outra ausência, porque nenhuma referência admite falta de dado;
+  - as consultas da seção 6 de `docs/dashboards.md` ficam também em `sql/referencias/`, e um teste garante que são iguais às do documento; R06, R07 e R11 passaram a ordenar com `NULLS LAST, cod_municipio`, para o resultado não depender de nulos nem de empates (os valores não mudaram);
+  - o lado Streamlit é lido pelo mesmo caminho de dados das páginas (consultas, tipos e cálculos do app, sem o cache), com o filtro padrão;
+  - o agente de verificação ganha a ferramenta de leitura `referencias_dashboards` (SQL × Streamlit), e uma divergência é ERRO no relatório.
+- **Motivo:** a mesma checagem roda no pytest, no agente e na linha de comando, sem depender de interface.
+- **Fora:** o Power BI fica fora da checagem automática, porque ler as medidas exige o Power BI Desktop aberto com o MCP conectado. A conferência dele é manual, descrita em `docs/validacao_dashboards.md`.
+
 ## 2026-11-26 — D35: relatório Power BI com escopo reduzido
 
 - **Decisão:**

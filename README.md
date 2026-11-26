@@ -2,7 +2,7 @@
 
 Pipeline de dados públicos do IBGE para analisar população, PIB e PIB per capita dos 295 municípios de Santa Catarina entre 2010 e 2023, com arquitetura em camadas (RAW → SILVER → GOLD), PostgreSQL, dashboards em Power BI e Streamlit e agentes de IA apoiando o desenvolvimento.
 
-> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29), análise exploratória em notebooks (D31–D33), especificação dos dashboards (D34), app Streamlit (D36) e relatório Power BI (D35). Próximo: validação entre dashboards (D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
+> **Status:** em desenvolvimento. Concluído: coleta RAW, banco, carga na SILVER, testes de qualidade, documentação de limitações e metodologia, camada GOLD (D30), agente de verificação (D28–D29), análise exploratória em notebooks (D31–D33), especificação dos dashboards (D34), app Streamlit (D36), relatório Power BI (D35) e validação entre dashboards (D37). Cronograma, com datas previstas e realizadas, em [docs/cronograma.md](docs/cronograma.md).
 
 ## Pergunta central
 
@@ -21,7 +21,7 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Especificação dos dashboards (páginas, KPIs, filtros e números de referência) | Pronto |
 | App Streamlit com seis páginas, lendo só a GOLD (`streamlit run dashboards/streamlit/app.py`) | Pronto |
 | Relatório Power BI com seis páginas, lendo só a GOLD (`dashboards/powerbi/BrasilEmDadosSC.pbip`) | Pronto |
-| Validação entre dashboards | Planejado (D37) |
+| Validação entre dashboards: R01–R15 iguais em SQL, Streamlit e Power BI ([docs/validacao_dashboards.md](docs/validacao_dashboards.md)) | Pronto |
 | Agente de verificação com o Claude Agent SDK | Pronto |
 
 ## Arquitetura
@@ -155,6 +155,7 @@ python -m brasil_em_dados.verificacao --coleta --carga --gold  # roda também co
   - saída dos passos;
   - controle de execução;
   - consultas do catálogo fechado em `sql/verificacao/`;
+  - números de referência R01–R15 dos dashboards, SQL × Streamlit ([docs/validacao_dashboards.md](docs/validacao_dashboards.md));
   - relatório anterior.
 
   O banco é lido como `bed_readonly`, com `SET TRANSACTION READ ONLY`. O agente não tem Bash nem edição de arquivos, e os conectores da conta do claude.ai são negados. Se a sessão não usar o login do plano, usar outro modelo ou receber qualquer ferramenta além das próprias, o agente é interrompido.
@@ -210,5 +211,6 @@ Limitações completas, com evidência e tratamento: [docs/limitacoes.md](docs/l
 - [Dicionário de dados](docs/dicionario_dados.md)
 - [Padrão de coleta](docs/padrao_coleta.md)
 - [Dashboards: narrativa e KPIs](docs/dashboards.md)
+- [Validação entre dashboards](docs/validacao_dashboards.md)
 - [Registro de decisões](docs/decisoes.md)
 - [Cronograma](docs/cronograma.md)

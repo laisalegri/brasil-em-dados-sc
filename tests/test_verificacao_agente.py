@@ -35,11 +35,12 @@ def test_opcoes_fechadas(tmp_path):
     assert list(opcoes.mcp_servers) == ["verif"]
 
 
-def test_ferramentas_esperadas_sao_as_seis_proprias():
+def test_ferramentas_esperadas_sao_as_sete_proprias():
     assert agente.FERRAMENTAS_ESPERADAS == {
         "mcp__verif__resultado_testes", "mcp__verif__saida_passo",
         "mcp__verif__controle_execucao", "mcp__verif__consulta_qualidade",
-        "mcp__verif__relatorio_anterior", "mcp__verif__entregar_relatorio"}
+        "mcp__verif__referencias_dashboards", "mcp__verif__relatorio_anterior",
+        "mcp__verif__entregar_relatorio"}
 
 
 def test_agente_com_modelo_falso_entrega_analise_e_consumo(tmp_path):

@@ -61,14 +61,18 @@ exatamente pela população deles (dupla contagem, regra 13; a GOLD marca com av
 
 Roteiro: veja o resultado dos testes; veja a saída só dos passos do pipeline que o pedido \
 diz que rodaram (sem --coleta, --carga ou --gold, só o pytest roda, e isso é normal); \
-consulte o controle de execução; rode as consultas de qualidade do catálogo; compare com o \
+consulte o controle de execução; rode as consultas de qualidade do catálogo; confira os \
+números de referência dos dashboards com referencias_dashboards (SQL × Streamlit: divergência \
+é ERRO; se a ferramenta falhar, registre como ERRO com a mensagem que ela devolveu; o Power BI \
+fica de fora porque exige o Desktop aberto, e isso é OBSERVAÇÃO); compare com o \
 relatório anterior, se houver. No fim, chame entregar_relatorio uma única vez com a análise, \
 sem título próprio (o executor já põe o título), começando direto pelas seções de nível ##: "Resumo" (até 5 linhas), "Achados" (ERRO, ALERTA, OBSERVAÇÃO, cada um com a \
 ferramenta de origem), "Comparação com o relatório anterior" e "Sugestões para a autora".
 """
 
 NOMES_FERRAMENTAS = ("resultado_testes", "saida_passo", "controle_execucao",
-                     "consulta_qualidade", "relatorio_anterior", "entregar_relatorio")
+                     "consulta_qualidade", "referencias_dashboards", "relatorio_anterior",
+                     "entregar_relatorio")
 FERRAMENTAS_ESPERADAS = frozenset(nome_completo(n) for n in NOMES_FERRAMENTAS)
 
 
