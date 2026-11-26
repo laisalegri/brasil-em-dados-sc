@@ -90,3 +90,46 @@ def test_marcacoes_das_quebras_seguem_a_c8():
     assert t.QUEBRAS_ESTIMATIVA == {2013: "quebra de série: nova projeção",
                                     2018: "revisão da projeção"}
     assert "2017→2018" in t.AVISO_REVISAO_2018 and "regra 12" in t.AVISO_REVISAO_2018
+
+
+# -- títulos sem teste unitário até o D38 (ausência vira "sem dado", nunca zero) -----------------
+
+def test_titulo_concentracao():
+    assert t.titulo_concentracao(40.6, 46.1, 2023) == (
+        "Os 10 maiores municípios somam 40,6% da população (Censo 2022) e 46,1% do PIB nominal "
+        "de 2023")
+    assert "sem dado do PIB nominal" in t.titulo_concentracao(40.6, None, 2023)
+
+
+def test_titulo_regioes_censo():
+    assert t.titulo_regioes_censo("Florianópolis", 33.79, "Lages", 3.29) == (
+        "Entre os Censos, a região de Florianópolis cresceu mais (+33,8%) e a de Lages, menos (+3,3%)")
+
+
+def test_titulo_regioes_pib_pop():
+    assert t.titulo_regioes_pib_pop(2, 7, 2022) == (
+        "Em 2 das 7 regiões intermediárias, a participação no PIB nominal supera a participação "
+        "na população (2022)")
+
+
+def test_titulo_per_capita_municipio_sem_variacao_e_com_ausencia():
+    texto = t.titulo_per_capita_municipio("Balneário Rincão", 2013, 11099.0, 2023, 26294.0)
+    assert texto.startswith("PIB per capita de Balneário Rincão: R$ ") and "2013" in texto
+    assert "%" not in texto  # sem variação: o denominador muda (limitações, seção 9)
+    assert "sem dado em 2013" in t.titulo_per_capita_municipio("X", 2013, None, 2023, 1.0)
+
+
+@pytest.mark.parametrize("c2010, c2022, esperado", [
+    (421240, 537211, "Censo de X: 421.240 pessoas em 2010 e 537.211 em 2022"),
+    (None, 15981, "Censo de X: sem dado em 2010 e 15.981 pessoas em 2022"),
+    (None, None, "Censo de X: sem dado em 2010 e sem dado em 2022"),
+    (421240, None, "Censo de X: 421.240 pessoas em 2010 e sem dado em 2022"),
+])
+def test_titulo_censos_poe_pessoas_no_primeiro_valor_presente(c2010, c2022, esperado):
+    assert t.titulo_censos("X", c2010, c2022) == esperado
+
+
+def test_titulo_ganhos_participacao():
+    assert t.titulo_ganhos_participacao(5, 10, "Itajaí", 2.8433, 2023) == (
+        "Dos 10 maiores municípios em PIB nominal de 2023, 5 ganharam participação no estado "
+        "desde 2010; maior variação: Itajaí (+2,84 p.p.)")

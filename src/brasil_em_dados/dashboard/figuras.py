@@ -207,7 +207,7 @@ def barras_agrupadas(categorias: Sequence[str], series: Mapping[str, Sequence[ob
     for cor, (nome, valores) in zip(CORES_SERIES, series.items()):
         vals = _floats(valores)
         todos.extend(vals)
-        textos = ["sem dado" if v is None else formatar(v) for v in vals]
+        textos = [SEM_DADO if v is None else formatar(v) for v in vals]
         eixos = {"y": list(categorias), "x": vals} if horizontal else {"x": list(categorias), "y": vals}
         fig.add_trace(go.Bar(name=nome, orientation="h" if horizontal else "v", marker_color=cor,
                              text=textos, textposition="outside", cliponaxis=False,

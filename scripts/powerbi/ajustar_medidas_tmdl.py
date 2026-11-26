@@ -16,7 +16,6 @@ import sys
 import uuid
 from pathlib import Path
 
-ARQ = Path(sys.argv[1]) / "definition" / "tables" / "Medidas.tmdl"
 
 INTEIRO = 'VAR _v = [{m}] RETURN IF ( ISBLANK ( _v ), "sem dado", FORMAT ( _v, "#,0" ) )'
 REAIS = 'VAR _v = [{m}] RETURN IF ( ISBLANK ( _v ), "sem dado", "R$ " & FORMAT ( _v, "#,0.00" ) )'
@@ -97,12 +96,23 @@ def bloco(nome: str, expr: str, pasta: str, formato: str | None, descricao: str)
     return "\r\n".join(linhas) + "\r\n"
 
 
-def main() -> None:
-    txt = ARQ.read_bytes().decode("utf-8")  # mantém CRLF (read_text converteria)
+class ErroTmdl(Exception):
+    """Medida esperada ausente ou trecho a trocar fora do esperado."""
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Linha de comando: <pasta BrasilEmDadosSC.SemanticModel>."""
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 1:
+        print(__doc__)
+        return 2
+    arq = Path(args[0]) / "definition" / "tables" / "Medidas.tmdl"
+    txt = arq.read_bytes().decode("utf-8")  # mantém CRLF (read_text converteria)
     novos = []
     for m, modelo, pasta in EXIBICAO:
         nome = f"{m} (exibição)"
-        assert f"measure {nome_tmdl(m)} = " in txt, m
+        if f"measure {nome_tmdl(m)} = " not in txt:
+            raise ErroTmdl(f"medida ausente: {m}")
         if f"measure {nome_tmdl(nome)} = " not in txt:
             novos.append(bloco(nome, modelo.format(m=m), pasta, None,
                                f"Exibição em texto de [{m}] para cartão: 'sem dado' quando ausente "
@@ -114,11 +124,13 @@ def main() -> None:
     for medida, antigo, novo in TROCAS:
         alvo = f"\tmeasure {nome_tmdl(medida)} = "
         idx = [i for i, l in enumerate(linhas) if l.startswith(alvo)]
-        assert len(idx) == 1, medida
+        if len(idx) != 1:
+            raise ErroTmdl(f"medida {medida}: {len(idx)} definições (esperada 1)")
         l = linhas[idx[0]]
         if novo in l:
             continue
-        assert l.count(antigo) == 1, (medida, antigo)
+        if l.count(antigo) != 1:
+            raise ErroTmdl(f"medida {medida}: trecho a trocar não encontrado uma única vez")
         linhas[idx[0]] = l.replace(antigo, novo)
     txt = "\n".join(linhas)
     # insere as medidas novas antes do primeiro 'column' da tabela (fim da lista de medidas)
@@ -127,9 +139,10 @@ def main() -> None:
         pos = len(txt)
     txt = txt[:pos].rstrip("\r\n") + "\r\n\r\n" + "".join(novos) + txt[pos:].lstrip("\r\n") \
         if novos else txt
-    ARQ.write_bytes(txt.encode("utf-8"))
+    arq.write_bytes(txt.encode("utf-8"))
     print(f"{len(novos)} medidas novas; trocas conferidas: {len(TROCAS)}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -20,12 +20,13 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import Engine, text
 
-from brasil_em_dados.config import RAIZ_PROJETO
+from brasil_em_dados.config import PASTA_CONSULTAS_REFERENCIAS
 from brasil_em_dados.db import transacao_somente_leitura
 
-logger = logging.getLogger(__name__)
+# Nome fixo: com `python -m`, __name__ vira "__main__" e o log ficaria fora de "brasil_em_dados".
+logger = logging.getLogger("brasil_em_dados.verificacao.referencias")
 
-PASTA_REFERENCIAS = RAIZ_PROJETO / "sql" / "referencias"
+PASTA_REFERENCIAS = PASTA_CONSULTAS_REFERENCIAS
 CODIGOS = tuple(f"R{n:02d}" for n in range(1, 16))
 ITAJAI = "4208203"  # R09 é sempre Itajaí (seção 6); o município do Perfil vem do filtro padrão
 
@@ -251,12 +252,13 @@ def main() -> int:
     configuração do banco (o log traz só o tipo do erro e o SQLSTATE, sem host, usuário ou banco).
     A tabela vai para a saída padrão porque é o resultado do comando, não um log.
     """
-    from sqlalchemy.exc import SQLAlchemyError
-
     from brasil_em_dados import db
+    from brasil_em_dados.logs import configurar_logging
     from brasil_em_dados.verificacao.ferramentas import ler_catalogo
+    from brasil_em_dados.verificacao.seguranca import proteger_logs, segredos_do_banco
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    configurar_logging()
+    proteger_logs(segredos_do_banco(db.ler_ambiente()))  # nada de senha nos logs
     consultas = {c.nome.upper(): c.sql for c in ler_catalogo(PASTA_REFERENCIAS).values()}
     try:
         engine = db.engine_readonly()
@@ -264,20 +266,13 @@ def main() -> int:
             linhas = conferir(engine, consultas)
         finally:
             engine.dispose()
-    except (SQLAlchemyError, db.ErroConfiguracao, OSError) as exc:
+    except db.ERROS_DE_CONEXAO as exc:
         logger.error("Falha ao ler a GOLD (%s, SQLSTATE %s); detalhes omitidos.",
-                     type(exc).__name__, sqlstate(exc))
+                     type(exc).__name__, db.sqlstate(exc))
         return 2
     print(relatorio_markdown(linhas))
     return 0 if all(l.confere for l in linhas) else 1
 
-
-def sqlstate(exc: BaseException) -> str:
-    """Código SQLSTATE do erro do driver (5 caracteres), ou 'sem código' (ex.: falha de rede)."""
-    codigo = getattr(getattr(exc, "orig", None), "sqlstate", None)
-    if isinstance(codigo, str) and len(codigo) == 5 and codigo.isalnum():
-        return codigo
-    return "sem código"
 
 
 if __name__ == "__main__":

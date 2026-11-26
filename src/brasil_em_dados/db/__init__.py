@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import URL
+from sqlalchemy.exc import SQLAlchemyError
 
 from brasil_em_dados.config import RAIZ_PROJETO
 
@@ -78,11 +79,6 @@ def montar_url(perfil: Perfil, ambiente: Mapping[str, str]) -> URL:
     )
 
 
-def descrever_url(url: URL) -> str:
-    """Texto da URL com a senha mascarada, seguro para log."""
-    return url.render_as_string(hide_password=True)
-
-
 def _criar_engine(perfil: Perfil, ambiente: Mapping[str, str] | None) -> Engine:
     """Cria o engine do perfil (sem conectar); sem `ambiente`, lê o .env e o processo."""
     url = montar_url(perfil, ler_ambiente() if ambiente is None else ambiente)
@@ -113,3 +109,21 @@ def transacao_somente_leitura(engine: Engine) -> Iterator[Connection]:
             yield conexao
         finally:
             transacao.rollback()
+
+
+# Falhas de conexão ou de configuração do banco: quem as captura mostra só o tipo e o SQLSTATE,
+# nunca a mensagem original (que pode trazer host, usuário ou banco). Usado pelo app e pela
+# checagem de referências.
+ERROS_DE_CONEXAO: tuple[type[Exception], ...] = (SQLAlchemyError, ErroConfiguracao, OSError)
+
+
+def sqlstate(exc: BaseException) -> str:
+    """Código SQLSTATE do erro do driver (ex.: 28P01, senha recusada; 3D000, banco inexistente).
+
+    É só um código de 5 caracteres, sem host, usuário ou banco. Falha de rede (servidor fora do
+    ar, porta fechada) não tem código: devolve 'sem código'.
+    """
+    codigo = getattr(getattr(exc, "orig", None), "sqlstate", None)
+    if isinstance(codigo, str) and len(codigo) == 5 and codigo.isalnum():
+        return codigo
+    return "sem código"

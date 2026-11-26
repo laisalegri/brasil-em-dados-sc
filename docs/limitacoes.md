@@ -1,8 +1,8 @@
 # Limitações dos dados
 
-- **Versão:** 2026-11-18 (cartão D27)
-- **Vale para:** a camada SILVER carregada em 2026-11-18 e as camadas que vierem dela (GOLD, EDA, dashboards).
-- **Base:** CLAUDE.md (regras 1–13), `docs/decisoes.md` (D01–D26), `docs/dicionario_dados.md`, `docs/fontes/` e o relatório de qualidade `reports/qualidade_20261118.md` (não versionado; os números citados dele estão reproduzidos aqui).
+- **Versão:** 2026-11-26 (revisão do D38; primeira versão no D27, em 2026-11-18)
+- **Vale para:** a camada SILVER carregada em 2026-11-18 e as camadas que vêm dela (GOLD, EDA, dashboards).
+- **Base:** CLAUDE.md (regras 1–13), `docs/decisoes.md` (D01–D37), `docs/dicionario_dados.md`, `docs/fontes/` e o relatório de qualidade `reports/qualidade_20261118.md` (não versionado; os números citados dele estão reproduzidos aqui).
 
 Cada seção traz: o que é, a evidência, o impacto na análise e o que o projeto faz a respeito. O que não tem fonte está marcado como **NÃO CONFIRMADO**.
 
@@ -10,8 +10,8 @@ Cada seção traz: o que é, a evidência, o impacto na análise e o que o proje
 
 | # | Limitação | Indicador | Tratamento no projeto |
 |---|---|---|---|
-| 1 | Quebras de série nas estimativas (2013 e 2018) | `pop_estimada` | Regra 12: sem variação entre ≤2012 e ≥2013 sem aviso |
-| 2 | Dupla contagem na soma de 2012 | `pop_estimada` | Regra 13: excluir 2 municípios ou avisar (escolha no D30); teste T16 |
+| 1 | Quebras de série nas estimativas (2013 e 2018) | `pop_estimada` | Regra 12: três bases; 2012→2013 sem variação (`NULL`); 2017→2018 calculada, com `comparavel = false` (D30) |
+| 2 | Dupla contagem na soma de 2012 | `pop_estimada` | Regra 13: agregações e participação de 2012 excluem 4212650 e 4220000, com aviso (D30); teste T16 |
 | 3 | Censo e estimativa não se comparam diretamente | `pop_censo`, `pop_estimada` | Regra 2: `tipo_medida` separa os dois |
 | 4 | Sem estimativa em 2010, 2022 e 2023 | `pop_estimada` | Ausência fica ausente; sem interpolação (regra 5) |
 | 5 | PIB nominal e sujeito a revisão | `pib_corrente` | Regra 3; RAW guarda cada versão |
@@ -49,8 +49,10 @@ Cada seção traz: o que é, a evidência, o impacto na análise e o que o proje
 - O PIB per capita de 2011–2012 usa estimativas da base antiga, e o de 2013 em diante, da nova. A comparação do per capita entre esses anos herda a quebra. Isso é inferência (A3, "Implicação para o D27").
 
 **O que o projeto faz.**
-- Regra 12 (D26): a GOLD não calcula nem exibe variação de `pop_estimada` entre anos de bases diferentes (≤2012 contra ≥2013) sem aviso explícito, e a série vem com a quebra marcada. A GOLD ainda não existe (D30).
-- A revisão de 2018 fica documentada aqui, sem regra própria (D26).
+- Regra 12 (D26, ampliada no D30): `gold.variacao_anual` marca três bases (`ate_2012`, `2013_2017`, `desde_2018`).
+  - De 2012 para 2013, a variação é `NULL` e `comparavel = false`.
+  - De 2017 para 2018, a variação é calculada, com `comparavel = false` e motivo próprio.
+- Os dashboards mostram uma linha por base, sem ligar pontos de bases diferentes (`docs/dashboards.md`, regra C8).
 - Por que o salto médio municipal é menor que o estadual: **NÃO CONFIRMADO** (A3, item 5).
 
 ## 2. Dupla contagem na soma de 2012
@@ -71,7 +73,7 @@ Em 2011 e 2013, a soma municipal fecha com o total de SC.
 **Impacto.** Somar 2012 sem cuidado conta essas 20.552 pessoas duas vezes. Uma hipótese é que Içara e Laguna, de onde os dois municípios foram desmembrados, ainda incluam essa população em 2012 (ver seção 9). A causa é **NÃO CONFIRMADA**.
 
 **O que o projeto faz.**
-- Regra 13 (D26): agregações de `pop_estimada` de 2012 (estado, região) excluem os dois municípios ou levam aviso. A escolha entre as duas opções fica para o D30.
+- Regra 13 (D26): no D30, a escolha foi excluir os dois municípios das agregações e da participação de `pop_estimada` de 2012, com coluna `aviso`. O total do estado na GOLD fica igual ao publicado (6.362.734), conferido em `tests/test_gold_integracao.py`.
 - O teste `test_t16_dupla_contagem_2012_igual_a_populacao_dos_municipios_novos` confere que soma municipal − total de SC = população dos dois municípios. O total de SC vem do valor de referência `TOTAL_SC_6579_2012` do dicionário, porque não está no banco. Se uma revisão do IBGE mudar a diferença, o teste falha.
 
 ## 3. Censo e estimativa não são uma série única
@@ -231,7 +233,7 @@ Os dois têm estimativa em 2012 e valores em todas as séries a partir de 2013.
 - Regras 6 e 10: ausência só é aceita para esses dois códigos antes de 2013; qualquer outra faz o teste falhar (testes T5 e T6).
 - Ausência é `NULL`, nunca zero, e o sinal original fica em `sinal_origem` (regras 5 e 9).
 - Não recompõe a série dos municípios novos com dados do município de origem (fora de escopo, `docs/escopo_mvp.md`).
-- A grade completa município × ano, com "sem dado", será montada na GOLD (D08; planejado para o D30).
+- A grade completa município × ano está em `gold.grade_indicador_municipio_ano` (12.095 linhas), com `status` `municipio_nao_instalado` para os dois antes de 2013 (D08, D30).
 
 ## 11. Documentação de origem não lida
 

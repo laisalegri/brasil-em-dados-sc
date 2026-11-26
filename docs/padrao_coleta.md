@@ -9,7 +9,7 @@ Este documento define como cada coleta é feita, gravada e registrada, para que 
 ## 1. Catálogo de séries (fonte única)
 
 - O módulo `brasil_em_dados.extract.catalogo` é a **fonte única** das séries coletadas: `cod_serie`, URL do extrator (`url_extrator`, mesmo nome da coluna da `dim_serie`), parâmetros, fonte e os atributos da `dim_serie` (indicador, tabela/pesquisa, variável/indicador, unidade de origem, fator de conversão, data de referência).
-- O mesmo módulo será usado pela carga da `dim_serie` no D20. Assim, extrator e banco não divergem.
+- O mesmo módulo é usado pela carga da `dim_serie` e da `dim_indicador` (D20). Assim, extrator e banco não divergem.
 - Um teste confere que os `cod_serie` do catálogo, com indicador, fonte e fator, batem com a tabela 1.2 do `docs/dicionario_dados.md`.
 - A coleta de municípios (API de Localidades) entra no catálogo como **fonte de dimensão**, com código `ibge_localidades_sc`. Ela não é uma série da `dim_serie`.
 

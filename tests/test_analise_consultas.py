@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from brasil_em_dados import db
 from brasil_em_dados.analise import consultas
+from brasil_em_dados.extract import catalogo
 from brasil_em_dados.config import PASTA_CONSULTAS_ANALISE
 from tests.apoio_banco import BLOQUEIOS_READONLY, sqlstate_em_savepoint
 
@@ -109,6 +110,6 @@ def test_consultas_dos_dashboards(engine_readonly):
     serie = consultas.participacao_serie(engine_readonly, "pib_corrente")
     assert sorted(serie["ano"].unique()) == list(range(2010, 2024))
     fontes = consultas.fontes_series(engine_readonly)
-    assert set(fontes["codigo_indicador"]) == set(consultas.INDICADORES)
+    assert set(fontes["codigo_indicador"]) == set(catalogo.INDICADORES)
     cobertura = consultas.cobertura(engine_readonly)
     assert "sem_dado" not in set(cobertura["status"])  # só ausência esperada (regra 10)

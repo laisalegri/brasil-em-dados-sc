@@ -10,8 +10,10 @@ from decimal import Decimal
 
 import pytest
 from sqlalchemy import Connection, text
+from sqlalchemy.exc import OperationalError
 
 from brasil_em_dados.config import PASTA_GOLD
+from brasil_em_dados.db import sqlstate
 from brasil_em_dados.db.aplicar_ddl import ler_scripts
 from brasil_em_dados.db.aplicar_gold import recriar_em_conexao, views_em_ordem
 from brasil_em_dados.extract import catalogo
@@ -25,16 +27,34 @@ VIEWS = views_em_ordem(ler_scripts(PASTA_GOLD))
 ORIGEM = {"4212650": "4209409", "4220000": "4207007"}
 
 
+LOCK_TIMEOUT = "10s"
+# lock_not_available (estourou o lock_timeout) e deadlock_detected.
+BLOQUEIO_POR_OUTRA_SESSAO = {"55P03", "40P01"}
+MENSAGEM_BLOQUEIO = ("Não foi possível recriar as views da GOLD: outra sessão está usando o banco "
+                     "(Streamlit, refresh do Power BI, notebook ou auditoria). Feche-a e rode o "
+                     "pytest com o banco livre (README, passo de testes).")
+
+
 @pytest.fixture
 def gold(engine_app) -> Iterator[Connection]:
-    """Conexão bed_app com as views recriadas dos arquivos atuais, numa transação desfeita."""
+    """Conexão bed_app com as views recriadas dos arquivos atuais, numa transação desfeita.
+
+    DROP VIEW pede trava exclusiva: se outra sessão estiver lendo a GOLD, a espera para em
+    LOCK_TIMEOUT e o teste falha com mensagem clara, em vez de travar ou dar deadlock obscuro.
+    """
     with engine_app.connect() as conexao:
         transacao = conexao.begin()
         try:
             if not conexao.execute(text(
                     "SELECT count(*) FROM silver.fato_indicador_municipio")).scalar():
                 pytest.skip("SILVER vazia; rode python -m brasil_em_dados.load tudo")
-            recriar_em_conexao(conexao, ler_scripts(PASTA_GOLD))
+            conexao.execute(text(f"SET LOCAL lock_timeout = '{LOCK_TIMEOUT}'"))
+            try:
+                recriar_em_conexao(conexao, ler_scripts(PASTA_GOLD))
+            except OperationalError as exc:
+                if sqlstate(exc) in BLOQUEIO_POR_OUTRA_SESSAO:
+                    pytest.fail(f"{MENSAGEM_BLOQUEIO} SQLSTATE {sqlstate(exc)}.", pytrace=False)
+                raise
             yield conexao
         finally:
             transacao.rollback()

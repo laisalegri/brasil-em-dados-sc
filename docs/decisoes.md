@@ -2,6 +2,16 @@
 
 Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra o que foi decidido, por quê e o que fica de fora.
 
+## 2026-11-26 — D38: revisão final
+
+- **Decisão:**
+  - **Dependências:** as dependências diretas (importadas pelo projeto ou usadas por comando) ficam com a versão fixada no `requirements.txt`, igual à instalada em 26/11/2026; o pip resolve as dependências delas. Entraram `nbclient` e `nbformat`, que os testes dos notebooks importam diretamente. O D39 testa exatamente essas versões.
+  - **Teste da GOLD:** a recriação das views usa `lock_timeout` de 10 s; se outra sessão estiver lendo a GOLD, o teste falha com mensagem clara (SQLSTATE 55P03 ou 40P01) em vez de travar. O pytest deve rodar com o banco livre (README).
+  - **Avisos iguais nos dois dashboards:** `tests/test_powerbi.py` confere que as medidas de aviso do Power BI e os textos da página Sobre os dados no PBIR são idênticos aos de `dashboard/textos.py`. A centralização fica para o D41/D42.
+  - **Scripts do Power BI:** `gerar_pbir.py` exige `--sobrescrever` e recusa se a pasta do Report tiver mudanças não commitadas; `verificar_pbir.py` falha com a pasta de schemas vazia e diz "OK com avisos" quando falta alguma versão de schema.
+  - **Para depois:** a lista de pendências não bloqueantes está em `docs/cronograma.md`, seção "Pendências para o D41/D42".
+- **Motivo:** fechar o MVP com o código e a documentação coerentes, sem mudar dados nem números de referência.
+
 ## 2026-11-26 — D37: validação entre dashboards
 
 - **Decisão:**
@@ -79,7 +89,7 @@ Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra 
   - **Filtro de ano:** age sobre PIB, PIB per capita e `pop_estimada`. Os visuais de Censo têm anos fixos (2010 e 2022). Num ano sem estimativa, o visual diz "sem estimativa publicada", sem usar o Censo no lugar.
   - **Mediana do per capita:** a mediana dos valores publicados de um mesmo ano é a única estatística permitida sobre o per capita. Ela aparece sempre com o rótulo "mediana entre os municípios", em todo lugar onde for exibida, e nunca como per capita do estado ou da região. Soma, média e per capita regional continuam proibidos (regra 4).
 - **Por quê:**
-  - **Streamlit primeiro:** no Streamlit, as consultas e os cálculos ficam em código Python e SQL versionado e testável, como na EDA (D31). O app vira a referência de layout, textos e números para o Power BI, cujo arquivo `.pbix` é binário e mais difícil de revisar. Assim, no D37, a comparação parte de uma implementação já conferida.
+  - **Streamlit primeiro:** no Streamlit, as consultas e os cálculos ficam em código Python e SQL versionado e testável, como na EDA (D31). O app vira a referência de layout, textos e números para o Power BI, cujo arquivo `.pbix` é binário e mais difícil de revisar. Assim, no D37, a comparação parte de uma implementação já conferida. *(Nota do D35: o formato adotado foi PBIP, com modelo em TMDL e relatório em PBIR, em texto.)*
   - **Totais da GOLD:** a soma de `pop_estimada` 2012 por município teria a dupla contagem da regra 13. Ler o total pronto também garante o mesmo número nos dois dashboards.
   - **Censo com anos fixos:** um filtro de ano que mostrasse Censo em 2010 e 2022 e estimativa nos outros anos montaria, na prática, uma série mista (regra 2).
   - **Mediana:** descreve a distribuição dos valores publicados sem criar um per capita novo; o notebook `02_pib` já a usa.
@@ -162,6 +172,8 @@ Decisões de projeto, da mais recente para a mais antiga. Cada entrada registra 
     - a lista de ferramentas tem de ser exatamente a das seis próprias. Se não for, a saída é 3 e o relatório lista os nomes.
 
     A origem da chave aparece no relatório.
+
+    *(Nota do D37: entrou `referencias_dashboards`; a lista conferida no `init` passou a ter sete ferramentas.)*
 - **Credenciais:** a trava do D28 roda antes de qualquer passo. Se `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` ou uma variável `CLAUDE_CODE_USE_*` estiver definida, a execução para com código 2, mostrando só o nome, e nada roda.
 - **Segredos:** saídas dos passos, respostas das ferramentas, erros e relatório passam por `limpar_texto`, que troca URLs `postgres…://` e as senhas dos dois perfis por marcadores. Os logs (console e `logs/`) passam pelo mesmo filtro, aplicado nos handlers do logger do projeto, inclusive nos tracebacks.
 - **Relatório:** `reports/verificacao_AAAAMMDDTHHMMSS.md` (UTC), gravado com o modo `x`, então nunca sobrescreve; o caminho é montado a partir do carimbo validado. Se o relatório ou a pasta `execucao_<carimbo>/` já existirem, nada roda. A parte de execução é escrita pelo código:

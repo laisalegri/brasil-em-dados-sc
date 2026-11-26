@@ -1,6 +1,6 @@
 # Dicionário de dados: Brasil em Dados SC
 
-- **Versão:** 2026-11-18 (D21: `data_coleta` e recorte da API de Pesquisas; D26: quebra de série e dupla contagem em `pop_estimada`); seção 1.4 nos D18/D19; base consolidada no D10
+- **Versão:** 2026-11-26 (revisão do D38); seção 1.5 no D30 (2026-11-18); D21: `data_coleta` e recorte da API de Pesquisas; D26: quebra de série e dupla contagem em `pop_estimada`; seção 1.4 nos D18/D19; base consolidada no D10
 - **Consolidado a partir de:**
   - `docs/fontes/sidra_6579.md`
   - `docs/fontes/sidra_1378.md`
@@ -73,7 +73,7 @@ Chave única: (`cod_municipio`, `codigo_indicador`, `ano`).
 
 ### 1.4 Implementação no banco (D18/D19)
 
-Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `03_fato_e_controle.sql`; o `04_comentario_data_coleta.sql` atualiza o comentário de `data_coleta`, D21). Os arquivos aplicados ficam registrados em `public.ddl_aplicado`. O schema `gold` existe, mas ainda não tem tabelas (D30).
+Todas as tabelas ficam no schema `silver` (DDL em `sql/ddl/02_dimensoes.sql` e `03_fato_e_controle.sql`; o `04_comentario_data_coleta.sql` atualiza o comentário de `data_coleta`, D21). Os arquivos aplicados ficam registrados em `public.ddl_aplicado`. O schema `gold` tem só views, descritas na seção 1.5 (D30).
 
 **Tipos definidos no DDL:**
 
@@ -135,12 +135,12 @@ Regras aplicadas: 2 (estimativa e Censo em colunas separadas), 3 (PIB nominal), 
   - o IBGE declara comparáveis só as estimativas de 2013 a 2017;
   - em SC, a nova base já fica 2,80% acima da estimativa publicada para 2012, enquanto o crescimento pela própria projeção é de 1,43%;
   - a GOLD não mostra variação entre anos ≤2012 e ≥2013 sem aviso explícito, e a série vem com a quebra marcada;
-  - há outra revisão da projeção em 2018, sem salto visível em SC (ver `docs/limitacoes.md`);
+  - há outra revisão da projeção em 2018, sem salto visível em SC (ver `docs/limitacoes.md`). Na GOLD, a variação de 2017 para 2018 é calculada e marcada `comparavel = false` (D30, regra 12 ampliada);
   - fonte: `docs/fontes/alertas_qualidade_2026-11.md`, A3.
 - **Dupla contagem em 2012 (D26, regra 13):**
   - a soma municipal de 2012 (6.383.286) excede o total de SC em 20.552 pessoas, exatamente a população de 4212650 (9.416) + 4220000 (11.136), que ainda não estavam instalados. Em 2011 e 2013, a soma fecha com o total;
   - a causa é **NÃO CONFIRMADA**;
-  - agregações de 2012 (estado, região) excluem os dois municípios ou levam aviso; a escolha fica para o D30;
+  - agregações e participação de 2012 (estado, região) excluem os dois municípios, com coluna `aviso` (D30);
   - valor de referência, lido pelo teste de qualidade (consulta R3 do arquivo de alertas): `TOTAL_SC_6579_2012 = 6362734`.
 
 **`pop_censo` (1378)**

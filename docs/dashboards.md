@@ -1,7 +1,7 @@
 # Dashboards: narrativa, páginas e KPIs
 
-- **Versão:** 2026-11-24 (cartão D34)
-- **Vale para:** o app Streamlit (D36, construído primeiro) e o dashboard Power BI (D35, construído depois, com o Streamlit como referência). Os dois seguem esta especificação; uma diferença entre eles é defeito, e não escolha de design.
+- **Versão:** 2026-11-24 (cartão D34); revisada no D38 com as exceções do D35
+- **Vale para:** o app Streamlit (D36, construído primeiro) e o dashboard Power BI (D35, construído depois, com o Streamlit como referência). Os dois seguem esta especificação; uma diferença entre eles é defeito, e não escolha de design. As exceções aprovadas para o Power BI estão na decisão D35: sem a página Comparação e algumas diferenças de visual por falta de visual nativo (ECO2 em barras agrupadas, POP2 com os dois gráficos lado a lado, marcações de 2013 e 2018 em texto, ECO4 ordenado pela variação).
 - **Base:** `CLAUDE.md` (regras 1–13), `docs/escopo_mvp.md`, `docs/limitacoes.md`, `docs/fontes/alertas_qualidade_2026-11.md` e os notebooks `01_populacao`, `02_pib` e `03_conclusoes` (D31–D33).
 - **Fonte dos dados:** só as views do schema `gold`, lidas como `bed_readonly`. Nenhum dashboard lê `silver` ou `raw`.
 
@@ -186,8 +186,8 @@ Códigos usados: Florianópolis `4205407`, Itajaí `4208203`.
 ## 7. Implementação (para o D36 e o D35)
 
 - **Ordem:** Streamlit primeiro (D36), Power BI depois (D35), com o Streamlit como referência de layout, textos e números (decisão de 2026-11-24).
-- **Streamlit:** consultas em arquivos `.sql` que só leem `gold`, como em `sql/analise/`, pela conexão `bed_readonly` em transação `READ ONLY`. A lógica de cálculo (rankings, medianas, participação regional) fica em funções testáveis, separada da interface. O pacote `streamlit` (e a biblioteca de gráficos) ainda não está no `requirements.txt` e precisa de aprovação no D36.
-- **Power BI:** conexão ao PostgreSQL com `bed_readonly`, importando só as views desta especificação. Medidas DAX nomeadas como os códigos das seções 4 e 6, para facilitar o D37.
+- **Streamlit:** consultas em arquivos `.sql` que só leem `gold`, como em `sql/analise/`, pela conexão `bed_readonly` em transação `READ ONLY`. A lógica de cálculo (rankings, medianas, participação regional) fica em funções testáveis, separada da interface. `streamlit==1.67.0` e `plotly==7.1.0` foram fixados no D36.
+- **Power BI:** projeto PBIP, com modelo em TMDL e relatório em PBIR (D35), conectado ao PostgreSQL com `bed_readonly` e importando só as views desta especificação. Medidas DAX nomeadas como os códigos das seções 4 e 6, para facilitar o D37.
 
 ## 8. Extensões (fora do MVP)
 

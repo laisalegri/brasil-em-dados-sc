@@ -8,8 +8,11 @@ código e conferir a diferença com o git.
 
 Uso (da raiz do repositório, com o Power BI Desktop FECHADO):
 
-    python scripts/powerbi/gerar_pbir.py dashboards/powerbi/BrasilEmDadosSC.Report \
-        dashboards/powerbi/BrasilEmDadosSC.SemanticModel
+    python scripts/powerbi/gerar_pbir.py dashboards/powerbi/BrasilEmDadosSC.Report ^
+        dashboards/powerbi/BrasilEmDadosSC.SemanticModel --sobrescrever
+
+Sem --sobrescrever, ou com mudanças não commitadas na pasta do Report, o script recusa e não
+apaga nada.
 
 - Apaga as páginas existentes em definition/pages/ e escreve, nesta ordem: Início, Visão geral,
   População, Economia, Perfil do município e Sobre os dados (page.json, visuals/<v>/visual.json e
@@ -24,12 +27,14 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
-REPORT = Path(sys.argv[1])
-MODELO = Path(sys.argv[2])
-PAGES = REPORT / "definition" / "pages"
+# Definidos em main() a partir dos argumentos (nada é lido de sys.argv no import).
+REPORT: Path = Path()
+MODELO: Path = Path()
+PAGES: Path = Path()
 
 SCHEMA_PAGE = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json"
 SCHEMA_PAGES = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json"
@@ -64,19 +69,20 @@ NOMES_AMIGAVEIS = {
 
 # -- textos das medidas de aviso (TMDL) ---------------------------------------------------------
 
-def textos_aviso() -> dict[str, str]:
+def textos_aviso(modelo: Path) -> dict[str, str]:
     """Lê as medidas de texto fixo (Aviso ..., Rodapé) do Medidas.tmdl."""
-    txt = (MODELO / "definition" / "tables" / "Medidas.tmdl").read_text(encoding="utf-8-sig")
+    txt = (modelo / "definition" / "tables" / "Medidas.tmdl").read_text(encoding="utf-8-sig")
     saida = {}
     for m in re.finditer(r"^\tmeasure (?:'([^']+)'|(\S+)) = \"((?:[^\"]|\"\")*)\"\s*$", txt, flags=re.M):
         saida[m.group(1) or m.group(2)] = m.group(3).replace('""', '"')
     return saida
 
 
-AVISOS = textos_aviso()
+AVISOS: dict[str, str] = {}  # preenchido em main()
 
 
 def aviso(nome: str) -> str:
+    """Texto da medida de aviso `nome`, idêntico ao do Streamlit (textos.py)."""
     return AVISOS[nome]
 
 
@@ -898,7 +904,35 @@ def sobre() -> Pagina:
     return p
 
 
-def main() -> None:
+def pasta_limpa_no_git(pasta: Path) -> bool:
+    """Indica se a pasta não tem mudanças locais no git (False se o git falhar)."""
+    try:
+        saida = subprocess.run(["git", "status", "--porcelain", "--", str(pasta)],
+                               capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return saida.strip() == ""
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Linha de comando: <Report> <SemanticModel> --sobrescrever.
+
+    Trava (decisão D35): sem --sobrescrever, ou com mudanças locais não commitadas no Report,
+    nada é apagado. Depois de rodar, confira a diferença com `git diff` antes de commitar.
+    """
+    global REPORT, MODELO, PAGES, AVISOS
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 3 or args[2] != "--sobrescrever":
+        print(__doc__)
+        print("Recusado: este script apaga todas as páginas do PBIP. Passe --sobrescrever.")
+        return 2
+    REPORT, MODELO = Path(args[0]), Path(args[1])
+    PAGES = REPORT / "definition" / "pages"
+    if not pasta_limpa_no_git(REPORT):
+        print(f"Recusado: {REPORT} tem mudanças não commitadas (ou o git falhou). "
+              "Commite ou descarte antes de regenerar.")
+        return 2
+    AVISOS = textos_aviso(MODELO)
     paginas = [inicio(), visao_geral(), populacao(), economia(), perfil(), sobre()]
     for pasta in PAGES.iterdir():  # remove páginas antigas (inclusive a vazia do Desktop)
         if pasta.is_dir():
@@ -911,7 +945,8 @@ def main() -> None:
                                       encoding="utf-8")
     for p in paginas:
         print(p.nome, len(p.visuais), "visuais; altura", int(p.y + MARGEM))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

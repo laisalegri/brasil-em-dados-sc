@@ -21,6 +21,7 @@ def visual(id_visual: str, pergunta: str) -> None:
 
 
 def grafico(fig: go.Figure) -> None:
+    """Mostra a figura plotly sem o logo do plotly na barra de ferramentas."""
     st.plotly_chart(fig, config={"displaylogo": False})
 
 

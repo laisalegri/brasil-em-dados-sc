@@ -67,6 +67,25 @@ AVISO_REVISAO_2018 = ("2017→2018: revisão da projeção; a variação é calc
                       "comparáveis só 2013–2017 (regra 12).")
 QUEBRAS_ESTIMATIVA = {2013: "quebra de série: nova projeção", 2018: "revisão da projeção"}  # C8
 
+# Sobre os dados (SOB2 e SOB3). O Power BI repete estes textos; um teste confere que são iguais.
+LEGENDA_COBERTURA = ("com_valor: valor publicado; municipio_nao_instalado: ausência esperada de "
+                     "Pescaria Brava e Balneário Rincão antes de 2013 (regras 6 e 10); sem_dado: "
+                     "ausência não esperada, que faria os testes falharem.")
+REGRAS_DE_LEITURA = (  # (título em destaque, texto)
+    ("Censo e estimativa são medidas diferentes (regra 2).",
+     f"Nunca aparecem na mesma série. {AVISO_CENSO_OFICIAL}"),
+    ("PIB é nominal (regra 3).", f"{AVISO_PIB_NOMINAL} {AVISO_REVISAO_PIB}"),
+    ("PIB per capita é o publicado (regra 4).",
+     f"{AVISO_PER_CAPITA} Não há per capita de região ou do estado; a única estatística mostrada "
+     f"é a {ROTULO_MEDIANA}. {AVISO_DENOMINADOR}"),
+    ("Ausência não é zero (regra 5).", f'Valor ausente aparece como "{SEM_DADO}" e não é interpolado.'),
+    ("Estimativa em três bases (regra 12).", AVISO_QUEBRAS),
+    ("Dupla contagem em 2012 (regra 13).", AVISO_DUPLA_CONTAGEM),
+    ("Saltos do PIB em municípios pequenos.", AVISO_A1),
+    ("PIB municipal é distribuição do PIB estadual.", AVISO_DISTRIBUICAO),
+)
+DETALHES_REGRAS = "Detalhes em docs/limitacoes.md e docs/dashboards.md no repositório."
+
 
 # -- formatadores (só texto) ---------------------------------------------------------------------
 
@@ -206,7 +225,10 @@ def titulo_per_capita_municipio(nome: str, ano_inicial: int, inicio: float, ano_
 
 
 def titulo_censos(nome: str, censo_2010: object, censo_2022: object) -> str:
-    """PER3 (b) e CMP3."""
+    """PER3 (b) e CMP3: 'pessoas' vai no primeiro valor presente; ausência vira 'sem dado'."""
+    if ausente(censo_2010):
+        fim = SEM_DADO if ausente(censo_2022) else f"{inteiro(censo_2022)} pessoas"
+        return f"Censo de {nome}: {SEM_DADO} em 2010 e {fim} em 2022"
     return (f"Censo de {nome}: {inteiro(censo_2010)} pessoas em 2010 e {inteiro(censo_2022)} "
             f"em 2022")
 

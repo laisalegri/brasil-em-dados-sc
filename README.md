@@ -19,7 +19,7 @@ Como os municípios de Santa Catarina se diferenciam em população e dimensão 
 | Camada GOLD: 7 views (grade, painel, variações, agregados e participação) | Pronto |
 | Notebooks de EDA (população, PIB e conclusões), lendo só a GOLD | Pronto |
 | Especificação dos dashboards (páginas, KPIs, filtros e números de referência) | Pronto |
-| App Streamlit com seis páginas, lendo só a GOLD (`streamlit run dashboards/streamlit/app.py`) | Pronto |
+| App Streamlit com sete páginas (Início e as seis seções de [docs/dashboards.md](docs/dashboards.md)), lendo só a GOLD (`streamlit run dashboards/streamlit/app.py`) | Pronto |
 | Relatório Power BI com seis páginas, lendo só a GOLD (`dashboards/powerbi/BrasilEmDadosSC.pbip`) | Pronto |
 | Validação entre dashboards: R01–R15 iguais em SQL, Streamlit e Power BI ([docs/validacao_dashboards.md](docs/validacao_dashboards.md)) | Pronto |
 | Agente de verificação com o Claude Agent SDK | Pronto |
@@ -41,19 +41,22 @@ IBGE (API de Localidades, API SIDRA, API de Pesquisas)
 
 Detalhes do fluxo em [docs/metodologia.md](docs/metodologia.md).
 
-Agentes de desenvolvimento: subagents do Claude Code em `.claude/agents/` (pesquisador de fontes, revisor de código, escritor de testes, revisor de qualidade de dados e documentador). O agente de verificação do pipeline, feito com o Claude Agent SDK, está descrito em [Agente de verificação](#agente-de-verificação).
+Agentes de desenvolvimento: subagents do Claude Code em `.claude/agents/` (pesquisador de fontes, revisor de código, escritor de testes, revisor de qualidade de dados, documentador e especialista em Power BI). O agente de verificação do pipeline, feito com o Claude Agent SDK, está descrito em [Agente de verificação](#agente-de-verificação).
 
 ## Estrutura do repositório
 
 | Pasta | Conteúdo |
 | --- | --- |
 | `.claude/agents/` | Subagents do Claude Code usados no desenvolvimento |
-| `src/brasil_em_dados/` | Código do pipeline: `extract` (coleta), `transform` (interpretação e conversão, sem I/O), `load` (carga), `db` (conexões e aplicadores de DDL e da GOLD), `verificacao` (agente de verificação), `analise` (consultas, cálculos e gráficos da EDA) |
+| `src/brasil_em_dados/` | Código do pipeline: `extract` (coleta), `transform` (interpretação e conversão, sem I/O), `load` (carga), `db` (conexões e aplicadores de DDL e da GOLD), `verificacao` (agente de verificação e checagem R01–R15), `analise` (consultas, cálculos e gráficos da EDA), `dashboard` (dados, cálculos, textos e gráficos do app Streamlit) |
 | `sql/ddl/` | Criação do banco, dos usuários, dos schemas e das tabelas |
 | `sql/gold/` | Views da camada GOLD |
 | `sql/verificacao/` | Catálogo fechado de consultas de qualidade do agente de verificação |
-| `sql/analise/` | Consultas da EDA, só sobre views da GOLD |
+| `sql/analise/` | Consultas da EDA e do app Streamlit, só sobre views da GOLD |
+| `sql/referencias/` | Consultas R01–R15 dos números de referência (cópia da seção 6 de [docs/dashboards.md](docs/dashboards.md)) |
 | `scripts/` | Estudos fora do pipeline (exemplo mínimo do Agent SDK) e `powerbi/`: gerador e verificador das páginas PBIR do Power BI |
+| `requirements.txt`, `pyproject.toml` | Dependências diretas, com as versões fixadas, e o pacote local |
+| `.mcp.json` | Configuração do Power BI Modeling MCP, versão `1.0.1` (decisão D35) |
 | `tests/` | Testes automatizados (pytest) |
 | `docs/` | Escopo, decisões, dicionário de dados, padrão de coleta, metodologia, limitações e fontes |
 | `data/raw/`, `data/controle/`, `data/processed/` | Gerados pelo pipeline (não versionados) |
@@ -122,6 +125,8 @@ pytest -m "not integracao"      # só os testes que não precisam do banco
 
 Os testes marcados `integracao` são pulados quando o banco não aceita conexão. Os testes de qualidade também são pulados se a fato estiver vazia.
 
+Rode o pytest com o banco livre: os testes de integração recriam as views da GOLD; uma sessão lendo a GOLD ao mesmo tempo (Streamlit, refresh do Power BI, notebooks, auditoria) pode causar deadlock. O teste da GOLD tem `lock_timeout` de 10 s e falha com mensagem clara em vez de travar.
+
 **7. GOLD**
 
 ```powershell
@@ -138,7 +143,9 @@ Abre o app no navegador (por padrão, em http://localhost:8501). O app lê só a
 
 **9. Power BI**
 
-Abra `dashboards/powerbi/BrasilEmDadosSC.pbip` no Power BI Desktop, com a conexão ao PostgreSQL como `bed_readonly` (as credenciais ficam no Desktop, não no projeto). O PBIP salvo no Desktop é a versão de referência: regenerar as páginas apaga os ajustes manuais, então só faça isso depois de passá-los para o gerador (decisão D35). Com o Desktop fechado, rode, nesta ordem, `ajustar_medidas_tmdl.py`, `gerar_pbir.py`, `baixar_schemas.py` (uma vez) e `verificar_pbir.py`, todos em `scripts/powerbi/`; o uso de cada um está no início do arquivo.
+Abra `dashboards/powerbi/BrasilEmDadosSC.pbip` no Power BI Desktop, com a conexão ao PostgreSQL como `bed_readonly` (as credenciais ficam no Desktop, não no projeto). O PBIP salvo no Desktop é a versão de referência; no uso normal, basta abri-lo.
+
+Regenerar as páginas apaga os ajustes manuais. Só faça isso depois de passá-los para o gerador (decisão D35). Nesse caso, com o Desktop fechado, rode, nesta ordem, `ajustar_medidas_tmdl.py`, `gerar_pbir.py` (exige `--sobrescrever` e recusa se a pasta do Report tiver mudanças não commitadas), `baixar_schemas.py` (uma vez) e `verificar_pbir.py`, todos em `scripts/powerbi/`. O uso de cada um está no início do arquivo. O `verificar_pbir.py` também serve sozinho, depois de salvar no Desktop: diz "OK com avisos" quando alguma versão de schema ainda não foi publicada pela Microsoft.
 
 ## Agente de verificação
 
@@ -155,7 +162,7 @@ python -m brasil_em_dados.verificacao --coleta --carga --gold  # roda também co
   - saída dos passos;
   - controle de execução;
   - consultas do catálogo fechado em `sql/verificacao/`;
-  - números de referência R01–R15 dos dashboards, SQL × Streamlit ([docs/validacao_dashboards.md](docs/validacao_dashboards.md));
+  - números de referência R01–R15 dos dashboards, SQL × Streamlit ([docs/validacao_dashboards.md](docs/validacao_dashboards.md)), também disponíveis por `python -m brasil_em_dados.verificacao.referencias`;
   - relatório anterior.
 
   O banco é lido como `bed_readonly`, com `SET TRANSACTION READ ONLY`. O agente não tem Bash nem edição de arquivos, e os conectores da conta do claude.ai são negados. Se a sessão não usar o login do plano, usar outro modelo ou receber qualquer ferramenta além das próprias, o agente é interrompido.
@@ -163,7 +170,7 @@ python -m brasil_em_dados.verificacao --coleta --carga --gold  # roda também co
 - **Autenticação:** pelo login do plano Claude Pro, sem chave de API. Se `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` ou uma variável de provedor de nuvem estiver definida, o agente para antes de rodar qualquer passo.
 - **Códigos de saída:**
   - 0: tudo certo;
-  - 1: um passo falhou ou não houve análise;
+  - 1: um passo falhou, não houve análise, o relatório já existia ou o catálogo de consultas é inválido;
   - 2: a trava de credenciais parou a execução, ou a sessão não usou o login do plano;
   - 3: o agente recebeu ferramentas inesperadas ou outro modelo.
 

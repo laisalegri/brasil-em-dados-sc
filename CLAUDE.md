@@ -11,21 +11,28 @@ Pipeline de dados públicos do IBGE sobre os 295 municípios de Santa Catarina (
 O cronograma dos cartões está em `docs/cronograma.md`. Ao concluir um cartão, no mesmo commit:
 
 - troque ⬜ por ✅ e preencha a "Data realizada" (DD/MM/AA, a data do commit);
-- acrescente em "Detalhes do realizado" a linha do cartão com as principais entregas.
+- acrescente em "Detalhes do realizado › Entregas e commits por cartão" a linha do cartão com as principais entregas.
 
 Os hashes entram no commit seguinte, e as datas previstas não mudam. Um cartão absorvido aparece como "Absorvido pelo Dxx".
 
 ## Estrutura
 
-- `src/brasil_em_dados/` — pacote Python: `extract/` (coleta das APIs), `load/` (carga no PostgreSQL), `transform/` (normalização)
-- `sql/ddl/`, `sql/silver/`, `sql/gold/` — scripts SQL por camada
+- `src/brasil_em_dados/` — pacote Python:
+  - `extract/` (coleta das APIs), `transform/` (normalização, sem I/O), `load/` (carga no PostgreSQL);
+  - `db/` (conexões, `aplicar_ddl`, `aplicar_gold`, `sqlstate` e erros de conexão);
+  - `analise/` (consultas, cálculos e gráficos da EDA), `dashboard/` (dados, cálculos, textos e gráficos do app Streamlit);
+  - `verificacao/` (agente de verificação e `referencias.py`, a checagem R01–R15 SQL × Streamlit)
+- `sql/ddl/` (banco, usuários, schemas e tabelas da SILVER), `sql/gold/` (views da GOLD)
+- `sql/analise/` (consultas da EDA e do app), `sql/verificacao/` (catálogo fechado do agente), `sql/referencias/` (R01–R15, cópia da seção 6 de `docs/dashboards.md`); todas só leem
+- `scripts/` — estudos fora do pipeline e `scripts/powerbi/` (gerador e verificador do PBIR)
+- `.mcp.json` — Power BI Modeling MCP (versão fixada, D35)
 - `data/raw/`, `data/processed/` — gerados pelo pipeline, não versionados
 - `data/controle/` — controle de execução das coletas (`execucoes.jsonl`), não versionado
 - `logs/` — logs do pipeline, não versionados
 - Padrão de coleta e rastreabilidade: `docs/padrao_coleta.md`
 - `tests/` — pytest
 - `notebooks/` — EDA
-- `dashboards/powerbi/`, `dashboards/streamlit/`
+- `dashboards/powerbi/` (PBIP: modelo em TMDL e relatório em PBIR), `dashboards/streamlit/` (app e páginas)
 - `docs/` — escopo, decisões, dicionário de dados, metodologia
 - `.claude/agents/` — subagents do projeto (versionados)
 - `reports/` — relatórios do agente de verificação, não versionados

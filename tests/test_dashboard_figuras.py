@@ -124,3 +124,36 @@ def test_divergentes_destacam_pelo_codigo_e_nao_pelo_nome():
     with pytest.raises(ValueError, match="chave"):
         figuras.barras_divergentes(["A"], [1.0], titulo="x", rotulo_eixo="y", fonte=FONTE,
                                    formatar=str, destaque="A")
+
+
+# -- figuras sem teste unitário até o D38 ---------------------------------------------------------
+
+def _rodape(fig) -> str:
+    return next(a.text for a in fig.layout.annotations if a.text.startswith("Fonte: "))
+
+
+def test_halteres_liga_os_dois_pontos_e_nao_desenha_traco_com_ausencia():
+    fig = figuras.halteres(["A", "B"], [6.5444, None], [9.3877, 3.0], nome_inicio="2010",
+                           nome_fim="2023", titulo="T", rotulo_eixo="%", fonte="IBGE",
+                           formatar=t.percentual)
+    tracos = [d for d in fig.data if d.mode == "lines"]
+    assert len(tracos) == 1 and list(tracos[0].y) == ["A", "A"]  # B não tem 2010: sem traço
+    pontos = {d.name: d for d in fig.data if d.mode == "markers"}
+    assert list(pontos["2010"].x) == [6.5444, None]  # ausência continua ausência, nunca zero
+    assert list(pontos["2010"].text) == ["6,5%", ""]
+    assert pontos["2023"].marker.color == PALETA["principal"]
+    assert _rodape(fig).startswith("Fonte: IBGE")
+
+
+@pytest.mark.parametrize("horizontal", [True, False])
+def test_barras_agrupadas_uma_serie_por_cor_e_sem_dado_no_rotulo(horizontal):
+    fig = figuras.barras_agrupadas(["Lages", "Caçador"], {"PIB": [3.57, None], "População": [4.8, 3.01]},
+                                   titulo="T", rotulo_eixo="%", fonte="IBGE",
+                                   formatar=t.percentual, horizontal=horizontal)
+    assert [d.name for d in fig.data] == ["PIB", "População"]
+    assert fig.data[0].marker.color != fig.data[1].marker.color
+    assert list(fig.data[0].text) == ["3,6%", "sem dado"]
+    valores = fig.data[0].x if horizontal else fig.data[0].y
+    assert list(valores) == [3.57, None]
+    assert fig.data[0].orientation == ("h" if horizontal else "v")
+    assert fig.layout.barmode == "group"

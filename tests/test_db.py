@@ -50,7 +50,7 @@ def test_senha_com_caracteres_especiais_sobrevive_a_ida_e_volta_da_url(perfil, s
                                             (db.PERFIL_READONLY, SENHA_RO)])
 def test_texto_e_repr_da_url_nao_mostram_a_senha(perfil, senha):
     url = db.montar_url(perfil, AMBIENTE)
-    for texto in (str(url), repr(url), db.descrever_url(url)):
+    for texto in (str(url), repr(url)):
         assert senha not in texto
         assert "***" in texto
 
@@ -167,3 +167,26 @@ def test_engine_sem_argumento_e_sem_env_falha_citando_as_variaveis(tmp_path, mon
     monkeypatch.setattr(db, "ARQUIVO_ENV", tmp_path / "nao_existe.env")
     with pytest.raises(db.ErroConfiguracao, match="PG_HOST"):
         db.engine_readonly()
+
+
+class _ErroDoDriver(Exception):
+    def __init__(self, codigo: object) -> None:
+        super().__init__("postgresql://u:senha@h/b")
+        self.sqlstate = codigo
+
+
+@pytest.mark.parametrize("codigo, esperado", [
+    ("28P01", "28P01"), ("3D000", "3D000"), (None, "sem código"),
+    ("postgresql://u:senha@h/b", "sem código"),  # fora do formato nunca vai para o log
+])
+def test_sqlstate_devolve_so_o_codigo(codigo, esperado):
+    from sqlalchemy.exc import OperationalError
+
+    assert db.sqlstate(OperationalError("SELECT 1", None, _ErroDoDriver(codigo))) == esperado
+    assert db.sqlstate(ConnectionRefusedError("porta fechada")) == "sem código"
+
+
+def test_erros_de_conexao_cobrem_banco_configuracao_e_rede():
+    from sqlalchemy.exc import SQLAlchemyError
+
+    assert set(db.ERROS_DE_CONEXAO) == {SQLAlchemyError, db.ErroConfiguracao, OSError}

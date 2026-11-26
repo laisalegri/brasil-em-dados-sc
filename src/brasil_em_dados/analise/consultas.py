@@ -15,7 +15,8 @@ from brasil_em_dados.db import transacao_somente_leitura
 _NOME = re.compile(r"^[a-z][a-z0-9_]*$")
 _ORIGEM = re.compile(r"\b(?:FROM|JOIN)\s+([A-Za-z_]\w*)(\.)?", re.IGNORECASE)
 _CTE = re.compile(r"(?:\bWITH|,)\s+([A-Za-z_]\w*)\s+AS\s*\(", re.IGNORECASE)
-INDICADORES = ("pop_estimada", "pop_censo", "pib_corrente", "pib_per_capita")
+# Indicadores com total de estado e de região (per capita nunca é agregado, regra 4).
+INDICADORES_SOMAVEIS = ("pop_estimada", "pop_censo", "pib_corrente")
 NIVEIS = ("estado", "regiao_intermediaria", "regiao_imediata")
 
 
@@ -57,7 +58,7 @@ def _exigir(valor: str, permitidos: tuple[str, ...], rotulo: str) -> None:
 
 def participacao(engine: Engine, indicador: str, ano: int) -> pd.DataFrame:
     """Participação de cada município no total de SC (maior valor primeiro)."""
-    _exigir(indicador, ("pop_estimada", "pop_censo", "pib_corrente"), "Indicador")
+    _exigir(indicador, INDICADORES_SOMAVEIS, "Indicador")
     return consultar(engine, "participacao_estadual", indicador=indicador, ano=ano)
 
 
@@ -69,7 +70,7 @@ def variacao_censo(engine: Engine) -> pd.DataFrame:
 def agregado(engine: Engine, nivel: str, indicador: str) -> pd.DataFrame:
     """Somas por nível territorial e ano (sem per capita agregado, regra 4)."""
     _exigir(nivel, NIVEIS, "Nível")
-    _exigir(indicador, ("pop_estimada", "pop_censo", "pib_corrente"), "Indicador")
+    _exigir(indicador, INDICADORES_SOMAVEIS, "Indicador")
     return consultar(engine, "agregado_regiao", nivel=nivel, indicador=indicador)
 
 
@@ -96,7 +97,7 @@ def painel_serie(engine: Engine) -> pd.DataFrame:
 
 def participacao_serie(engine: Engine, indicador: str) -> pd.DataFrame:
     """Participação no total de SC em todos os anos do indicador."""
-    _exigir(indicador, ("pop_estimada", "pop_censo", "pib_corrente"), "Indicador")
+    _exigir(indicador, INDICADORES_SOMAVEIS, "Indicador")
     return consultar(engine, "participacao_serie", indicador=indicador)
 
 

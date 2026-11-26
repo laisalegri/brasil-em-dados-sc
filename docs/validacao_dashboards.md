@@ -8,7 +8,7 @@ Confere se os 15 números de referência de [docs/dashboards.md](dashboards.md) 
 
 - **Data:** 26/11/2026.
 - **Versões:**
-  - código: commit `2845e7b` mais as mudanças do D37 (a checagem `referencias`), no commit do D37;
+  - código: commit `6766243` (D37), que traz a checagem `referencias`;
   - Power BI: o `BrasilEmDadosSC.pbip` do commit `2845e7b`, aberto no Desktop sem alterações (o `git status` de `dashboards/powerbi/` estava limpo);
   - PostgreSQL 15.5, Python 3.12.0, Streamlit 1.67.0, pandas 3.1.1, SQLAlchemy 2.1.8 e Power BI Modeling MCP 1.0.1. As ferramentas do MCP não informam a versão do Power BI Desktop.
 

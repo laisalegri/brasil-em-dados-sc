@@ -45,13 +45,29 @@ Fonte do plano: quadro do Trello. O CSV exportado do quadro, usado para gerar a 
 | ✅ | **D36** Construir app Streamlit | Dashboards | 22/12/26 | 26/11/26 | **Feito antes do D35** (decisão de 24/11). Criar filtros por município, ano e indicador usando a camada analítica. |
 | ✅ | **D35** Construir dashboard Power BI | Dashboards | 21/12/26 | 26/11/26 | Conectar à camada GOLD e criar páginas de visão geral e comparação municipal, com o app Streamlit como referência. |
 | ✅ | **D37** Validar consistência entre dashboards | Dashboards | 23/12/26 | 26/11/26 | Comparar amostras e totais entre SQL, Power BI e Streamlit; incluir a checagem no agente de verificação. |
-| ⬜ | **D38** Revisão final com subagents | Integração e entrega | 24/12/26 | — | Rodar revisor-de-codigo e documentador no repositório inteiro; aplicar correções. |
+| ✅ | **D38** Revisão final com subagents | Integração e entrega | 24/12/26 | 26/11/26 | Rodar revisor-de-codigo e documentador no repositório inteiro; aplicar correções. |
 | ⬜ | **D39** Pipeline do zero, README e portfólio | Integração e entrega | 26/12/26 | — | Executar pipeline do zero com o agente de verificação, rodar testes, revisar README e publicar no GitHub. |
 | ⬜ | **D40** Publicar Streamlit (extensão) | Extensão | 28/12/26 | — | Exportar GOLD para Parquet/DuckDB e publicar no Streamlit Community Cloud, sem agente. |
 | ⬜ | **D41** Reserva | Reserva | 29/12/26 | — | Dia livre para absorver atrasos. |
 | ⬜ | **D42** Reserva | Reserva | 30/12/26 | — | Dia livre para absorver atrasos. |
 
 O MVP fecha no D39 (26/12/26). D40 é extensão (publicar Streamlit) e D41–D42 são reserva.
+
+### Pendências para o D41/D42 (da revisão do D38)
+
+Achados da revisão final que não bloqueiam o MVP. Nenhum muda dados nem números de referência.
+
+1. Centralizar os textos de aviso, hoje em `dashboard/textos.py`, nas medidas `Aviso ...` do `Medidas.tmdl` e no `gerar_pbir.py`. Até lá, `tests/test_powerbi.py` garante que são iguais.
+2. Centralizar formatadores, paleta e quebras de base da estimativa, repetidos em `analise/graficos.py`, `dashboard/textos.py`, `dashboard/calculos.py`, `dashboard/figuras.py` e `scripts/powerbi/gerar_pbir.py`.
+3. Agrupar e destacar regiões pelo código (`cod_regiao`), usando o nome só como rótulo (`analise/calculos.py`, `dashboard/calculos.py`, página População).
+4. Proteger `analise.calculos.variacao_entre_anos` e `participacao_no_total` contra linhas municipais de `pop_estimada` 2012 (regra 13), ou documentar que a entrada vem de `agregado_regiao_ano`.
+5. Montar os textos do limite de 50% a partir de `LIMITE_SALTO_PERCENTUAL` (app e nomes das medidas ECO4).
+6. Mover para `sql/` o SQL que ainda está em Python (controle de execução, carga da fato, registro do DDL, `aplicar_gold`), ou registrar a exceção em `docs/decisoes.md`.
+7. `scripts/estudo_agent_sdk.py`: importar as listas de credenciais de `verificacao/seguranca.py`, em vez de repeti-las.
+8. Consulta repetida em `sql/analise/cobertura.sql` e `sql/verificacao/status_grade_gold.sql`: unificar ou testar que são iguais.
+9. Testes T19–T28 da GOLD propostos pelo revisor de qualidade (`reports/qualidade_20261126.md`, local).
+10. Power BI: o título do PER3b com Censo ausente ainda diz "sem dado pessoas em 2010" (o Streamlit foi corrigido no D38); o aviso do denominador do per capita não cita a relação do TCU de 2023 (`docs/limitacoes.md`, seção 9), no app e no TMDL.
+11. Tabela versionada de anos esperados por série (pendência do D30).
 
 ## Detalhes do realizado
 
@@ -66,8 +82,8 @@ As datas realizadas foram reconstruídas em 20/11/2026 a partir do `git log` e d
 |---|---|---|
 | Cartões D01–D30 | 30 cartões em 30 dias de trabalho (11/11 a 15/12) | 26 concluídos e 4 absorvidos, em 6 dias com commits (11, 12, 14, 17, 18 e 20/11) |
 | Cartões D31–D33 | 3 cartões em 3 dias (16 a 18/12) | 3 concluídos em 23/11 |
-| Cartões D34 a D37 | 4 cartões (19, 21, 22 e 23/12) | Concluídos em 24/11 (D34) e 26/11 (D35 a D37) |
-| Cartões pendentes | — | 5 (D38 a D42) |
+| Cartões D34 a D38 | 5 cartões (19, 21, 22, 23 e 24/12) | Concluídos em 24/11 (D34) e 26/11 (D35 a D38) |
+| Cartões pendentes | — | 4 (D39 a D42) |
 | Fechamento do MVP | D39, em 26/12 | Em andamento |
 
 Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho sem commit não aparece no git. Cada cartão previa 3 horas.
@@ -130,9 +146,10 @@ Os dias de trabalho realizados contam só os dias com commit; um dia de trabalho
 | D32 | `notebooks/02_pib.ipynb`: PIB nominal, concentração, participação 2010 × 2023, PIB per capita 2023 e regiões | `1d5f587` |
 | D33 | `notebooks/03_conclusoes.ipynb` e teste que executa os três notebooks | `1d5f587` |
 | D34 | `docs/dashboards.md`: narrativa, seis páginas com 24 visuais, filtros globais, proibições e 15 números de referência para o D37; D36 antes do D35 e decisão D34 | `bb582ae` |
-| D36 | App Streamlit em `dashboards/streamlit/` (seis páginas, filtros globais com `st.navigation`), pacote `brasil_em_dados.dashboard`, cinco consultas novas em `sql/analise/`, testes com AppTest (R01–R15, Censo fixo, erro de conexão sem detalhes), streamlit e plotly fixados e decisão D36 | `929556f` |
+| D36 | App Streamlit em `dashboards/streamlit/` (Início e seis páginas, filtros globais com `st.navigation`), pacote `brasil_em_dados.dashboard`, cinco consultas novas em `sql/analise/`, testes com AppTest (R01–R15, Censo fixo, erro de conexão sem detalhes), streamlit e plotly fixados e decisão D36 | `929556f` |
 | D35 | Relatório Power BI em `dashboards/powerbi/` (PBIP: modelo em TMDL e relatório em PBIR), com seis páginas (Início, Visão geral, População, Economia, Perfil e Sobre os dados); modelo pelo Power BI Modeling MCP (relacionamentos só por `cod_municipio`, 189 medidas, R01–R15 conferidos em DAX); gerador e verificador em `scripts/powerbi/`; `.mcp.json`, `.gitignore` dos arquivos locais do PBIP e decisão D35 | `2845e7b` |
-| D37 | `docs/validacao_dashboards.md`: R01–R15 iguais em SQL, Streamlit e Power BI (44 componentes, comparados pelo valor); consultas em `sql/referencias/`; checagem SQL × Streamlit no agente de verificação (`referencias_dashboards`) e em `python -m brasil_em_dados.verificacao.referencias`; decisão D37 | — |
+| D37 | `docs/validacao_dashboards.md`: R01–R15 iguais em SQL, Streamlit e Power BI (44 componentes, comparados pelo valor); consultas em `sql/referencias/`; checagem SQL × Streamlit no agente de verificação (`referencias_dashboards`) e em `python -m brasil_em_dados.verificacao.referencias`; decisão D37 | `6766243` |
+| D38 | Revisão final: revisor-de-codigo (nenhum bloqueante; importantes corrigidos: verificador do PBIR sem falso OK, trava no `gerar_pbir.py`, teste de igualdade dos avisos e do Sobre entre Streamlit e Power BI, testes dos scripts e das figuras e títulos sem teste), documentador (metodologia, limitações, dicionário, escopo com os critérios de sucesso marcados, CLAUDE.md, dashboards.md), varredura do histórico do git sem credenciais, agente de verificação e revisor de qualidade sem ERRO; `lock_timeout` no teste da GOLD; versões das dependências diretas fixadas; pendências para o D41/D42 | — |
 
 Commit fora de cartão: `12d0db4` (12/11/2026), um ajuste do texto do cronograma (fonte do quadro e datas previstas).
 

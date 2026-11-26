@@ -1,7 +1,7 @@
 # Metodologia
 
-- **Versão:** 2026-11-18 (cartão D27)
-- **Situação:** descreve o que está implementado até o D26: coleta RAW, banco, carga na SILVER e testes de qualidade. A GOLD, a EDA, os dashboards e o agente de verificação ainda não existem (D28 em diante, `docs/cronograma.md`).
+- **Versão:** 2026-11-26 (revisão do D38; primeira versão no D27, em 2026-11-18)
+- **Situação:** descreve o que está implementado até o D37: coleta RAW, banco, carga na SILVER, qualidade, GOLD, EDA, dashboards, validação entre dashboards e agente de verificação. O que falta está na seção 11.
 
 Este documento resume o fluxo e aponta para os documentos de referência. As regras completas estão nos arquivos citados em cada seção.
 
@@ -15,9 +15,9 @@ RAW      data/raw/{cod_serie}/  — resposta original + .meta.json, imutável
    │  python -m brasil_em_dados.load tudo
    ▼
 SILVER   PostgreSQL, schema silver — dimensões, fato e controle de execução
-   │  (D30, planejado)
+   │  python -m brasil_em_dados.db.aplicar_gold
    ▼
-GOLD     PostgreSQL, schema gold — criado, ainda sem tabelas
+GOLD     PostgreSQL, schema gold — 7 views (D30) ──► notebooks · Streamlit · Power BI
 ```
 
 | Etapa | Código | Referência |
@@ -27,8 +27,13 @@ GOLD     PostgreSQL, schema gold — criado, ainda sem tabelas
 | Transformação (sem I/O) | `src/brasil_em_dados/transform/` | D20 e D21 |
 | Carga | `src/brasil_em_dados/load/` | D20 e D21 |
 | Qualidade | `tests/test_qualidade_dados.py`, `.claude/agents/revisor-de-qualidade-de-dados.md` | D22 e D26 |
+| GOLD | `sql/gold/`, `src/brasil_em_dados/db/aplicar_gold.py` | D30 |
+| EDA | `src/brasil_em_dados/analise/`, `sql/analise/`, `notebooks/` | D31 |
+| Dashboards | `src/brasil_em_dados/dashboard/`, `dashboards/streamlit/`, `dashboards/powerbi/`, `scripts/powerbi/` | `docs/dashboards.md`, D34, D35 e D36 |
+| Validação entre dashboards | `src/brasil_em_dados/verificacao/referencias.py`, `sql/referencias/` | `docs/validacao_dashboards.md`, D37 |
+| Agente de verificação | `src/brasil_em_dados/verificacao/`, `sql/verificacao/` | D29 |
 
-Os códigos D01–D26 citados neste documento são entradas de `docs/decisoes.md`.
+Os códigos D01–D37 citados neste documento são entradas de `docs/decisoes.md`.
 
 ## 2. Fontes e séries
 
@@ -177,24 +182,68 @@ Números da auditoria (relatório, seção 4.1). Uma tolerância fixa de meio ce
 - As demais suítes testam coleta, falhas HTTP, não sobrescrita da RAW, transformação, upsert, aplicador de DDL e permissões dos usuários. As que precisam do banco têm o marcador `integracao`: são puladas quando a porta do banco não aceita conexão e falham quando o servidor recusa a conexão (D17).
 - Os testes de classe ALERTA propostos no relatório (zeros, exclusões do T11, saltos nas somas, variações extremas e censo × estimativa) não foram implementados como pytest.
 
-## 7. Ainda não implementado
+## 7. GOLD (D30)
 
-| Item | Cartão previsto |
+Comando: `python -m brasil_em_dados.db.aplicar_gold`, como `bed_app`. Ele recria as views de `sql/gold/` numa transação e valida os arquivos antes de abrir a conexão. A GOLD fica fora do controle `public.ddl_aplicado`, porque views não guardam dados. O `bed_readonly` lê as views pelos privilégios padrão do schema `gold`.
+
+| View | Para que serve |
 |---|---|
-| Agente de verificação com o Claude Agent SDK | D28–D29 |
-| Camada GOLD (grade completa, regras 12 e 13 na apresentação) | D30 |
-| EDA em notebooks | D31–D33 |
-| Dashboards Power BI e Streamlit | D34–D37 |
-| Comparação dos totais da GOLD com os totais publicados pelo IBGE | critério do D39 (`docs/escopo_mvp.md`) |
+| `dim_municipio` | As duas hierarquias regionais e `ano_instalacao` (2013 para 4212650 e 4220000) |
+| `grade_indicador_municipio_ano` | Grade completa (12.095 linhas), com `status` (`com_valor`, `municipio_nao_instalado`, `sem_dado`) e `aviso` |
+| `painel_municipio_ano` | Uma linha por município e ano, com estimativa e Censo em colunas separadas |
+| `variacao_populacao_censo` | Censo 2010 × Censo 2022 |
+| `variacao_anual` | Variação de `pop_estimada` e `pib_corrente`, com `comparavel` e `motivo` |
+| `agregado_regiao_ano` | Totais do estado, das regiões intermediárias e das imediatas, sem per capita |
+| `participacao_estadual` | Participação de cada município no total do estado |
 
-## 8. Documentos de referência
+- **Regra 12:** três bases da estimativa. De 2012 para 2013, a variação é `NULL`; de 2017 para 2018, é calculada. Nos dois casos, `comparavel = false`.
+- **Regra 13:** agregações e participação de `pop_estimada` 2012 excluem 4212650 e 4220000, com aviso. O total do estado fica igual ao publicado (6.362.734).
+- **Sem conversão de unidade** (regra 11) e **sem per capita agregado** (regra 4).
+
+Colunas em `docs/dicionario_dados.md`, seção 1.5.
+
+## 8. Análise exploratória (D31–D33)
+
+- Três notebooks (`notebooks/01_populacao.ipynb`, `02_pib.ipynb`, `03_conclusoes.ipynb`) que só chamam funções de `brasil_em_dados.analise` e comentam os resultados.
+- As consultas ficam em `sql/analise/` e só leem o schema `gold`, como `bed_readonly`, numa transação `READ ONLY`.
+- Os notebooks são versionados com as saídas. `tests/test_notebooks.py` executa cópias dos três (marcador `integracao`) e confere que não há erro, segredo nem conversão de unidade no código.
+
+## 9. Dashboards (D34–D37)
+
+- **Especificação:** `docs/dashboards.md` define páginas, visuais, filtros (região intermediária, município e ano), proibições e os números de referência R01–R15. Totais vêm de `gold.agregado_regiao_ano`; os dashboards não somam municípios.
+- **Streamlit (D36):** `streamlit run dashboards/streamlit/app.py`. Sete páginas: Início e as seis seções da especificação. Lê a GOLD pelas funções de `brasil_em_dados.analise.consultas`, como `bed_readonly`.
+- **Power BI (D35):** `dashboards/powerbi/BrasilEmDadosSC.pbip` (modelo em TMDL e relatório em PBIR), importando as views da GOLD como `bed_readonly`. Seis páginas, sem a Comparação. As diferenças de visual em relação ao Streamlit estão na decisão D35.
+- **Validação (D37):** R01–R15 iguais em SQL, Streamlit e Power BI (44 componentes, comparados pelo valor). SQL × Streamlit é automático (`python -m brasil_em_dados.verificacao.referencias` e `tests/test_verificacao_referencias.py`). O Power BI é conferido manualmente. Detalhes em `docs/validacao_dashboards.md`.
+
+## 10. Agente de verificação (D29)
+
+Comando: `python -m brasil_em_dados.verificacao [--coleta] [--carga] [--gold]`.
+
+- Um executor determinístico roda sempre o pytest. Coleta, carga e GOLD só rodam com a flag correspondente.
+- Depois, um agente do Claude Agent SDK lê os resultados com ferramentas próprias de leitura e escreve a análise. As ferramentas cobrem testes, saídas dos passos, controle de execução, consultas de `sql/verificacao/`, R01–R15 (D37) e relatório anterior.
+- O banco é lido como `bed_readonly`, numa transação `READ ONLY`.
+- O relatório vai para `reports/verificacao_AAAAMMDDTHHMMSS.md` (não versionado) e nunca é sobrescrito.
+- Autenticação, isolamento e códigos de saída: README, seção "Agente de verificação", e decisão D29.
+
+## 11. Ainda não implementado
+
+| Item | Cartão |
+|---|---|
+| Execução do pipeline do zero com o agente de verificação, prints no README e publicação no GitHub | D39 |
+| Streamlit publicado (extensão) | D40 |
+| Tabela versionada de anos esperados por série (pendência registrada no D30) | D41/D42 |
+| Testes de classe ALERTA propostos no relatório de qualidade (seção 6.3) | não planejado |
+
+## 12. Documentos de referência
 
 | Documento | Conteúdo |
 |---|---|
 | `CLAUDE.md` | Regras de dados 1–13 |
 | `docs/escopo_mvp.md` | Escopo, fora de escopo e critérios de sucesso |
-| `docs/decisoes.md` | Decisões D01–D26 |
-| `docs/dicionario_dados.md` | Tabelas, colunas, restrições, sinais e cobertura |
+| `docs/decisoes.md` | Decisões D01–D37 |
+| `docs/dicionario_dados.md` | Tabelas, colunas, restrições, sinais, cobertura e views da GOLD |
 | `docs/padrao_coleta.md` | Coleta, RAW, metadados e controle de execução |
 | `docs/limitacoes.md` | Limitações dos dados e como o projeto as trata |
+| `docs/dashboards.md` | Especificação dos dashboards e números de referência |
+| `docs/validacao_dashboards.md` | Comparação R01–R15 entre SQL, Streamlit e Power BI |
 | `docs/fontes/` | Investigação de cada fonte, com URLs oficiais |
